@@ -1,7 +1,7 @@
 import * as owl from "@odoo/owl";
 import { fontSizeMap } from "../../fonts";
 import { EnrichedToken, composerTokenize, rangeReference } from "../../formulas/index";
-import { Rect, SpreadsheetEnv, Zone } from "../../types/index";
+import { SpreadsheetEnv } from "../../types/index";
 import { TextValueProvider } from "./autocomplete_dropdown";
 import { ContentEditableHelper } from "./content_editable_helper";
 import { colors } from "../../helpers/index";
@@ -40,9 +40,11 @@ const TEMPLATE = xml/* xml */ `
       t-on-input="onInput"
       t-on-keyup="onKeyup"
 
+      t-on-focus="onFocus"
       t-on-blur="saveSelection"
       t-on-click="onClick"
-    />
+    >
+    </div>
     <TextValueProvider
         t-if="autoCompleteState.showProvider"
         t-ref="o_autocomplete_provider"
@@ -54,18 +56,15 @@ const TEMPLATE = xml/* xml */ `
   `;
 const CSS = css/* scss */ `
   .o-composer-container {
-    box-sizing: border-box;
-    position: absolute;
     padding: 0;
     margin: 0;
     border: 0;
+    flex-grow: 1;
     .o-composer {
       caret-color: black;
-      box-sizing: border-box;
       background-color: white;
       padding-left: 2px;
       padding-right: 2px;
-      border: 1.6px solid #3266ca;
       white-space: nowrap;
       &:focus {
         outline: none;
@@ -85,13 +84,13 @@ export class Composer extends Component<any, SpreadsheetEnv> {
   getters = this.env.getters;
   dispatch = this.env.dispatch;
 
-  zone: Zone;
-  rect: Rect;
-
   selectionEnd: number = 0;
   selectionStart: number = 0;
   contentHelper: ContentEditableHelper;
 
+  state = useState({
+    isFocused: false,
+  });
   autoCompleteState = useState({
     showProvider: false,
     provider: "functions",
@@ -122,50 +121,49 @@ export class Composer extends Component<any, SpreadsheetEnv> {
   constructor() {
     super(...arguments);
     this.contentHelper = new ContentEditableHelper(this.composerRef.el!);
-    const [col, row] = this.getters.getPosition();
-    this.zone = this.getters.expandZone({ left: col, right: col, top: row, bottom: row });
-    this.rect = this.getters.getRect(this.zone, this.props.viewport);
   }
 
   mounted() {
-    // @ts-ignore
-    window.composer = this;
-
     const el = this.composerRef.el!;
-
     this.contentHelper.updateEl(el);
-    const currentContent = this.getters.getCurrentContent();
-    if (currentContent) {
-      this.contentHelper.insertText(currentContent);
-      this.contentHelper.selectRange(currentContent.length, currentContent.length);
-    }
-    this.processContent();
+    if (!this.state.isFocused) return;
+    this.initContentEditable();
+  }
 
-    el.style.width = (Math.max(el.scrollWidth + 10, this.rect[2] + 1.5) + "px") as string;
-    el.style.height = (this.rect[3] + 1.5 + "px") as string;
+  async willUpdateProps() {
+    // if (!this.state.isFocused) {
+    //   const currentContent = this.getters.getCurrentContent();
+    //   this.contentHelper.removeAll();
+    //   this.contentHelper.insertText(currentContent || this.activeContent);
+    // }
   }
 
   willUnmount(): void {
     this.trigger("composer-unmounted");
   }
 
-  get containerStyle() {
+  get activeContent(): string {
+    const activeCell = this.getters.getActiveCell();
+    return activeCell && activeCell.content ? activeCell.content : "";
+  }
+
+  get containerStyle(): string {
+    // move to cell composer
     const style = this.getters.getCurrentStyle();
-    const [x, y, , height] = this.rect;
+    const height = this.props.height;
     const weight = `font-weight:${style.bold ? "bold" : 500};`;
     const italic = style.italic ? `font-style: italic;` : ``;
     const strikethrough = style.strikethrough ? `text-decoration:line-through;` : ``;
-    return `left: ${x - 1}px;
-        top:${y}px;
+    return `
         height:${height}px;
         font-size:${fontSizeMap[style.fontSize || 10]}px;
         ${weight}${italic}${strikethrough}`;
   }
 
-  get composerStyle() {
+  get composerStyle(): string {
     const style = this.getters.getCurrentStyle();
     const cell = this.getters.getActiveCell() || { type: "text" };
-    const height = this.rect[3];
+    const height = this.props.height;
     const align = "align" in style ? style.align : cell.type === "number" ? "right" : "left";
     return `text-align:${align};
         line-height:${height - 1.5}px;`;
@@ -258,11 +256,14 @@ export class Composer extends Component<any, SpreadsheetEnv> {
       return;
     }
     const el = this.composerRef.el! as HTMLInputElement;
+    // Move to cell composer ?
     if (el.clientWidth !== el.scrollWidth) {
       el.style.width = (el.scrollWidth + 20) as any;
     }
-    const content = el.childNodes.length ? el.textContent! : "";
-    this.dispatch("SET_CURRENT_CONTENT", { content });
+    if (this.state.isFocused) {
+      const content = el.childNodes.length ? el.textContent! : "";
+      this.dispatch("SET_CURRENT_CONTENT", { content });
+    }
   }
 
   onKeyup(ev: KeyboardEvent) {
@@ -306,6 +307,11 @@ export class Composer extends Component<any, SpreadsheetEnv> {
     this.autoComplete(ev.detail.text);
   }
 
+  onFocus() {
+    this.initContentEditable();
+    this.state.isFocused = true;
+  }
+
   // ---------------------------------------------------------------------------
   // Private
   // ---------------------------------------------------------------------------
@@ -339,6 +345,7 @@ export class Composer extends Component<any, SpreadsheetEnv> {
           case "COMMA":
           case "BOOLEAN":
             this.contentHelper.insertText(token.value, tokenColor[token.type]);
+            // this.dispatch("SET_CURRENT_CONTENT", { content: token.value });
             break;
           case "SYMBOL":
             let value = token.value;
@@ -354,7 +361,9 @@ export class Composer extends Component<any, SpreadsheetEnv> {
                 lastUsedColorIndex = ++lastUsedColorIndex % colors.length;
               }
               this.contentHelper.insertText(value, refUsed[refSanitized]);
+              // this.dispatch("SET_CURRENT_CONTENT", { content: value });
             } else {
+              // this.dispatch("SET_CURRENT_CONTENT", { content: value });
               this.contentHelper.insertText(value);
             }
             break;
@@ -466,8 +475,23 @@ export class Composer extends Component<any, SpreadsheetEnv> {
    * Save the current selection
    */
   saveSelection() {
+    this.state.isFocused = false;
     const selection = this.contentHelper.getCurrentSelection();
     this.selectionStart = selection.start;
     this.selectionEnd = selection.end;
+  }
+
+  private initContentEditable() {
+    // @ts-ignore
+    window.composer = this;
+
+    const currentContent = this.getters.getCurrentContent();
+    console.log(currentContent);
+    if (currentContent) {
+      this.contentHelper.removeAll();
+      this.contentHelper.insertText(currentContent);
+      this.contentHelper.selectRange(currentContent.length, currentContent.length);
+    }
+    this.processContent();
   }
 }

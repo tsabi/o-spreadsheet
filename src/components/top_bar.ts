@@ -11,6 +11,7 @@ import { DEFAULT_FONT_SIZE } from "../constants";
 import { MenuState, Menu } from "./menu";
 import { setStyle, setFormatter, topbarComponentRegistry } from "../registries/index";
 import { isChildEvent } from "./helpers/dom_helpers";
+import { Composer } from "./composer/composer";
 const { Component, useState, hooks } = owl;
 const { xml, css } = owl.tags;
 const { useExternalListener, useRef } = hooks;
@@ -152,10 +153,11 @@ export class TopBar extends Component<any, SpreadsheetEnv> {
         </div>
 
         <!-- Cell content -->
-        <div class="o-toolbar-cell-content">
+        <Composer height="34"/>
+        <!-- <div t-else="" class="o-toolbar-cell-content">
           <t t-set="cell" t-value="getters.getActiveCell()"/>
           <t t-esc="cell and cell.content"/>
-        </div>
+        </div> -->
 
       </div>
     </div>`;
@@ -329,7 +331,7 @@ export class TopBar extends Component<any, SpreadsheetEnv> {
       }
     }
   `;
-  static components = { ColorPicker, Menu };
+  static components = { ColorPicker, Menu, Composer };
   formats = FORMATS;
   currentFormat = "auto";
   fontSizes = fontSizes;

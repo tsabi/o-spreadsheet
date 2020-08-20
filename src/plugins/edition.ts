@@ -54,6 +54,7 @@ export class EditionPlugin extends BasePlugin {
         }
         break;
       case "SET_CURRENT_CONTENT":
+        console.log(cmd.type, cmd.content);
         this.currentContent = cmd.content;
         break;
       case "SELECT_CELL":

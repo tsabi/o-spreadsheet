@@ -9,7 +9,7 @@ import {
 import { isEqual, isInside, toXC, toCartesian } from "../helpers/index";
 import { Model } from "../model";
 import { SpreadsheetEnv, Viewport } from "../types/index";
-import { Composer } from "./composer/composer";
+import { CellComposer } from "./composer/cell_composer";
 import { Menu, MenuState } from "./menu";
 import { Overlay } from "./overlay";
 import { Autofill } from "./autofill";
@@ -175,7 +175,7 @@ function useTouchMove(handler: (deltaX: number, deltaY: number) => void, canMove
 const TEMPLATE = xml/* xml */ `
   <div class="o-grid" t-on-click="focus" t-on-keydown="onKeydown" t-on-wheel="onMouseWheel">
     <t t-if="getters.getEditionMode() !== 'inactive'">
-      <Composer t-ref="composer" t-on-composer-unmounted="focus" viewport="snappedViewport"/>
+      <CellComposer t-ref="composer" t-on-composer-unmounted="focus" viewport="snappedViewport"/>
     </t>
     <canvas t-ref="canvas"
       t-on-mousedown="onMouseDown"
@@ -257,7 +257,7 @@ const CSS = css/* scss */ `
 export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
   static template = TEMPLATE;
   static style = CSS;
-  static components = { Composer, Overlay, Menu, Autofill, FiguresContainer };
+  static components = { CellComposer, Overlay, Menu, Autofill, FiguresContainer };
 
   private menuState: MenuState = useState({
     isOpen: false,
@@ -483,7 +483,7 @@ export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
       this.dispatch(ev.ctrlKey ? "PREPARE_SELECTION_EXPANSION" : "STOP_SELECTION");
       if (this.getters.getEditionMode() === "selecting") {
         if (this.composer.comp) {
-          (this.composer.comp as Composer).addTextFromSelection();
+          (this.composer.comp as CellComposer).addTextFromSelection();
         }
       }
       this.canvas.el!.removeEventListener("mousemove", onMouseMove);
@@ -531,7 +531,7 @@ export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
     }
 
     if (this.getters.getEditionMode() === "selecting" && this.composer.comp) {
-      (this.composer.comp as Composer).addTextFromSelection();
+      (this.composer.comp as CellComposer).addTextFromSelection();
     } else if (this.getters.isPaintingFormat()) {
       this.dispatch("PASTE", {
         target: this.getters.getSelectedZones(),
