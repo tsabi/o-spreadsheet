@@ -6,14 +6,13 @@ export class ContentEditableHelper {
 
   updateEl(el: HTMLElement) {
     this.el = el;
-    this.el.focus(); // Nope
   }
 
   /**
    * select the text at position start to end, no matter the children
    */
   selectRange(start: number, end: number) {
-    console.log("already focused ?", this.el === document.activeElement);
+    if (document.activeElement !== this.el) return;
     let selection = window.getSelection()!;
     this.removeSelection();
     let range = document.createRange();
@@ -80,12 +79,16 @@ export class ContentEditableHelper {
    * the selection is replaced by the text to be inserted
    * */
   insertText(value: string, color: string = "#000") {
+    // console.log(value)
     if (document.activeElement === this.el) {
-      console.log("execCommand", value);
       document.execCommand("foreColor", false, color);
       document.execCommand("insertText", false, value);
     } else {
-      this.el.innerText += value;
+      // this.el.innerText += value;
+      const span = document.createElement("span");
+      span.innerText = value;
+      span.style.color = color;
+      this.el.appendChild(span);
     }
   }
 

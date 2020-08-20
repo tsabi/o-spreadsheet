@@ -126,16 +126,20 @@ export class Composer extends Component<any, SpreadsheetEnv> {
   mounted() {
     const el = this.composerRef.el!;
     this.contentHelper.updateEl(el);
-    if (!this.state.isFocused) return;
+    // if (this.props.focus) {
+    //   this.el!.focus();
+    //   this.state.isFocused = true;
+    // };
+    // if (!this.state.isFocused) return;
     this.initContentEditable();
+    this.processContent();
   }
 
   async willUpdateProps() {
-    console.log(this.state.isFocused, this.el);
     if (!this.state.isFocused) {
-      const currentContent = this.getters.getCurrentContent();
       this.contentHelper.removeAll();
-      this.contentHelper.insertText(currentContent || this.activeContent);
+      this.contentHelper.insertText(this.content);
+      this.processContent();
     }
   }
 
@@ -143,7 +147,11 @@ export class Composer extends Component<any, SpreadsheetEnv> {
     this.trigger("composer-unmounted");
   }
 
-  get activeContent(): string {
+  get content(): string {
+    const content = this.getters.getCurrentContent();
+    if (content) {
+      return content;
+    }
     const activeCell = this.getters.getActiveCell();
     return activeCell && activeCell.content ? activeCell.content : "";
   }
@@ -256,6 +264,9 @@ export class Composer extends Component<any, SpreadsheetEnv> {
     if (this.isDone || !this.shouldProcessInputEvents) {
       return;
     }
+    if (this.getters.getEditionMode() === "inactive") {
+      this.dispatch("START_EDITION");
+    }
     const el = this.composerRef.el! as HTMLInputElement;
     // Move to cell composer ?
     if (el.clientWidth !== el.scrollWidth) {
@@ -309,14 +320,16 @@ export class Composer extends Component<any, SpreadsheetEnv> {
   }
 
   onFocus() {
-    this.initContentEditable();
+    this.isDone = false;
     this.state.isFocused = true;
+    const content = this.content;
+    this.dispatch("SET_CURRENT_CONTENT", { content });
   }
 
   onBlur() {
     this.saveSelection();
-    console.log("saved ?", this.el);
     this.state.isFocused = false;
+    this.dispatch("REMOVE_ALL_HIGHLIGHTS");
   }
 
   // ---------------------------------------------------------------------------
@@ -325,13 +338,15 @@ export class Composer extends Component<any, SpreadsheetEnv> {
 
   processContent() {
     this.shouldProcessInputEvents = false;
-    let value = this.getters.getCurrentContent();
+    let value = this.content;
     this.tokenAtCursor = undefined;
     if (value.startsWith("=")) {
-      this.saveSelection();
+      if (this.state.isFocused) {
+        this.saveSelection();
+        this.contentHelper.selectRange(0, 0); // move the cursor inside the composer at 0 0.
+        this.dispatch("REMOVE_ALL_HIGHLIGHTS"); //cleanup highlights for references
+      }
       this.contentHelper.removeAll(); // remove the content of the composer, to be added just after
-      this.contentHelper.selectRange(0, 0); // move the cursor inside the composer at 0 0.
-      this.dispatch("REMOVE_ALL_HIGHLIGHTS"); //cleanup highlights for references
 
       const refUsed = {};
       let lastUsedColorIndex = 0;
@@ -395,9 +410,11 @@ export class Composer extends Component<any, SpreadsheetEnv> {
       }
 
       // Put the cursor back where it was
-      this.contentHelper.selectRange(this.selectionStart, this.selectionEnd);
-      if (Object.keys(refUsed).length) {
-        this.dispatch("ADD_HIGHLIGHTS", { ranges: refUsed });
+      if (this.state.isFocused) {
+        this.contentHelper.selectRange(this.selectionStart, this.selectionEnd);
+        if (Object.keys(refUsed).length) {
+          this.dispatch("ADD_HIGHLIGHTS", { ranges: refUsed });
+        }
       }
     }
     this.shouldProcessInputEvents = true;
@@ -492,11 +509,12 @@ export class Composer extends Component<any, SpreadsheetEnv> {
     window.composer = this;
 
     const currentContent = this.getters.getCurrentContent();
-    console.log(currentContent);
     if (currentContent) {
       this.contentHelper.removeAll();
       this.contentHelper.insertText(currentContent);
-      this.contentHelper.selectRange(currentContent.length, currentContent.length);
+      if (this.state.isFocused) {
+        this.contentHelper.selectRange(currentContent.length, currentContent.length);
+      }
     }
     this.processContent();
   }

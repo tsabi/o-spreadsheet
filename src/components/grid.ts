@@ -323,6 +323,10 @@ export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
     useTouchMove(this.moveCanvas.bind(this), () => this.vScrollbar.scroll > 0);
   }
 
+  // get isFocused() {
+  //   this.canvas.el!.
+  // }
+
   mounted() {
     this.vScrollbar.el = this.vScrollbarRef.el!;
     this.hScrollbar.el = this.hScrollbarRef.el!;
