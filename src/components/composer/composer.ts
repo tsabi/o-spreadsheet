@@ -124,14 +124,20 @@ export class Composer extends Component<any, SpreadsheetEnv> {
   }
 
   mounted() {
+    // @ts-ignore
+    window.composer = this;
+
     const el = this.composerRef.el!;
+
     this.contentHelper.updateEl(el);
-    // if (this.props.focus) {
-    //   this.el!.focus();
-    //   this.state.isFocused = true;
-    // };
-    // if (!this.state.isFocused) return;
-    this.initContentEditable();
+    const currentContent = this.getters.getCurrentContent();
+    if (currentContent) {
+      this.contentHelper.removeAll();
+      this.contentHelper.insertText(currentContent);
+      if (this.state.isFocused) {
+        this.contentHelper.selectRange(currentContent.length, currentContent.length);
+      }
+    }
     this.processContent();
   }
 
@@ -322,7 +328,8 @@ export class Composer extends Component<any, SpreadsheetEnv> {
   onFocus() {
     this.isDone = false;
     this.state.isFocused = true;
-    const content = this.content;
+    const activeCell = this.getters.getActiveCell();
+    const content = activeCell && activeCell.content ? activeCell.content : "";
     this.dispatch("SET_CURRENT_CONTENT", { content });
   }
 
@@ -502,20 +509,5 @@ export class Composer extends Component<any, SpreadsheetEnv> {
     const selection = this.contentHelper.getCurrentSelection();
     this.selectionStart = selection.start;
     this.selectionEnd = selection.end;
-  }
-
-  private initContentEditable() {
-    // @ts-ignore
-    window.composer = this;
-
-    const currentContent = this.getters.getCurrentContent();
-    if (currentContent) {
-      this.contentHelper.removeAll();
-      this.contentHelper.insertText(currentContent);
-      if (this.state.isFocused) {
-        this.contentHelper.selectRange(currentContent.length, currentContent.length);
-      }
-    }
-    this.processContent();
   }
 }
