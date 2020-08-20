@@ -41,7 +41,7 @@ const TEMPLATE = xml/* xml */ `
       t-on-keyup="onKeyup"
 
       t-on-focus="onFocus"
-      t-on-blur="saveSelection"
+      t-on-blur="onBlur"
       t-on-click="onClick"
     >
     </div>
@@ -131,11 +131,12 @@ export class Composer extends Component<any, SpreadsheetEnv> {
   }
 
   async willUpdateProps() {
-    // if (!this.state.isFocused) {
-    //   const currentContent = this.getters.getCurrentContent();
-    //   this.contentHelper.removeAll();
-    //   this.contentHelper.insertText(currentContent || this.activeContent);
-    // }
+    console.log(this.state.isFocused, this.el);
+    if (!this.state.isFocused) {
+      const currentContent = this.getters.getCurrentContent();
+      this.contentHelper.removeAll();
+      this.contentHelper.insertText(currentContent || this.activeContent);
+    }
   }
 
   willUnmount(): void {
@@ -312,6 +313,12 @@ export class Composer extends Component<any, SpreadsheetEnv> {
     this.state.isFocused = true;
   }
 
+  onBlur() {
+    this.saveSelection();
+    console.log("saved ?", this.el);
+    this.state.isFocused = false;
+  }
+
   // ---------------------------------------------------------------------------
   // Private
   // ---------------------------------------------------------------------------
@@ -475,7 +482,6 @@ export class Composer extends Component<any, SpreadsheetEnv> {
    * Save the current selection
    */
   saveSelection() {
-    this.state.isFocused = false;
     const selection = this.contentHelper.getCurrentSelection();
     this.selectionStart = selection.start;
     this.selectionEnd = selection.end;
