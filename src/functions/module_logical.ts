@@ -58,8 +58,10 @@ export const IF: FunctionDescription = {
       logical_expression (boolean) ${_lt(
         "An expression or reference to a cell containing an expression that represents some logical value, i.e. TRUE or FALSE."
       )}
-      value_if_true (any) ${_lt("The value the function returns if logical_expression is TRUE.")}
-      value_if_false (any, optional, default=FALSE) ${_lt(
+      value_if_true (any, insensitive) ${_lt(
+        "The value the function returns if logical_expression is TRUE."
+      )}
+      value_if_false (any, optional, default=FALSE, insensitive) ${_lt(
         "The value the function returns if logical_expression is FALSE."
       )}
     `),

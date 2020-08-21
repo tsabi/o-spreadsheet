@@ -23,7 +23,8 @@ const functionMap = functionRegistry.mapping;
 
 type ReadCell = (xc: string, sheet: string) => any;
 type Range = (v1: string, v2: string, sheetName: string) => any[];
-type FormulaParameters = [ReadCell, Range, EvalContext];
+type SanitizeErrors = (value: any) => void;
+type FormulaParameters = [ReadCell, Range, SanitizeErrors, EvalContext];
 
 export const LOADING = "Loading...";
 
@@ -197,7 +198,7 @@ export class EvaluationPlugin extends BasePlugin {
         cell.value = LOADING;
       } else if (!cell.error) {
         cell.value = "#ERROR";
-        const __lastFnCalled = params[2].__lastFnCalled || "";
+        const __lastFnCalled = params[3].__lastFnCalled || "";
         cell.error = e.message.replace("[[FUNCTION_NAME]]", __lastFnCalled);
       }
     }
@@ -279,9 +280,6 @@ export class EvaluationPlugin extends BasePlugin {
 
     function getCellValue(cell: Cell, sheetId: string): any {
       computeValue(cell, sheetId);
-      if (cell.error) {
-        throw new Error(_lt("This formula depends on invalid values"));
-      }
       if (cell.value === LOADING) {
         throw new Error("not ready");
       }
@@ -312,6 +310,22 @@ export class EvaluationPlugin extends BasePlugin {
       return result;
     }
 
-    return [readCell, range, evalContext];
+    function sanitizeErrors(value) {
+      if (Array.isArray(value)) {
+        for (let i of value) {
+          for (let j of i) {
+            errorsContainValue(j);
+          }
+        }
+      } else errorsContainValue(value);
+    }
+
+    function errorsContainValue(value: any) {
+      if (["#CYCLE", "#BAD_EXPR", "#ERROR"].includes(value)) {
+        throw new Error(_lt("This formula depends on invalid values"));
+      }
+    }
+
+    return [readCell, range, sanitizeErrors, evalContext];
   }
 }

@@ -54,6 +54,7 @@ export interface NewCell {
 export type CompiledFormula = (
   readCell: (xc: string, sheet: string) => any,
   range: (v1: string, v2: string, sheetName: string) => any[],
+  sanitizeErrors: (value: any) => void,
   ctx: {}
 ) => any;
 

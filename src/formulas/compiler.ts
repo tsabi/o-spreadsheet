@@ -65,6 +65,12 @@ export function compile(
       const arg = args[i];
       let argValue = compileAST(arg);
       argDescr = fn.args[i] || argDescr!;
+
+      const sensitiveToError = !(argDescr && argDescr.insensitive);
+      if (sensitiveToError) {
+        code.push(`sanitizeErrors(${argValue})`);
+      }
+
       if (arg.type === "REFERENCE") {
         const types = argDescr.type;
         const hasRange = types.find(
@@ -97,6 +103,7 @@ export function compile(
     }
     return result;
   }
+
   function compileAST(ast: AST): any {
     let id, left, right, args, fnName;
     if (ast.debug) {
@@ -156,7 +163,9 @@ export function compile(
     return `_${id}`;
   }
 
-  code.push(`return ${compileAST(ast)};`);
+  const result = compileAST(ast);
+  code.push(`sanitizeErrors(${result})`);
+  code.push(`return ${result};`);
   const Constructor = isAsync ? AsyncFunction : Function;
-  return new Constructor("cell", "range", "ctx", code.join("\n"));
+  return new Constructor("cell", "range", "sanitizeErrors", "ctx", code.join("\n"));
 }
