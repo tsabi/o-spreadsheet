@@ -267,6 +267,7 @@ export class Composer extends Component<any, SpreadsheetEnv> {
    * Triggered automatically by the content-editable between the keydown and key up
    * */
   onInput(ev: KeyboardEvent) {
+    console.log("on input", this.isDone, this.shouldProcessInputEvents);
     if (this.isDone || !this.shouldProcessInputEvents) {
       return;
     }
@@ -274,7 +275,7 @@ export class Composer extends Component<any, SpreadsheetEnv> {
       this.dispatch("START_EDITION");
     }
     const el = this.composerRef.el! as HTMLInputElement;
-    // Move to cell composer ?
+    // Move to cell composer
     if (el.clientWidth !== el.scrollWidth) {
       el.style.width = (el.scrollWidth + 20) as any;
     }
@@ -334,9 +335,11 @@ export class Composer extends Component<any, SpreadsheetEnv> {
   }
 
   onBlur() {
-    this.saveSelection();
-    this.state.isFocused = false;
-    this.dispatch("REMOVE_ALL_HIGHLIGHTS");
+    if (this.getters.getEditionMode() !== "selecting") {
+      this.saveSelection();
+      this.state.isFocused = false;
+      this.dispatch("REMOVE_ALL_HIGHLIGHTS");
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -453,10 +456,16 @@ export class Composer extends Component<any, SpreadsheetEnv> {
   }
 
   addText(text: string) {
-    this.contentHelper.selectRange(this.selectionStart, this.selectionEnd);
-    this.contentHelper.insertText(text);
-    this.selectionStart = this.selectionEnd = this.selectionStart + text.length;
-    this.contentHelper.selectRange(this.selectionStart, this.selectionEnd);
+    if (this.state.isFocused) {
+      this.contentHelper.selectRange(this.selectionStart, this.selectionEnd);
+      this.contentHelper.insertText(text);
+      this.selectionStart = this.selectionEnd = this.selectionStart + text.length;
+      const el = this.composerRef.el! as HTMLInputElement;
+      const content = el.childNodes.length ? el.textContent! : "";
+      debugger;
+      this.dispatch("SET_CURRENT_CONTENT", { content });
+    }
+    // this.contentHelper.selectRange(this.selectionStart, this.selectionEnd);
   }
 
   addTextFromSelection() {
@@ -470,7 +479,7 @@ export class Composer extends Component<any, SpreadsheetEnv> {
       selection = `${sheetName}!${selection}`;
     }
     this.addText(selection);
-    this.processContent();
+    // this.processContent();
   }
 
   autoComplete(value: string) {
@@ -510,4 +519,8 @@ export class Composer extends Component<any, SpreadsheetEnv> {
     this.selectionStart = selection.start;
     this.selectionEnd = selection.end;
   }
+
+  // private setContent() {
+
+  // }
 }

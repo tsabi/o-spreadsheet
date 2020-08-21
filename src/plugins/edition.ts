@@ -55,11 +55,13 @@ export class EditionPlugin extends BasePlugin {
         break;
       case "SET_CURRENT_CONTENT":
         console.log(cmd.type, cmd.content);
-        this.currentContent = cmd.content;
+        if (cmd.content === "=SUM(A1:A2" || cmd.content === "=SUM(A1:A2A1:A2")
+          this.currentContent = cmd.content;
         break;
       case "SELECT_CELL":
       case "MOVE_POSITION":
         if (this.mode === "editing") {
+          debugger;
           this.stopEdition();
         }
         break;

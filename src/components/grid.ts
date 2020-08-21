@@ -174,6 +174,7 @@ function useTouchMove(handler: (deltaX: number, deltaY: number) => void, canMove
 // -----------------------------------------------------------------------------
 const TEMPLATE = xml/* xml */ `
   <div class="o-grid" t-on-click="focus" t-on-keydown="onKeydown" t-on-wheel="onMouseWheel">
+    <t t-esc="getters.getEditionMode()"/>
     <t t-if="getters.getEditionMode() !== 'inactive'">
       <CellComposer t-ref="composer" t-on-composer-unmounted="focus" viewport="snappedViewport"/>
     </t>
