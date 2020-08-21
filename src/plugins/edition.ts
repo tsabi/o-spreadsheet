@@ -32,6 +32,7 @@ export class EditionPlugin extends BasePlugin {
   }
 
   handle(cmd: Command) {
+    console.log(cmd.type);
     switch (cmd.type) {
       case "START_COMPOSER_SELECTION":
         this.mode = "selecting";

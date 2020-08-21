@@ -369,6 +369,7 @@ export class Composer extends Component<any, SpreadsheetEnv> {
           (t) => t.start <= this.selectionStart! && t.end >= this.selectionEnd!
         );
       }
+      console.log("token", this.tokenAtCursor);
       for (let token of this.tokens) {
         switch (token.type) {
           case "OPERATOR":
@@ -377,7 +378,6 @@ export class Composer extends Component<any, SpreadsheetEnv> {
           case "COMMA":
           case "BOOLEAN":
             this.contentHelper.insertText(token.value, tokenColor[token.type]);
-            // this.dispatch("SET_CURRENT_CONTENT", { content: token.value });
             break;
           case "SYMBOL":
             let value = token.value;
@@ -393,9 +393,7 @@ export class Composer extends Component<any, SpreadsheetEnv> {
                 lastUsedColorIndex = ++lastUsedColorIndex % colors.length;
               }
               this.contentHelper.insertText(value, refUsed[refSanitized]);
-              // this.dispatch("SET_CURRENT_CONTENT", { content: value });
             } else {
-              // this.dispatch("SET_CURRENT_CONTENT", { content: value });
               this.contentHelper.insertText(value);
             }
             break;
@@ -460,12 +458,12 @@ export class Composer extends Component<any, SpreadsheetEnv> {
       this.contentHelper.selectRange(this.selectionStart, this.selectionEnd);
       this.contentHelper.insertText(text);
       this.selectionStart = this.selectionEnd = this.selectionStart + text.length;
-      const el = this.composerRef.el! as HTMLInputElement;
-      const content = el.childNodes.length ? el.textContent! : "";
-      debugger;
-      this.dispatch("SET_CURRENT_CONTENT", { content });
+      // const el = this.composerRef.el! as HTMLInputElement;
+      // const content = el.childNodes.length ? el.textContent! : "";
+      // debugger;
+      // this.dispatch("SET_CURRENT_CONTENT", { content });
+      this.contentHelper.selectRange(this.selectionStart, this.selectionEnd);
     }
-    // this.contentHelper.selectRange(this.selectionStart, this.selectionEnd);
   }
 
   addTextFromSelection() {
@@ -479,7 +477,7 @@ export class Composer extends Component<any, SpreadsheetEnv> {
       selection = `${sheetName}!${selection}`;
     }
     this.addText(selection);
-    // this.processContent();
+    this.processContent();
   }
 
   autoComplete(value: string) {
