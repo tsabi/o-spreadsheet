@@ -12,7 +12,6 @@ export class ContentEditableHelper {
    * select the text at position start to end, no matter the children
    */
   selectRange(start: number, end: number) {
-    if (document.activeElement !== this.el) return;
     let selection = window.getSelection()!;
     this.removeSelection();
     let range = document.createRange();

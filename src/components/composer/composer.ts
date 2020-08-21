@@ -267,7 +267,6 @@ export class Composer extends Component<any, SpreadsheetEnv> {
    * Triggered automatically by the content-editable between the keydown and key up
    * */
   onInput(ev: KeyboardEvent) {
-    console.log("on input", this.isDone, this.shouldProcessInputEvents);
     if (this.isDone || !this.shouldProcessInputEvents) {
       return;
     }
