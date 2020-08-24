@@ -329,8 +329,22 @@ exports[`Spreadsheet simple rendering snapshot 1`] = `
       </div>
       <!-- Cell content -->
       <div
-        class="o-toolbar-cell-content"
-      />
+        class="o-composer-container"
+        style="
+        height:34px;
+        font-size:13px;
+        font-weight:500;"
+      >
+        <div
+          class="o-composer"
+          contenteditable="true"
+          spellcheck="false"
+          style="text-align:left;
+        line-height:32.5px;"
+          tabindex="1"
+        />
+      </div>
+      <!-- &lt;div t-else="" class="o-toolbar-cell-content"&gt; &lt;t t-set="cell" t-value="getters.getActiveCell()"/&gt; &lt;t t-esc="cell and cell.content"/&gt; &lt;/div&gt; -->
     </div>
   </div>
   <div

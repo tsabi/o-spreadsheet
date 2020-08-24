@@ -174,9 +174,12 @@ function useTouchMove(handler: (deltaX: number, deltaY: number) => void, canMove
 // -----------------------------------------------------------------------------
 const TEMPLATE = xml/* xml */ `
   <div class="o-grid" t-on-click="focus" t-on-keydown="onKeydown" t-on-wheel="onMouseWheel">
-    <t t-esc="getters.getEditionMode()"/>
     <t t-if="getters.getEditionMode() !== 'inactive'">
-      <CellComposer t-ref="composer" t-on-composer-unmounted="focus" viewport="snappedViewport"/>
+      <CellComposer
+        t-ref="composer"
+        t-on-composer-unmounted="focus"
+        autofocus="autoFocusComposer"
+        viewport="snappedViewport"/>
     </t>
     <canvas t-ref="canvas"
       t-on-mousedown="onMouseDown"
@@ -316,6 +319,7 @@ export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
     "CTRL+Z": () => this.dispatch("UNDO"),
     "CTRL+Y": () => this.dispatch("REDO"),
   };
+  autoFocusComposer: boolean = false;
 
   constructor() {
     super(...arguments);
@@ -342,6 +346,7 @@ export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
   focus() {
     if (this.getters.getEditionMode() !== "selecting") {
       this.canvas.el!.focus();
+      this.autoFocusComposer = false;
     }
   }
 
@@ -505,6 +510,7 @@ export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
   onDoubleClick(ev) {
     const [col, row] = this.getCartesianCoordinates(ev);
     if (this.clickedCol === col && this.clickedRow === row) {
+      this.autoFocusComposer = true;
       this.dispatch("START_EDITION");
     }
   }
@@ -570,6 +576,7 @@ export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
         // character
         ev.preventDefault();
         ev.stopPropagation();
+        this.autoFocusComposer = true;
         this.dispatch("START_EDITION", { text: ev.key });
       }
     }

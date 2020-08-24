@@ -11,7 +11,6 @@ export class ContentEditableHelper {
 
   updateEl(el: HTMLElement) {
     this.el = el;
-    this.el.focus();
     this.currentState = {
       cursorStart: 0,
       cursorEnd: 0,

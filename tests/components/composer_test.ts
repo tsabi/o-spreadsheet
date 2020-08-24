@@ -33,6 +33,8 @@ async function startComposition(key: string = "Enter") {
   canvasEl.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
   await nextTick();
   composerEl = fixture.querySelector("div.o-composer")!;
+  composerEl.dispatchEvent(new Event("focus"));
+  // await nextTick();
 }
 
 async function keydown(key: string, options: any = {}) {
@@ -184,7 +186,9 @@ describe("composer", () => {
   test("type '=', backspace and select a cell should not add it", async () => {
     await typeInComposer("=");
     model.dispatch("SET_CURRENT_CONTENT", { content: "" });
-    const cehMock = parent.grid.comp.composer.comp.contentHelper as ContentEditableHelper;
+    // Bleurk
+    const cehMock = parent.grid.comp.composer.comp.composerRef.comp
+      .contentHelper as ContentEditableHelper;
     cehMock.removeAll();
     composerEl.dispatchEvent(new Event("keyup"));
     triggerMouseEvent("canvas", "mousedown", 300, 200);

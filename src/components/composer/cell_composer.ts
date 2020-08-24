@@ -9,7 +9,7 @@ const { useRef } = owl.hooks;
 
 const TEMPLATE = xml/* xml */ `
   <div class="o-cell-composer" t-att-style="positionStyle">
-    <Composer t-ref="composer" height="height"/>
+    <Composer t-ref="composer" height="height" autofocus="props.autofocus"/>
   </div>
 `;
 const CSS = css/* scss */ `

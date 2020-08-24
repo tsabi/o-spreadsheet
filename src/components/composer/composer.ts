@@ -40,7 +40,7 @@ const TEMPLATE = xml/* xml */ `
       t-on-input="onInput"
       t-on-keyup="onKeyup"
 
-      t-on-focus="onFocus"
+      t-on-focus="focus"
       t-on-blur="onBlur"
       t-on-click="onClick"
     >
@@ -123,12 +123,21 @@ export class Composer extends Component<any, SpreadsheetEnv> {
     this.contentHelper = new ContentEditableHelper(this.composerRef.el!);
   }
 
+  // async willStart() {
+  //   if (this.props.autofocus) {
+  //     this.focus()
+  //   }
+  // }
+
   mounted() {
     // @ts-ignore
     window.composer = this;
-
     const el = this.composerRef.el!;
-
+    if (this.props.autofocus) {
+      this.shouldProcessInputEvents = false;
+      el.focus();
+      this.shouldProcessInputEvents = true;
+    }
     this.contentHelper.updateEl(el);
     const currentContent = this.getters.getCurrentContent();
     if (currentContent) {
@@ -270,9 +279,6 @@ export class Composer extends Component<any, SpreadsheetEnv> {
     if (this.isDone || !this.shouldProcessInputEvents) {
       return;
     }
-    if (this.getters.getEditionMode() === "inactive") {
-      this.dispatch("START_EDITION");
-    }
     const el = this.composerRef.el! as HTMLInputElement;
     // Move to cell composer
     if (el.clientWidth !== el.scrollWidth) {
@@ -325,9 +331,15 @@ export class Composer extends Component<any, SpreadsheetEnv> {
     this.autoComplete(ev.detail.text);
   }
 
-  onFocus() {
+  focus() {
     this.isDone = false;
     this.state.isFocused = true;
+    if (!this.shouldProcessInputEvents) {
+      return;
+    }
+    if (this.getters.getEditionMode() === "inactive") {
+      this.dispatch("START_EDITION");
+    }
     const activeCell = this.getters.getActiveCell();
     const content = activeCell && activeCell.content ? activeCell.content : "";
     this.dispatch("SET_CURRENT_CONTENT", { content });
@@ -368,7 +380,6 @@ export class Composer extends Component<any, SpreadsheetEnv> {
           (t) => t.start <= this.selectionStart! && t.end >= this.selectionEnd!
         );
       }
-      console.log("token", this.tokenAtCursor);
       for (let token of this.tokens) {
         switch (token.type) {
           case "OPERATOR":
@@ -457,10 +468,6 @@ export class Composer extends Component<any, SpreadsheetEnv> {
       this.contentHelper.selectRange(this.selectionStart, this.selectionEnd);
       this.contentHelper.insertText(text);
       this.selectionStart = this.selectionEnd = this.selectionStart + text.length;
-      // const el = this.composerRef.el! as HTMLInputElement;
-      // const content = el.childNodes.length ? el.textContent! : "";
-      // debugger;
-      // this.dispatch("SET_CURRENT_CONTENT", { content });
       this.contentHelper.selectRange(this.selectionStart, this.selectionEnd);
     }
   }
