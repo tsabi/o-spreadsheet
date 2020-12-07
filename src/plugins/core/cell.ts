@@ -742,4 +742,5 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
     this.history.update("cells", sheet.id, cell.id, cell);
     this.dispatch("UPDATE_CELL_POSITION", { cell, cellId: cell.id, col, row, sheetId: sheet.id });
   }
+
 }
