@@ -242,7 +242,7 @@ export class EvaluationPlugin extends UIPlugin {
     }
 
     function computeValue(cell: Cell, sheetId: string) {
-      if (cell.type !== "formula" || !cell.formula) {
+      if (cell.type !== CellType.formula) {
         return;
       }
       const position = params[2].getters.getCellPosition(cell.id);

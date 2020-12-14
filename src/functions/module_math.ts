@@ -1079,6 +1079,7 @@ export const SUM: AddFunctionDescription = {
       )}
     `),
   returns: ["NUMBER"],
+  returnFormat: "ANY",
   compute: function (): number {
     return reduceNumbers(arguments, (acc, a) => acc + a, 0);
   },

@@ -448,6 +448,8 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
 
   getCellText(cell: Cell, sheetId: UID, showFormula: boolean = false): string {
     let value: unknown;
+    let format = cell.format;
+
     if (showFormula) {
       if (cell.type === CellType.formula) {
         value = this.getters.getFormulaCellContent(sheetId, cell);
@@ -456,9 +458,13 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
       }
     } else {
       value = cell.value;
+      // return the format of the formula when the format is automatic
+      if (!format && cell.type === CellType.formula) {
+        format = this.computeFormulaFormat(cell);
+      }
     }
-    const shouldFormat = (value || value === 0) && cell.format && !cell.error;
-    const dateTimeFormat = shouldFormat && cell.format!.match(/[ymd:]/);
+    const shouldFormat = (value || value === 0) && format && !cell.error;
+    const dateTimeFormat = shouldFormat && format!.match(/[ymd:]/);
     const numberFormat = shouldFormat && !dateTimeFormat;
     switch (typeof value) {
       case "string":
@@ -467,18 +473,18 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
         return value ? "TRUE" : "FALSE";
       case "number":
         if (dateTimeFormat) {
-          return formatDateTime({ value } as InternalDate, cell.format);
+          return formatDateTime({ value } as InternalDate, format!);
         }
         if (numberFormat) {
-          return formatNumber(value, cell.format!);
+          return formatNumber(value, format!);
         }
         return formatStandardNumber(value);
       case "object":
         if (dateTimeFormat) {
-          return formatDateTime(value as InternalDate, cell.format);
+          return formatDateTime(value as InternalDate, format!);
         }
         if (numberFormat) {
-          return formatNumber((value as any).value, cell.format!);
+          return formatNumber((value as any).value, format!);
         }
         if (value && (value as InternalDate).format!.match(/[ymd:]/)) {
           return formatDateTime(value as InternalDate);
@@ -486,6 +492,69 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
         return "0";
     }
     return (value && (value as any).toString()) || "";
+  }
+
+  NULL_FORMAT = "";
+
+  private computeFormulaFormat(cell: FormulaCell): string {
+    // return this.NULL_FORMAT;
+    const stack = [cell];
+    const sheets = this.getters.getEvaluationSheets();
+
+    let current: Cell | undefined;
+    while ((current = stack.pop())) {
+      if (!current) {
+        return this.NULL_FORMAT;
+      }
+
+      const dependenciesFormat = current.formula.compiledFormula.dependenciesFormat;
+      const dependencies = current.dependencies;
+
+      for (let dependencyFormat of dependenciesFormat) {
+        switch (typeof dependencyFormat) {
+          case "string":
+            // dependencyFormat corresponds to a literal format which can be applied
+            // directly.
+            return dependencyFormat;
+          case "number":
+            // dependencyFormat corresponds to a dependency cell from which we must
+            // find the cell and extract the associated format
+
+            const ref = dependencies[dependencyFormat];
+            const s = sheets[ref.sheetId];
+            if (s) {
+              // if the reference is a range --> the first cell in the range
+              // determines the format
+              const cellRef = s.rows[ref.zone.top]?.cells[ref.zone.left];
+              if (cellRef) {
+                if (cellRef.format) {
+                  return cellRef.format;
+                }
+                // if (cellRef.type === "formula" && cellRef.formula.format){
+                //   return cellRef.formula.format
+                // }
+
+                if (
+                  cellRef.value === "#ERROR" ||
+                  cellRef.value === "#CYCLE" ||
+                  cellRef.value === "#VALUE"
+                ) {
+                  return this.NULL_FORMAT;
+                }
+                if (cellRef.type === "formula") {
+                  // if (!cellRef.formula.format){
+                  //   cellRef.formula.format = this.computeFormulaFormat(cell)
+                  // }
+                  stack.push(cellRef);
+                  continue;
+                  // return cellRef.formula.format || ""
+                }
+              }
+            }
+        }
+      }
+    }
+    return this.NULL_FORMAT;
   }
 
   getCellStyle(cell: Cell): Style {
@@ -629,39 +698,20 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
       // derived
       const cellId = before?.id || uuidv4();
 
-      if (after.formula) {
-        try {
-          let compiledFormula = compile(after.formula);
-          const ranges: Range[] = [];
+      let formulaString = after.formula;
+      if (!formulaString && afterContent[0] === "=") {
+        formulaString = normalize(afterContent || "");
+      }
 
-          for (let xc of after.formula.dependencies) {
+      if (formulaString) {
+        try {
+          const compiledFormula = compile(formulaString);
+          let ranges: Range[] = [];
+
+          for (let xc of formulaString.dependencies) {
             // todo: remove the actual range from the cell and only keep the range Id
             ranges.push(this.getters.getRangeFromSheetXC(sheet.id, xc));
           }
-          cell = {
-            id: cellId,
-            type: CellType.formula,
-            formula: {
-              compiledFormula: compiledFormula,
-              text: after.formula.text,
-            },
-            dependencies: ranges,
-          } as FormulaCell;
-        } catch (_) {
-          cell = {
-            id: cellId,
-            type: CellType.invalidFormula,
-            content: afterContent,
-            value: "#BAD_EXPR",
-            error: _lt("Invalid Expression"),
-          };
-        }
-      } else if (afterContent[0] === "=") {
-        try {
-          const formulaString: NormalizedFormula = normalize(afterContent || "");
-          const compiledFormula = compile(formulaString);
-
-          const ranges: Range[] = [];
 
           cell = {
             id: cellId,
@@ -672,11 +722,6 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
             },
             dependencies: ranges,
           } as FormulaCell;
-
-          for (let xc of formulaString.dependencies) {
-            // todo: remove the actual range from the cell and only keep the range Id
-            ranges.push(this.getters.getRangeFromSheetXC(sheet.id, xc));
-          }
         } catch (_) {
           cell = {
             id: cellId,
@@ -742,5 +787,4 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
     this.history.update("cells", sheet.id, cell.id, cell);
     this.dispatch("UPDATE_CELL_POSITION", { cell, cellId: cell.id, col, row, sheetId: sheet.id });
   }
-
 }

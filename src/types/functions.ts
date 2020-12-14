@@ -28,6 +28,7 @@ export interface AddFunctionDescription {
   category?: string;
   args: Arg[];
   returns: [ArgType];
+  returnFormat?: string;
 }
 
 export interface FunctionDescription extends AddFunctionDescription {
