@@ -3,6 +3,7 @@ import { Border, Cell, UID } from "./misc";
 import { Figure } from "./workbook_data";
 import { ComposerSelection } from "../plugins/ui/edition";
 import { SearchOptions, ReplaceOptions } from "../plugins/ui/find_and_replace";
+import { Pivot } from "./pivot";
 
 // -----------------------------------------------------------------------------
 // Grid commands
@@ -37,6 +38,12 @@ export interface BaseCommand {
 
 // Primitive Commands
 // ------------------------------------------------
+export interface AddPivotCommand extends BaseCommand {
+  type: "ADD_PIVOT";
+  data: Pivot;
+  pivotId: UID;
+}
+
 export interface UpdateCellCommand extends BaseCommand {
   type: "UPDATE_CELL";
   sheetId: UID;
@@ -643,6 +650,7 @@ export interface ReplaceAllSearchCommand extends BaseCommand {
 }
 
 export type Command =
+  | AddPivotCommand
   | NewInputCommand
   | RemoveInputCommand
   | FocusInputCommand

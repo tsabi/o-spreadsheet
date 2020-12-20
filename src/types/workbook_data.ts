@@ -1,5 +1,6 @@
 import { ConditionalFormat } from "./conditional_formatting";
-import { Border, Style } from "./misc";
+import { Border, Style, UID } from "./misc";
+import { Pivot } from "./pivot";
 
 export type NormalizedFormula = {
   // if the content is a formula (ex. =sum(  a1:b3, 3) + a1, should be stored as
@@ -49,4 +50,5 @@ export interface WorkbookData {
   styles: { [key: number]: Style };
   borders: { [key: number]: Border };
   entities: { [key: string]: { [key: string]: any } };
+  pivots: Record<UID, Pivot>;
 }
