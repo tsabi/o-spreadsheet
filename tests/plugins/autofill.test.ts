@@ -127,7 +127,7 @@ describe("Autofill", () => {
     model.dispatch("SET_BORDER", { sheetId, col, row, border });
     autofill("A1", "A2");
     const cell = getCell(model, "A2")!;
-    expect(model.getters.getCellStyle(cell)).toMatchObject(style);
+    expect(model.getters.getCellStyle(cell)).toEqual({ ...DEFAULT_STYLE, ...style });
     expect(model.getters.getCellBorder(sheetId, 0, 1)).toEqual(border);
     expect(cell.format).toBe("m/d/yyyy");
   });

@@ -121,7 +121,14 @@ describe("TopBar component", () => {
   });
 
   test("undo/redo tools", async () => {
-    const model = new Model();
+    const model = new Model({
+      sheets: [
+        {
+          colNumber: 1,
+          rowNumber: 1,
+        },
+      ],
+    });
 
     const parent = new Parent(model);
     await parent.mount(fixture);

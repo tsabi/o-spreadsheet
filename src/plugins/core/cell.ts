@@ -528,14 +528,16 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
     }
     const currentStyle = cell && this.getCellStyle(cell);
     const nextStyle = Object.assign({}, currentStyle, style);
-    const id = this.getRegisteredStyle(nextStyle);
+    const styleId = this.getRegisteredStyle(nextStyle);
 
     if (!cell) {
-      cell = { ...this.createBaseCell(), type: CellType.empty };
-      this.history.update("cells", sheetId, cell.id, cell);
-    } else {
-      this.history.update("cells", sheetId, cell.id, "styleId", id);
+      cell = { ...this.createBaseCell(uuidv4()), type: CellType.empty };
     }
+    cell.styleId = styleId;
+    this.history.update("cells", sheetId, cell.id, cell);
+    this.dispatch("UPDATE_CELL_POSITION", { cell, cellId: cell.id, col, row, sheetId });
+    // this.history.update("cells", sheetId, cell.id, "styleId", id);
+    //=> c'est cassé là :D test intéressant dans top_bar.test.ts test("undo/redo tools", async () => {
   }
 
   private getRegisteredStyle(style: Style) {
@@ -677,7 +679,8 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
             ...this.createBaseCell(cellId),
             type: CellType.formula,
             formula: { compiledFormula, text: formulaString.text },
-          } as FormulaCell;
+            dependencies: ranges,
+          };
 
           if (!after.formula) {
             format = this.computeFormulaFormat(cell);
