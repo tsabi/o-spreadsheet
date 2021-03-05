@@ -1,4 +1,5 @@
 import { Model } from "../../src";
+import { DEFAULT_STYLE } from "../../src/constants";
 import { toCartesian, toZone } from "../../src/helpers";
 import { AutofillPlugin } from "../../src/plugins/ui/autofill";
 import { Border, ConditionalFormat, Style } from "../../src/types";
@@ -116,13 +117,17 @@ describe("Autofill", () => {
       col,
       row,
       sheetId,
-      style,
       format: "m/d/yyyy",
+    });
+    model.dispatch("SET_FORMATTING", {
+      sheetId,
+      target: [{ left: col, right: col, top: row, bottom: row }],
+      style,
     });
     model.dispatch("SET_BORDER", { sheetId, col, row, border });
     autofill("A1", "A2");
     const cell = getCell(model, "A2")!;
-    expect(cell.styleId).toEqual(style);
+    expect(model.getters.getCellStyle(cell)).toMatchObject(style);
     expect(model.getters.getCellBorder(sheetId, 0, 1)).toEqual(border);
     expect(cell.format).toBe("m/d/yyyy");
   });
@@ -305,13 +310,18 @@ describe("Autofill", () => {
         col,
         row,
         content: "test",
-        style,
         format: "m/d/yyyy",
       });
+      model.dispatch("SET_FORMATTING", {
+        sheetId,
+        target: [{ left: col, right: col, top: row, bottom: row }],
+        style,
+      });
+
       model.dispatch("SET_BORDER", { sheetId, col, row, border });
       autofill("A1", "A2");
       const cell = getCell(model, "A2")!;
-      expect(cell.styleId).toBeUndefined();
+      expect(model.getters.getCellStyle(cell)).toEqual(DEFAULT_STYLE);
       expect(model.getters.getCellBorder(sheetId, col, row)).toBeNull();
       expect(cell.format).toBeUndefined();
       expect(cell["content"]).toBe("1");
@@ -343,12 +353,10 @@ describe("Autofill", () => {
     const border: Border = {
       left: ["thin", "#000"],
     };
-    const style: Style = { textColor: "orange" };
     model.dispatch("UPDATE_CELL", {
       sheetId,
       col,
       row,
-      style,
       format: "m/d/yyyy",
     });
     model.dispatch("SET_BORDER", { sheetId, col, row, border });

@@ -1,4 +1,5 @@
 import { Model } from "../../src";
+import { DEFAULT_STYLE_ID } from "../../src/constants";
 import { CellType } from "../../src/types";
 
 describe("getCellText", () => {
@@ -17,6 +18,7 @@ describe("getCellText", () => {
           value: a,
           type: CellType.text,
           content: "text",
+          styleId: DEFAULT_STYLE_ID,
         },
         sheetId
       )

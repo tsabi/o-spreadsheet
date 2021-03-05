@@ -1,4 +1,4 @@
-import { DATETIME_FORMAT, DEFAULT_STYLE } from "../../constants";
+import { DATETIME_FORMAT, DEFAULT_STYLE, DEFAULT_STYLE_ID } from "../../constants";
 import { compile, normalize } from "../../formulas/index";
 import { FORMULA_REF_IDENTIFIER } from "../../formulas/tokenizer";
 import { formatDateTime, parseDateTime } from "../../functions/dates";
@@ -60,7 +60,7 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
   ];
 
   public readonly cells: { [sheetId: string]: { [id: string]: Cell } } = {};
-  private styles: { [key: number]: Style } = {};
+  private styles: { [key: number]: Style } = { [DEFAULT_STYLE_ID]: DEFAULT_STYLE };
   private nextId: number = 1;
 
   adaptRanges(applyChange: ApplyRangeChange, sheetId?: UID) {
@@ -522,7 +522,7 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
     if (!style) {
       if (cell) {
         //TODO rename 0 to DEFAULT_STYLE_ID
-        this.history.update("cells", sheetId, cell.id, "styleId", 0);
+        this.history.update("cells", sheetId, cell.id, "styleId", DEFAULT_STYLE_ID);
       }
       return;
     }
@@ -598,7 +598,7 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
   private createBaseCell(id: UID = uuidv4()): CellBase {
     return {
       id,
-      styleId: 0,
+      styleId: DEFAULT_STYLE_ID,
       format: "",
       value: "",
     };
