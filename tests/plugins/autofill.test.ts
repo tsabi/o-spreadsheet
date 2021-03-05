@@ -122,7 +122,7 @@ describe("Autofill", () => {
     model.dispatch("SET_BORDER", { sheetId, col, row, border });
     autofill("A1", "A2");
     const cell = getCell(model, "A2")!;
-    expect(cell.style).toEqual(style);
+    expect(cell.styleId).toEqual(style);
     expect(model.getters.getCellBorder(sheetId, 0, 1)).toEqual(border);
     expect(cell.format).toBe("m/d/yyyy");
   });
@@ -311,7 +311,7 @@ describe("Autofill", () => {
       model.dispatch("SET_BORDER", { sheetId, col, row, border });
       autofill("A1", "A2");
       const cell = getCell(model, "A2")!;
-      expect(cell.style).toBeUndefined();
+      expect(cell.styleId).toBeUndefined();
       expect(model.getters.getCellBorder(sheetId, col, row)).toBeNull();
       expect(cell.format).toBeUndefined();
       expect(cell["content"]).toBe("1");

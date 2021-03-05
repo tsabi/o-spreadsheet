@@ -311,9 +311,19 @@ export class MergePlugin extends CorePlugin<MergeState> implements MergeState {
             sheetId: sheet.id,
             col,
             row,
-            style: topLeft ? topLeft.style : undefined,
             content: undefined,
           });
+          if (topLeft && topLeft.styleId) {
+            const cell = this.getters.getCell(sheet.id, col, row);
+            if (cell) {
+              const style = this.getters.getCellStyle(cell);
+              this.dispatch("SET_FORMATTING", {
+                sheetId: sheet.id,
+                target: [{ left: col, right: col, top: row, bottom: row }],
+                style,
+              });
+            }
+          }
         }
         const merge = this.getMerge(sheet.id, col, row);
         if (merge) {

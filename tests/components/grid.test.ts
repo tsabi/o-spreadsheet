@@ -268,7 +268,7 @@ describe("Grid component", () => {
         target: [{ left: 0, right: 0, top: 0, bottom: 0 }],
         style: { fillColor: "red" },
       });
-      expect(getCell(model, "A1")!.style).toBeDefined();
+      expect(getCell(model, "A1")!.styleId).toBeDefined();
       document.activeElement!.dispatchEvent(
         new KeyboardEvent("keydown", { key: "z", ctrlKey: true, bubbles: true })
       );
@@ -277,7 +277,7 @@ describe("Grid component", () => {
       document.activeElement!.dispatchEvent(
         new KeyboardEvent("keydown", { key: "y", ctrlKey: true, bubbles: true })
       );
-      expect(getCell(model, "A1")!.style).toBeDefined();
+      expect(getCell(model, "A1")!.styleId).toBeDefined();
     });
 
     test("can undo/redo with keyboard (uppercase version)", async () => {
@@ -286,7 +286,7 @@ describe("Grid component", () => {
         target: [{ left: 0, right: 0, top: 0, bottom: 0 }],
         style: { fillColor: "red" },
       });
-      expect(getCell(model, "A1")!.style).toBeDefined();
+      expect(getCell(model, "A1")!.styleId).toBeDefined();
       document.activeElement!.dispatchEvent(
         new KeyboardEvent("keydown", { key: "Z", ctrlKey: true, bubbles: true })
       );
@@ -295,7 +295,7 @@ describe("Grid component", () => {
       document.activeElement!.dispatchEvent(
         new KeyboardEvent("keydown", { key: "Y", ctrlKey: true, bubbles: true })
       );
-      expect(getCell(model, "A1")!.style).toBeDefined();
+      expect(getCell(model, "A1")!.styleId).toBeDefined();
     });
 
     test("can select all the sheet with CTRL+A", async () => {
@@ -313,35 +313,35 @@ describe("Grid component", () => {
 
     test("toggle bold with Ctrl+B", async () => {
       setCellContent(model, "A1", "hello");
-      expect(getCell(model, "A1")!.style).not.toBeDefined();
+      expect(getCell(model, "A1")!.styleId).not.toBeDefined();
       document.activeElement!.dispatchEvent(
         new KeyboardEvent("keydown", { key: "B", ctrlKey: true, bubbles: true })
       );
       await nextTick();
-      expect(getCell(model, "A1")!.style).toEqual({ bold: true });
+      expect(getCell(model, "A1")!.styleId).toEqual({ bold: true });
       expect(model.getters.getCellStyle(model.getters.getActiveCell()!)).toEqual({ bold: true });
       document.activeElement!.dispatchEvent(
         new KeyboardEvent("keydown", { key: "B", ctrlKey: true, bubbles: true })
       );
       await nextTick();
-      expect(getCell(model, "A1")!.style).toEqual({ bold: false });
+      expect(getCell(model, "A1")!.styleId).toEqual({ bold: false });
       expect(model.getters.getCellStyle(model.getters.getActiveCell()!)).toEqual({ bold: false });
     });
 
     test("toggle Italic with Ctrl+I", async () => {
       setCellContent(model, "A1", "hello");
-      expect(getCell(model, "A1")!.style).toBeUndefined();
+      expect(getCell(model, "A1")!.styleId).toBeUndefined();
       document.activeElement!.dispatchEvent(
         new KeyboardEvent("keydown", { key: "I", ctrlKey: true, bubbles: true })
       );
       await nextTick();
-      expect(getCell(model, "A1")!.style).toEqual({ italic: true });
+      expect(getCell(model, "A1")!.styleId).toEqual({ italic: true });
       expect(model.getters.getCellStyle(model.getters.getActiveCell()!)).toEqual({ italic: true });
       document.activeElement!.dispatchEvent(
         new KeyboardEvent("keydown", { key: "I", ctrlKey: true, bubbles: true })
       );
       await nextTick();
-      expect(getCell(model, "A1")!.style).toEqual({ italic: false });
+      expect(getCell(model, "A1")!.styleId).toEqual({ italic: false });
       expect(model.getters.getCellStyle(model.getters.getActiveCell()!)).toEqual({ italic: false });
     });
 
@@ -371,7 +371,7 @@ describe("Grid component", () => {
       triggerMouseEvent("canvas", "mousedown", 300, 200);
       expect(getCell(model, "C8")).toBeUndefined();
       triggerMouseEvent("body", "mouseup", 300, 200);
-      expect(getCell(model, "C8")!.style).toEqual({ bold: true });
+      expect(getCell(model, "C8")!.styleId).toEqual({ bold: true });
     });
 
     test("can paste format with key", async () => {
@@ -388,7 +388,7 @@ describe("Grid component", () => {
       document.activeElement!.dispatchEvent(
         new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })
       );
-      expect(getCell(model, "C2")!.style).toEqual({ bold: true });
+      expect(getCell(model, "C2")!.styleId).toEqual({ bold: true });
     });
     test("Can scroll horizontally using shift key", async () => {
       const baseVertical = getVerticalScroll();

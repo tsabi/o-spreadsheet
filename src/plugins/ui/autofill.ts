@@ -137,10 +137,16 @@ export class AutofillPlugin extends UIPlugin {
           sheetId,
           col: cmd.col,
           row: cmd.row,
-          style: cmd.style || null,
           content: cmd.content || "",
           format: cmd.format || "",
         });
+        if (cmd.style) {
+          this.dispatch("SET_FORMATTING", {
+            sheetId,
+            target: [{ left: cmd.col, right: cmd.col, top: cmd.row, bottom: cmd.row }],
+            style: cmd.style || null,
+          });
+        }
         this.dispatch("SET_BORDER", {
           sheetId,
           col: cmd.col,

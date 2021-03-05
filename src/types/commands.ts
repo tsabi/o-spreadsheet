@@ -132,7 +132,6 @@ export interface UpdateCellCommand
     PositionDependentCommand {
   type: "UPDATE_CELL";
   content?: string;
-  style?: Style | null;
   format?: string;
 }
 

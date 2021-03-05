@@ -457,7 +457,7 @@ export class SortPlugin extends UIPlugin {
             const ranges = this.getters.createAdaptedRanges(cell.dependencies, 0, offsetY, sheetId);
             content = this.getters.buildFormulaContent(sheetId, cell.formula.text, ranges);
           }
-          newCellValues.style = cell.style;
+          newCellValues.style = cell.styleId;
           newCellValues.content = content;
           newCellValues.format = cell.format;
           newCellValues.value = cell.value;

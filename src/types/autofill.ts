@@ -9,6 +9,7 @@
  */
 
 import { Getters } from ".";
+import { Style } from "./index";
 import { Border, Cell, DIRECTION, UID, UpdateCellData } from "./misc";
 
 export interface IncrementModifier {
@@ -36,6 +37,7 @@ export interface Tooltip {
 
 export interface AutofillCellData extends UpdateCellData {
   border?: Border;
+  style?: Style;
 }
 
 export interface AutofillData {

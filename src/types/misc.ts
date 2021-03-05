@@ -32,7 +32,6 @@ export interface Style {
 export interface UpdateCellData {
   content?: string;
   formula?: NormalizedFormula;
-  style?: Style | null;
   format?: string;
 }
 
@@ -104,10 +103,10 @@ export enum CellType {
 
 export interface CellBase {
   id: UID;
-  style?: Style;
+  styleId: number;
+  value: unknown;
   format?: string;
   error?: string;
-  value: unknown;
 }
 
 export interface OtherCell extends CellBase {

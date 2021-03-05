@@ -11,7 +11,6 @@ import {
   GridRenderingContext,
   LAYERS,
   Sheet,
-  Style,
   UID,
   Zone,
 } from "../../types/index";
@@ -458,12 +457,11 @@ export class ClipboardPlugin extends UIPlugin {
       this.dispatch("SET_BORDER", { sheetId, col, row, border: originBorder || undefined });
     }
     if (origin) {
-      let style: Style | undefined | null = origin.style || null;
+      const style = this.getters.getCellStyle(origin);
       let format = origin.format;
       let content: string = this.getters.getCellValue(origin, originSheet, true) || "";
 
       if (onlyValue) {
-        style = targetCell ? targetCell.style : undefined;
         format = targetCell ? targetCell.format : undefined;
 
         if (origin.type === CellType.formula) {
@@ -494,18 +492,22 @@ export class ClipboardPlugin extends UIPlugin {
     } else if (targetCell) {
       if (onlyValue) {
         this.dispatch("UPDATE_CELL", {
-          sheetId: sheetId,
+          sheetId,
           col,
           row,
           content: "",
         });
       } else if (onlyFormat) {
         this.dispatch("UPDATE_CELL", {
-          sheetId: sheetId,
+          sheetId,
           col,
           row,
-          style: null,
           format: "",
+        });
+        this.dispatch("SET_FORMATTING", {
+          // set style to default
+          sheetId,
+          target: [{ left: col, right: col, top: row, bottom: row }],
         });
       } else {
         this.dispatch("CLEAR_CELL", {

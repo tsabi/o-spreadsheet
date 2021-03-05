@@ -140,7 +140,7 @@ describe("TopBar component", () => {
 
     expect(undoTool.classList.contains("o-disabled")).toBeFalsy();
     expect(redoTool.classList.contains("o-disabled")).toBeTruthy();
-    expect(getCell(model, "A1")!.style).toBeDefined();
+    expect(getCell(model, "A1")!.styleId).toBeDefined();
 
     undoTool.dispatchEvent(new Event("click"));
     await nextTick();

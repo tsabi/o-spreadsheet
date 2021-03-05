@@ -130,7 +130,7 @@ describe("merges", () => {
     selectCell(model, "C3");
     expect(getActiveXc(model)).toBe("C3");
     expect(getCellsXC(model)).toEqual(["B2"]);
-    expect(getCell(model, "B2")!.style).not.toBeDefined();
+    expect(getCell(model, "B2")!.styleId).not.toBeDefined();
     const sheet1 = model.getters.getVisibleSheets()[0];
 
     model.dispatch("SET_FORMATTING", {
@@ -140,7 +140,7 @@ describe("merges", () => {
     });
 
     expect(getCellsXC(model)).toEqual(["B2", "B3", "C2", "C3"]);
-    expect(getCell(model, "B2")!.style).toBeDefined();
+    expect(getCell(model, "B2")!.styleId).toBeDefined();
   });
 
   test("when moving in a merge, selected cell is topleft", () => {
@@ -545,11 +545,11 @@ describe("merges", () => {
     const sheetId = model.getters.getActiveSheetId();
     expect(model.getters.getMerge(sheetId, ...toCartesian("B4"))).toBeTruthy();
     expect(model.getters.getMerge(sheetId, ...toCartesian("C4"))).toBeTruthy();
-    expect(getCell(model, "B4")!.style).toEqual({ textColor: "#fe0000" });
+    expect(getCell(model, "B4")!.styleId).toEqual({ textColor: "#fe0000" });
     expect(getBorder(model, "B4")).toEqual({ top: ["thin", "#000"] });
     unMerge(model, "B4:C5");
-    expect(getCell(model, "B4")!.style).toEqual({ textColor: "#fe0000" });
-    expect(getCell(model, "C4")!.style).toEqual({ textColor: "#fe0000" });
+    expect(getCell(model, "B4")!.styleId).toEqual({ textColor: "#fe0000" });
+    expect(getCell(model, "C4")!.styleId).toEqual({ textColor: "#fe0000" });
     expect(getBorder(model, "B4")).toEqual({ top: ["thin", "#000"] });
     expect(getBorder(model, "C4")).toEqual({ top: ["thin", "#000"] });
     expect(getBorder(model, "C5")).toBeNull();

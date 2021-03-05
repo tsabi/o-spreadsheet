@@ -19,13 +19,13 @@ export const autofillModifiersRegistry = new Registry<AutofillModifierImplementa
 
 autofillModifiersRegistry
   .add("INCREMENT_MODIFIER", {
-    apply: (rule: IncrementModifier, data: AutofillData) => {
+    apply: (rule: IncrementModifier, data: AutofillData, getters: Getters) => {
       rule.current += rule.increment;
       const content = rule.current.toString();
       return {
         cellData: {
           border: data.border,
-          style: data.cell && data.cell.style,
+          style: data.cell && getters.getCellStyle(data.cell),
           format: data.cell && data.cell.format,
           content,
         },
@@ -39,7 +39,7 @@ autofillModifiersRegistry
       return {
         cellData: {
           border: data.border,
-          style: data.cell && data.cell.style,
+          style: data.cell && getters.getCellStyle(data.cell),
           format: data.cell && data.cell.format,
           content,
         },
@@ -79,7 +79,7 @@ autofillModifiersRegistry
       return {
         cellData: {
           border: data.border,
-          style: data.cell.style,
+          style: getters.getCellStyle(data.cell),
           format: data.cell.format,
           content,
         },

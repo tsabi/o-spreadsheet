@@ -1,5 +1,5 @@
 import { Model } from "../../src";
-import { DEFAULT_REVISION_ID, MESSAGE_VERSION } from "../../src/constants";
+import { DEFAULT_REVISION_ID, DEFAULT_STYLE, MESSAGE_VERSION } from "../../src/constants";
 import { toZone } from "../../src/helpers";
 import { CoreCommand } from "../../src/types";
 import { CollaborationMessage } from "../../src/types/collaborative/transport_service";
@@ -212,31 +212,45 @@ describe("Multi users synchronisation", () => {
       sheetId: alice.getters.getActiveSheetId(),
       col: 0,
       row: 0,
+    });
+    alice.dispatch("SET_FORMATTING", {
+      sheetId: alice.getters.getActiveSheetId(),
+      target: [{ left: 0, right: 0, top: 0, bottom: 0 }],
       style: { fillColor: "#fefefe" },
     });
     alice.dispatch("COPY", { target: [toZone("A1")] });
     alice.dispatch("PASTE", { target: [toZone("A2")] });
-    expect([alice, bob, charlie]).toHaveSynchronizedValue((user) => getCell(user, "A1")!.style, {
-      fillColor: "#fefefe",
-    });
-    expect([alice, bob, charlie]).toHaveSynchronizedValue((user) => getCell(user, "A2")!.style, {
-      fillColor: "#fefefe",
-    });
+    expect([alice, bob, charlie]).toHaveSynchronizedValue(
+      (user) => user.getters.getCellStyle(getCell(user, "A1")!),
+      {
+        fillColor: "#fefefe",
+      }
+    );
+    expect([alice, bob, charlie]).toHaveSynchronizedValue(
+      (user) => user.getters.getCellStyle(getCell(user, "A2")!),
+      {
+        fillColor: "#fefefe",
+      }
+    );
   });
 
   test("copy/paste on styled cell", () => {
     setCellContent(alice, "A1", "hello");
-    alice.dispatch("UPDATE_CELL", {
+    // alice.dispatch("UPDATE_CELL", {
+    //   sheetId: alice.getters.getActiveSheetId(),
+    //   col: 1,
+    //   row: 1,
+    // });
+    alice.dispatch("SET_FORMATTING", {
       sheetId: alice.getters.getActiveSheetId(),
-      col: 1,
-      row: 1,
+      target: [{ left: 1, right: 1, top: 1, bottom: 1 }],
       style: { fillColor: "#fefefe" },
     });
     alice.dispatch("COPY", { target: [toZone("A1")] });
     alice.dispatch("PASTE", { target: [toZone("B2")] });
     expect([alice, bob, charlie]).toHaveSynchronizedValue(
-      (user) => getCell(user, "B2")!.style,
-      undefined
+      (user) => user.getters.getCellStyle(getCell(user, "A1")!),
+      DEFAULT_STYLE
     );
   });
 

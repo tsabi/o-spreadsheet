@@ -14,7 +14,7 @@ describe("styles", () => {
     });
 
     expect(getCellContent(model, "B1")).toBe("");
-    expect(getCell(model, "B1")!.style).toBeDefined();
+    expect(getCell(model, "B1")!.styleId).toBeDefined();
     undo(model);
     expect(getCell(model, "B1")).toBeUndefined();
   });
@@ -29,10 +29,10 @@ describe("styles", () => {
       style: { fillColor: "red" },
     });
     expect(getCellContent(model, "B1")).toBe("some content");
-    expect(getCell(model, "B1")!.style).toBeDefined();
+    expect(getCell(model, "B1")!.styleId).toBeDefined();
     undo(model);
     expect(getCellContent(model, "B1")).toBe("some content");
-    expect(getCell(model, "B1")!.style).not.toBeDefined();
+    expect(getCell(model, "B1")!.styleId).not.toBeDefined();
   });
 
   test("can clear formatting (style)", () => {
@@ -45,13 +45,13 @@ describe("styles", () => {
       target: model.getters.getSelectedZones(),
       style: { fillColor: "red" },
     });
-    expect(getCell(model, "B1")!.style).toBeDefined();
+    expect(getCell(model, "B1")!.styleId).toBeDefined();
     model.dispatch("CLEAR_FORMATTING", {
       sheetId: model.getters.getActiveSheetId(),
       target: model.getters.getSelectedZones(),
     });
     expect(getCellContent(model, "B1")).toBe("b1");
-    expect(getCell(model, "B1")!.style).not.toBeDefined();
+    expect(getCell(model, "B1")!.styleId).not.toBeDefined();
   });
 
   test("clearing format on a cell with no content actually remove it", () => {
@@ -62,7 +62,7 @@ describe("styles", () => {
       target: model.getters.getSelectedZones(),
       style: { fillColor: "red" },
     });
-    expect(getCell(model, "B1")!.style).toBeDefined();
+    expect(getCell(model, "B1")!.styleId).toBeDefined();
     model.dispatch("CLEAR_FORMATTING", {
       sheetId: model.getters.getActiveSheetId(),
       target: model.getters.getSelectedZones(),
@@ -79,14 +79,14 @@ describe("styles", () => {
       target: model.getters.getSelectedZones(),
       style: { fillColor: "red" },
     });
-    expect(getCell(model, "B1")!.style).toBeDefined();
+    expect(getCell(model, "B1")!.styleId).toBeDefined();
     model.dispatch("CLEAR_FORMATTING", {
       sheetId: model.getters.getActiveSheetId(),
       target: model.getters.getSelectedZones(),
     });
-    expect(getCell(model, "B1")!.style).not.toBeDefined();
+    expect(getCell(model, "B1")!.styleId).not.toBeDefined();
     undo(model);
-    expect(getCell(model, "B1")!.style).toBeDefined();
+    expect(getCell(model, "B1")!.styleId).toBeDefined();
   });
 
   test("Can set a format in another than the active one", () => {
@@ -98,6 +98,6 @@ describe("styles", () => {
       style: { fillColor: "red" },
     });
     expect(getCell(model, "A1")).toBeUndefined();
-    expect(getCell(model, "A1", "42")!.style).toBeDefined();
+    expect(getCell(model, "A1", "42")!.styleId).toBeDefined();
   });
 });
