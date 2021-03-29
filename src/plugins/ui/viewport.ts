@@ -6,7 +6,7 @@ import {
 } from "../../constants";
 import { getNextVisibleCellCoords } from "../../helpers";
 import { Mode } from "../../model";
-import { Command, Sheet, UID, Viewport, ZoneDimension } from "../../types/index";
+import { Command, Sheet, UID, Viewport, Zone, ZoneDimension } from "../../types/index";
 import { UIPlugin } from "../ui_plugin";
 
 interface ViewportPluginState {
@@ -36,6 +36,7 @@ export class ViewportPlugin extends UIPlugin {
 
   readonly viewports: ViewportPluginState["viewports"] = {};
   readonly snappedViewports: ViewportPluginState["viewports"] = {};
+  private oldLastZone: Zone | undefined;
   private updateSnap: boolean = false;
   /**
    * The viewport dimensions (clientWidth and clientHeight) are usually set by one of the components
@@ -45,6 +46,14 @@ export class ViewportPlugin extends UIPlugin {
    */
   private clientWidth: number = 1000;
   private clientHeight: number = 1000;
+
+  beforeHandle(cmd: Command) {
+    switch (cmd.type) {
+      case "ALTER_SELECTION":
+        this.oldLastZone = this.getters.getSelectedZone();
+        break;
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // Command Handling
@@ -87,6 +96,9 @@ export class ViewportPlugin extends UIPlugin {
       case "SELECT_CELL":
       case "MOVE_POSITION":
         this.refreshViewport(this.getters.getActiveSheetId());
+        break;
+      case "ALTER_SELECTION":
+        this.moveViewportOnAlterSelection();
         break;
     }
   }
@@ -272,13 +284,14 @@ export class ViewportPlugin extends UIPlugin {
    * In order to keep the coherence of both viewports, it is also necessary to update the standard viewport
    * if the zones of both viewports don't match.
    */
-  private adjustViewportsPosition(sheetId: UID) {
+  private adjustViewportsPosition(sheetId: UID, position?: [number, number]) {
     const sheet = this.getters.getSheet(sheetId);
     const { cols, rows } = sheet;
     const adjustedViewport = this.getSnappedViewport(sheetId);
+    position = position || this.getters.getSheetPosition(sheetId);
     const [col, row] = this.getters.getMainCell(
       sheetId,
-      ...getNextVisibleCellCoords(sheet, ...this.getters.getSheetPosition(sheetId))
+      ...getNextVisibleCellCoords(sheet, position[0], position[1])
     );
     while (
       cols[col].end > adjustedViewport.offsetX + this.clientWidth - HEADER_WIDTH &&
@@ -325,6 +338,35 @@ export class ViewportPlugin extends UIPlugin {
     adjustedViewport.offsetY = rows[viewport.top].start;
     this.adjustViewportZone(sheetId, adjustedViewport);
     this.snappedViewports[sheetId] = adjustedViewport;
+  }
+
+  /**
+   * This function will compare the modifications of selection to determine
+   * a cell position that MUST be visible, once found, it will adjust the
+   * viewport to ensure that the cell is part of it.
+   */
+  private moveViewportOnAlterSelection() {
+    const sheetId = this.getters.getActiveSheetId();
+    const { left: oldLeft, right: oldRight, top: oldTop, bottom: oldBottom } = this.oldLastZone!;
+    const { left, right, top, bottom } = this.getters.getSelectedZone();
+    const snappedViewport = this.snappedViewports[sheetId];
+    let col: number, row: number;
+    if (left != oldLeft) {
+      col = left;
+    } else if (right != oldRight) {
+      col = right;
+    } else {
+      col = snappedViewport.left;
+    }
+    if (top != oldTop) {
+      row = top;
+    } else if (bottom != oldBottom) {
+      row = bottom;
+    } else {
+      row = snappedViewport.top;
+    }
+    this.adjustViewportsPosition(sheetId, [col, row]);
+    this.oldLastZone = undefined;
   }
 
   finalize() {
