@@ -43,3 +43,9 @@ export const enum LAYERS {
   Autofill,
   Headers, // Probably keep this at the end
 }
+
+export interface EgdeScrollInfo {
+  isEdgeScrolling: boolean;
+  index: number;
+  delay: number;
+}

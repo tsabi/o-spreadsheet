@@ -7,6 +7,7 @@ import {
   HEADER_WIDTH,
   SCROLLBAR_WIDTH,
 } from "../constants";
+import { findCellInNewZone, MAX_DELAY } from "../helpers/edge_scrolling";
 import { isInside } from "../helpers/index";
 import { Model } from "../model";
 import { cellMenuRegistry } from "../registries/menus/cell_menu_registry";
@@ -461,10 +462,18 @@ export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
   // Zone selection with mouse
   // ---------------------------------------------------------------------------
 
-  getCartesianCoordinates(ev: MouseEvent): [number, number] {
+  /**
+   * Get the coordinates in pixels, with 0,0 being the top left of the grid itself
+   */
+  getCoordinates(ev: MouseEvent): [number, number] {
     const rect = this.el!.getBoundingClientRect();
     const x = ev.pageX - rect.left;
     const y = ev.pageY - rect.top;
+    return [x, y];
+  }
+
+  getCartesianCoordinates(ev: MouseEvent): [number, number] {
+    const [x, y] = this.getCoordinates(ev);
     const { left, top } = this.getters.getActiveSnappedViewport();
     const colIndex = this.getters.getColIndex(x, left);
     const rowIndex = this.getters.getRowIndex(y, top);
@@ -492,18 +501,52 @@ export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
     }
     let prevCol = col;
     let prevRow = row;
+
+    let isEdgeScrolling: boolean = false;
+    let timeOutId: any = null;
+    let timeoutDelay: number = 0;
+
+    let currentEv: MouseEvent;
+
     const onMouseMove = (ev: MouseEvent) => {
-      const [col, row] = this.getCartesianCoordinates(ev);
-      if (col < 0 || row < 0) {
+      currentEv = ev;
+      if (timeOutId) {
         return;
       }
+
+      const [x, y] = this.getCoordinates(currentEv);
+
+      isEdgeScrolling = false;
+      timeoutDelay = 0;
+
+      const colEdgeScroll = this.getters.getEdgeScrollColIndex(x);
+      const rowEdgeScroll = this.getters.getEdgeScrollRowIndex(y);
+
+      let col = colEdgeScroll.index;
+      let row = rowEdgeScroll.index;
+
+      isEdgeScrolling = colEdgeScroll.isEdgeScrolling || rowEdgeScroll.isEdgeScrolling;
+
+      timeoutDelay = Math.min(
+        colEdgeScroll.isEdgeScrolling ? colEdgeScroll.delay : MAX_DELAY,
+        rowEdgeScroll.isEdgeScrolling ? rowEdgeScroll.delay : MAX_DELAY
+      );
+
       if (col !== prevCol || row !== prevRow) {
         prevCol = col;
         prevRow = row;
         this.dispatch("ALTER_SELECTION", { cell: [col, row] });
       }
+      if (isEdgeScrolling) {
+        this.dispatch("ADJUST_VIEWPORT_ON_CELL", { col, row });
+        timeOutId = setTimeout(() => {
+          timeOutId = null;
+          onMouseMove(currentEv);
+        }, Math.round(timeoutDelay));
+      }
     };
     const onMouseUp = (ev: MouseEvent) => {
+      clearTimeout(timeOutId);
       this.dispatch(ev.ctrlKey ? "PREPARE_SELECTION_EXPANSION" : "STOP_SELECTION");
       this.canvas.el!.removeEventListener("mousemove", onMouseMove);
       if (this.getters.isPaintingFormat()) {
@@ -544,7 +587,15 @@ export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
     };
     const delta = deltaMap[ev.key];
     if (ev.shiftKey) {
+      const oldZone = this.getters.getSelectedZone();
       this.dispatch("ALTER_SELECTION", { delta });
+      const newZone = this.getters.getSelectedZone();
+      const [col, row] = findCellInNewZone(
+        oldZone,
+        newZone,
+        this.getters.getActiveSnappedViewport()
+      );
+      this.dispatch("ADJUST_VIEWPORT_ON_CELL", { col, row });
     } else {
       this.dispatch("MOVE_POSITION", { deltaX: delta[0], deltaY: delta[1] });
     }

@@ -6,7 +6,7 @@ import {
 } from "../../constants";
 import { getNextVisibleCellCoords } from "../../helpers";
 import { Mode } from "../../model";
-import { Command, Sheet, UID, Viewport, Zone, ZoneDimension } from "../../types/index";
+import { Command, Sheet, UID, Viewport, ZoneDimension } from "../../types/index";
 import { UIPlugin } from "../ui_plugin";
 
 interface ViewportPluginState {
@@ -36,7 +36,6 @@ export class ViewportPlugin extends UIPlugin {
 
   readonly viewports: ViewportPluginState["viewports"] = {};
   readonly snappedViewports: ViewportPluginState["viewports"] = {};
-  private oldLastZone: Zone | undefined;
   private updateSnap: boolean = false;
   /**
    * The viewport dimensions (clientWidth and clientHeight) are usually set by one of the components
@@ -46,14 +45,6 @@ export class ViewportPlugin extends UIPlugin {
    */
   private clientWidth: number = 1000;
   private clientHeight: number = 1000;
-
-  beforeHandle(cmd: Command) {
-    switch (cmd.type) {
-      case "ALTER_SELECTION":
-        this.oldLastZone = this.getters.getSelectedZone();
-        break;
-    }
-  }
 
   // ---------------------------------------------------------------------------
   // Command Handling
@@ -73,6 +64,11 @@ export class ViewportPlugin extends UIPlugin {
       case "SET_VIEWPORT_OFFSET":
         this.setViewportOffset(cmd.offsetX, cmd.offsetY);
         break;
+      case "ADJUST_VIEWPORT_ON_CELL":
+        const sheetId = this.getters.getActiveSheetId();
+        this.adjustViewportsPosition(sheetId, [cmd.col, cmd.row]);
+        break;
+
       case "REMOVE_COLUMNS_ROWS":
       case "RESIZE_COLUMNS_ROWS":
       case "HIDE_COLUMNS_ROWS":
@@ -97,9 +93,13 @@ export class ViewportPlugin extends UIPlugin {
       case "MOVE_POSITION":
         this.refreshViewport(this.getters.getActiveSheetId());
         break;
-      case "ALTER_SELECTION":
-        this.moveViewportOnAlterSelection();
-        break;
+    }
+  }
+
+  finalize() {
+    if (this.updateSnap) {
+      this.snapViewportToCell(this.getters.getActiveSheetId());
+      this.updateSnap = false;
     }
   }
 
@@ -338,41 +338,5 @@ export class ViewportPlugin extends UIPlugin {
     adjustedViewport.offsetY = rows[viewport.top].start;
     this.adjustViewportZone(sheetId, adjustedViewport);
     this.snappedViewports[sheetId] = adjustedViewport;
-  }
-
-  /**
-   * This function will compare the modifications of selection to determine
-   * a cell position that MUST be visible, once found, it will adjust the
-   * viewport to ensure that the cell is part of it.
-   */
-  private moveViewportOnAlterSelection() {
-    const sheetId = this.getters.getActiveSheetId();
-    const { left: oldLeft, right: oldRight, top: oldTop, bottom: oldBottom } = this.oldLastZone!;
-    const { left, right, top, bottom } = this.getters.getSelectedZone();
-    const snappedViewport = this.snappedViewports[sheetId];
-    let col: number, row: number;
-    if (left != oldLeft) {
-      col = left;
-    } else if (right != oldRight) {
-      col = right;
-    } else {
-      col = snappedViewport.left;
-    }
-    if (top != oldTop) {
-      row = top;
-    } else if (bottom != oldBottom) {
-      row = bottom;
-    } else {
-      row = snappedViewport.top;
-    }
-    this.adjustViewportsPosition(sheetId, [col, row]);
-    this.oldLastZone = undefined;
-  }
-
-  finalize() {
-    if (this.updateSnap) {
-      this.snapViewportToCell(this.getters.getActiveSheetId());
-      this.updateSnap = false;
-    }
   }
 }

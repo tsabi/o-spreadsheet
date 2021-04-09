@@ -13,12 +13,14 @@ import {
   TEXT_HEADER_COLOR,
 } from "../../constants";
 import { fontSizeMap } from "../../fonts";
+import { scrollDelay } from "../../helpers/edge_scrolling";
 import { overlap } from "../../helpers/index";
 import { Mode } from "../../model";
 import {
   Box,
   Cell,
   CellType,
+  EgdeScrollInfo,
   GridRenderingContext,
   Header,
   LAYERS,
@@ -71,7 +73,13 @@ function searchIndex(headers: Header[], offset: number): number {
 
 export class RendererPlugin extends UIPlugin {
   static layers = [LAYERS.Background, LAYERS.Headers];
-  static getters = ["getColIndex", "getRowIndex", "getRect"];
+  static getters = [
+    "getColIndex",
+    "getRowIndex",
+    "getRect",
+    "getEdgeScrollColIndex",
+    "getEdgeScrollRowIndex",
+  ];
   static modes: Mode[] = ["normal", "readonly"];
 
   private boxes: Box[] = [];
@@ -113,6 +121,94 @@ export class RendererPlugin extends UIPlugin {
     const y = Math.max(rows[top].start - offsetY, HEADER_HEIGHT);
     const height = rows[bottom].end - offsetY - y;
     return [x, y, width, height];
+  }
+
+  /**
+   * This function will return an object consisting of:
+   *  a boolean stating that we are edgescrolling based on the horizontal position *x*
+   *  the next index we should be selecting, based on the previous value
+   *  the delay at which we should refresh the information about edgeScroll.
+   */
+  getEdgeScrollColIndex(x: number): EgdeScrollInfo {
+    let isEdgeScrolling = false;
+    let index: number;
+    let delay = 0;
+    const { left, right } = this.getters.getActiveSnappedViewport();
+    const { width } = this.getters.getViewportDimension();
+    const sheet = this.getters.getActiveSheet();
+
+    const lastFullCol =
+      sheet.cols[right].end > sheet.cols[left].start + width - HEADER_WIDTH ? right - 1 : right;
+
+    if (x < HEADER_WIDTH) {
+      if (left > 0) {
+        index = left - 1;
+        isEdgeScrolling = true;
+        delay = scrollDelay(HEADER_WIDTH - x);
+      } else {
+        index = left;
+      }
+    } else if (x > width) {
+      if (right < sheet.cols.length - 1) {
+        index = lastFullCol + 1;
+        isEdgeScrolling = true;
+        delay = scrollDelay(x - width);
+      } else {
+        index = lastFullCol;
+      }
+    } else {
+      index = this.getColIndex(x, left, sheet);
+
+      // our cursor might be in the empty zone at the far right of the sheet
+      index = index !== -1 ? index : right;
+    }
+
+    return {
+      isEdgeScrolling,
+      index,
+      delay,
+    };
+  }
+
+  getEdgeScrollRowIndex(y: number): EgdeScrollInfo {
+    let isEdgeScrolling = false;
+    let index: number;
+    let delay = 0;
+    const { top, bottom } = this.getters.getActiveSnappedViewport();
+    const { height } = this.getters.getViewportDimension();
+    const sheet = this.getters.getActiveSheet();
+
+    const lastFullRow =
+      sheet.rows[bottom].end > sheet.rows[top].start + height - HEADER_HEIGHT ? bottom - 1 : bottom;
+
+    if (y < HEADER_HEIGHT) {
+      if (top > 0) {
+        index = top - 1;
+        isEdgeScrolling = true;
+        delay = scrollDelay(HEADER_HEIGHT - y);
+      } else {
+        index = top;
+      }
+    } else if (y > height) {
+      if (bottom < sheet.rows.length - 1) {
+        index = lastFullRow + 1;
+        isEdgeScrolling = true;
+        delay = scrollDelay(y - height);
+      } else {
+        index = lastFullRow;
+      }
+    } else {
+      index = this.getRowIndex(y, top, sheet);
+
+      // our cursor might be in the empty zone at the bottom of the sheet
+      index = index !== -1 ? index : bottom;
+    }
+
+    return {
+      isEdgeScrolling,
+      index,
+      delay,
+    };
   }
 
   // ---------------------------------------------------------------------------

@@ -7,7 +7,7 @@ import {
   MIN_ROW_HEIGHT,
   UNHIDE_ICON_EDGE_LENGTH,
 } from "../constants";
-import { Col, Row, SpreadsheetEnv } from "../types/index";
+import { Col, EgdeScrollInfo, Row, SpreadsheetEnv } from "../types/index";
 import { ContextMenuType } from "./grid";
 import { startDnd } from "./helpers/drag_and_drop";
 import * as icons from "./icons";
@@ -47,6 +47,8 @@ abstract class AbstractResizer extends Component<any, SpreadsheetEnv> {
 
   abstract _getElementIndex(index: number): number;
 
+  abstract _getEdgeScroll(position: number): EgdeScrollInfo;
+
   abstract _getElement(index: number): Col | Row;
 
   abstract _getHeaderSize(): number;
@@ -58,6 +60,8 @@ abstract class AbstractResizer extends Component<any, SpreadsheetEnv> {
   abstract _selectElement(index: number, ctrlKey: boolean): void;
 
   abstract _increaseSelection(index: number): void;
+
+  abstract _adjustViewport(index: number): void;
 
   abstract _fitElementSize(index: number): void;
 
@@ -160,15 +164,31 @@ abstract class AbstractResizer extends Component<any, SpreadsheetEnv> {
     }
     const initialIndex = this._getClientPosition(ev);
     const initialOffset = this._getEvOffset(ev);
+    let timeOutId: any = null;
+    let currentEv: MouseEvent;
+
     const onMouseMoveSelect = (ev: MouseEvent) => {
-      const offset = this._getClientPosition(ev) - initialIndex + initialOffset;
-      const index = this._getElementIndex(offset);
+      currentEv = ev;
+      if (timeOutId) {
+        return;
+      }
+      const offset = this._getClientPosition(currentEv) - initialIndex + initialOffset;
+      const EdgeScrollInfo = this._getEdgeScroll(offset);
+      const index = EdgeScrollInfo.index;
       if (index !== this.lastElement && index !== -1) {
         this._increaseSelection(index);
         this.lastElement = index;
       }
+      if (EdgeScrollInfo.isEdgeScrolling) {
+        this._adjustViewport(index);
+        timeOutId = setTimeout(() => {
+          timeOutId = null;
+          onMouseMoveSelect(currentEv);
+        }, Math.round(EdgeScrollInfo.delay));
+      }
     };
     const onMouseUpSelect = () => {
+      clearTimeout(timeOutId);
       this.lastElement = null;
       this.dispatch(ev.ctrlKey ? "PREPARE_SELECTION_EXPANSION" : "STOP_SELECTION");
     };
@@ -282,6 +302,10 @@ export class ColResizer extends AbstractResizer {
     return this.getters.getColIndex(index, this.getters.getActiveSnappedViewport().left);
   }
 
+  _getEdgeScroll(position: number): EgdeScrollInfo {
+    return this.getters.getEdgeScrollColIndex(position);
+  }
+
   _getElement(index: number): Col {
     return this.getters.getCol(this.getters.getActiveSheetId(), index)!;
   }
@@ -316,6 +340,11 @@ export class ColResizer extends AbstractResizer {
 
   _increaseSelection(index: number): void {
     this.dispatch("SELECT_COLUMN", { index, updateRange: true });
+  }
+
+  _adjustViewport(index: number): void {
+    const { top } = this.getters.getActiveSnappedViewport();
+    this.dispatch("ADJUST_VIEWPORT_ON_CELL", { col: index, row: top });
   }
 
   _fitElementSize(index: number): void {
@@ -456,6 +485,10 @@ export class RowResizer extends AbstractResizer {
     return this.getters.getRowIndex(index, this.getters.getActiveSnappedViewport().top);
   }
 
+  _getEdgeScroll(position: number): EgdeScrollInfo {
+    return this.getters.getEdgeScrollRowIndex(position);
+  }
+
   _getElement(index: number): Row {
     return this.getters.getRow(this.getters.getActiveSheetId(), index)!;
   }
@@ -486,6 +519,11 @@ export class RowResizer extends AbstractResizer {
 
   _increaseSelection(index: number): void {
     this.dispatch("SELECT_ROW", { index, updateRange: true });
+  }
+
+  _adjustViewport(index: number): void {
+    const { left } = this.getters.getActiveSnappedViewport();
+    this.dispatch("ADJUST_VIEWPORT_ON_CELL", { col: left, row: index });
   }
 
   _fitElementSize(index: number): void {

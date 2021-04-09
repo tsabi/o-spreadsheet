@@ -819,6 +819,12 @@ export interface SetViewportOffsetCommand extends BaseCommand {
   offsetY: number;
 }
 
+export interface AdjustViewportOnCell extends BaseCommand {
+  type: "ADJUST_VIEWPORT_ON_CELL";
+  col: number;
+  row: number;
+}
+
 export type CoreCommand =
   // /** History */
   // | SelectiveUndoCommand
@@ -929,7 +935,8 @@ export type LocalCommand =
   | SortCommand
   | ResizeViewportCommand
   | RefreshChartCommand
-  | SetViewportOffsetCommand;
+  | SetViewportOffsetCommand
+  | AdjustViewportOnCell;
 
 export type Command = CoreCommand | LocalCommand;
 
