@@ -54,3 +54,5 @@ ___
 ### version
 
 • **version**: *number*
+
+Inherited from: void

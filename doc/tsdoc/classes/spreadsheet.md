@@ -45,6 +45,7 @@
 - [save](spreadsheet.md#save)
 - [toggleSidePanel](spreadsheet.md#togglesidepanel)
 - [willUnmount](spreadsheet.md#willunmount)
+- [willUpdateProps](spreadsheet.md#willupdateprops)
 
 ## Constructors
 
@@ -53,6 +54,8 @@
 \+ **new Spreadsheet**(): [*Spreadsheet*](spreadsheet.md)
 
 **Returns:** [*Spreadsheet*](spreadsheet.md)
+
+Overrides: void
 
 ## Properties
 
@@ -126,6 +129,8 @@ Name | Type |
 `SidePanel` | *typeof* SidePanel |
 `TopBar` | *typeof* TopBar |
 
+Overrides: void
+
 ___
 
 ### style
@@ -137,6 +142,8 @@ ___
 ### template
 
 ▪ `Static` **template**: *string*
+
+Overrides: void
 
 ## Accessors
 
@@ -177,6 +184,8 @@ ___
 
 **Returns:** *void*
 
+Overrides: void
+
 ___
 
 ### focusGrid
@@ -192,6 +201,8 @@ ___
 ▸ **mounted**(): *void*
 
 **Returns:** *void*
+
+Overrides: void
 
 ___
 
@@ -308,3 +319,21 @@ ___
 ▸ **willUnmount**(): *void*
 
 **Returns:** *void*
+
+Overrides: void
+
+___
+
+### willUpdateProps
+
+▸ **willUpdateProps**(`nextProps`: Props): *Promise*<void\>
+
+#### Parameters:
+
+Name | Type |
+:------ | :------ |
+`nextProps` | Props |
+
+**Returns:** *Promise*<void\>
+
+Overrides: void
