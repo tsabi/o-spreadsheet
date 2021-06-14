@@ -196,11 +196,13 @@ describe("figures", () => {
     const hasTitle = (dataSeries.querySelector("input[type=checkbox]") as HTMLInputElement).checked;
     const labels = fixture.querySelector(".o-data-labels");
     expect((chartType as HTMLSelectElement).value).toBe("bar");
-    expect((dataSeries.querySelector(" .o-selection input") as HTMLInputElement).value).toBe(
-      "B1:B4"
-    );
+    expect(
+      (dataSeries.querySelector(" .o-selection-input-container input") as HTMLInputElement).value
+    ).toBe("B1:B4");
     expect(hasTitle).toBe(true);
-    expect((labels!.querySelector(".o-selection input") as HTMLInputElement).value).toBe("A2:A4");
+    expect(
+      (labels!.querySelector(".o-selection-input-container input") as HTMLInputElement).value
+    ).toBe("A2:A4");
   });
 
   test("can edit charts", async () => {
@@ -261,7 +263,7 @@ describe("figures", () => {
     await nextTick();
     await simulateClick(".o-data-labels input");
     setInputValueAndTrigger(".o-data-labels input", "", "change");
-    await simulateClick(".o-data-labels .o-selection-ok");
+    await simulateClick(".o-data-labels .o-selection-input-ok");
     expect(parent.model.getters.getChartDefinition(chartId)?.labelRange).toBeUndefined();
   });
 
@@ -337,11 +339,13 @@ describe("figures", () => {
     const hasTitle = (dataSeries.querySelector("input[type=checkbox]") as HTMLInputElement).checked;
     const labels = fixture.querySelector(".o-data-labels");
     expect((chartType as HTMLSelectElement).value).toBe("line");
-    expect((dataSeries.querySelector(" .o-selection input") as HTMLInputElement).value).toBe(
-      "C1:C4"
-    );
+    expect(
+      (dataSeries.querySelector(" .o-selection-input-container input") as HTMLInputElement).value
+    ).toBe("C1:C4");
     expect(hasTitle).toBe(true);
-    expect((labels!.querySelector(".o-selection input") as HTMLInputElement).value).toBe("A2:A4");
+    expect(
+      (labels!.querySelector(".o-selection-input-container input") as HTMLInputElement).value
+    ).toBe("A2:A4");
   });
 });
 describe("charts with multiple sheets", () => {

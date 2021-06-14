@@ -74,7 +74,7 @@ const TEMPLATE = xml/* xml */ `
         <div class="o-cf-ruleEditor">
             <div class="o-section o-cf-range">
               <div class="o-section-title">Apply to range</div>
-              <div class="o-selection-cf">
+              <div class="o-selection-input-cf">
                 <SelectionInput ranges="state.currentCF.ranges" class="o-range" t-on-selection-changed="onRangesChanged"/>
               </div>
               <div class="o-section-title" t-esc="env._t('${conditionalFormattingTerms.CF_TITLE}')"></div>
@@ -211,7 +211,7 @@ const CSS = css/* scss */ `
     .o-cf-ruleEditor {
       font-size: 12px;
       line-height: 1.5;
-      .o-selection-cf{
+      .o-selection-input-cf{
         margin-bottom: 3%;
       }
       .o-dropdown {

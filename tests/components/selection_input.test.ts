@@ -125,13 +125,13 @@ describe("Selection Input", () => {
 
   test("remove button is not displayed with a single input", async () => {
     await createSelectionInput();
-    expect(fixture.querySelectorAll(".o-remove-selection").length).toBeFalsy();
+    expect(fixture.querySelectorAll(".o-remove-selection-input").length).toBeFalsy();
   });
 
   test("remove button is displayed with more than one input", async () => {
     await createSelectionInput();
-    await simulateClick(".o-add-selection");
-    expect(fixture.querySelectorAll(".o-remove-selection").length).toBe(2);
+    await simulateClick(".o-add-selection-input");
+    expect(fixture.querySelectorAll(".o-remove-selection-input").length).toBe(2);
   });
 
   test("input is filled when new highlight is added", async () => {
@@ -144,7 +144,7 @@ describe("Selection Input", () => {
     await nextTick();
     expect(fixture.querySelector("input")!.value).toBe("B4");
     expect(fixture.querySelector("input")!.getAttribute("style")).toBe("color: #454545;");
-    simulateClick(".o-add-selection");
+    simulateClick(".o-add-selection-input");
     model.dispatch("ADD_HIGHLIGHTS", {
       ranges: {
         B5: "#787878",
@@ -166,24 +166,24 @@ describe("Selection Input", () => {
     await nextTick();
     expect(fixture.querySelectorAll("input")).toHaveLength(1);
     expect(fixture.querySelector("input")!.value).toBe("A1");
-    expect(fixture.querySelector(".o-add-selection")).toBeNull();
+    expect(fixture.querySelector(".o-add-selection-input")).toBeNull();
   });
 
   test("new range is added when button clicked", async () => {
     await createSelectionInput();
     expect(fixture.querySelectorAll("input").length).toBe(1);
-    await simulateClick(".o-add-selection");
+    await simulateClick(".o-add-selection-input");
     expect(fixture.querySelectorAll("input").length).toBe(2);
   });
 
   test("cannot add more ranges than the maximum", async () => {
     await createSelectionInput({ maximumRanges: 2 });
     expect(fixture.querySelectorAll("input").length).toBe(1);
-    await simulateClick(".o-add-selection");
+    await simulateClick(".o-add-selection-input");
     expect(fixture.querySelectorAll("input").length).toBe(2);
-    expect(fixture.querySelector(".o-add-selection")).toBeNull();
-    await simulateClick(".o-remove-selection");
-    expect(fixture.querySelector(".o-add-selection")).toBeDefined();
+    expect(fixture.querySelector(".o-add-selection-input")).toBeNull();
+    await simulateClick(".o-remove-selection-input");
+    expect(fixture.querySelector(".o-add-selection-input")).toBeDefined();
   });
 
   test("can set initial ranges", async () => {
@@ -195,7 +195,7 @@ describe("Selection Input", () => {
 
   test("can focus a range", async () => {
     await createSelectionInput();
-    await simulateClick(".o-add-selection"); // last input is now focused
+    await simulateClick(".o-add-selection-input"); // last input is now focused
     expect([...fixture.querySelectorAll("input")].map((i) => i.className)).toEqual([
       "",
       "o-focused",
@@ -217,7 +217,7 @@ describe("Selection Input", () => {
   test("can unfocus all inputs with the OK button", async () => {
     await createSelectionInput();
     expect(fixture.querySelector(".o-focused")).toBeTruthy();
-    await simulateClick(".o-selection-ok");
+    await simulateClick(".o-selection-input-ok");
   });
 
   test("changed event is triggered when input changed", async () => {
@@ -272,7 +272,7 @@ describe("Selection Input", () => {
     });
     await nextTick();
     expect(fixture.querySelector("input")!.value).toBe("Sheet2!B4");
-    await simulateClick(".o-selection-ok");
+    await simulateClick(".o-selection-input-ok");
     expect(model.getters.getActiveSheetId()).toBe(sheet1Id);
   });
 
@@ -288,7 +288,7 @@ describe("Selection Input", () => {
       },
     });
     await nextTick();
-    await simulateClick(".o-selection-ok");
+    await simulateClick(".o-selection-input-ok");
     expect(model.getters.getActiveSheetId()).toBe(sheet1Id);
     undo(model);
     expect(model.getters.getActiveSheetId()).toBe(sheet1Id);

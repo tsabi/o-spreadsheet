@@ -8,7 +8,7 @@ const { Component } = owl;
 const { xml, css } = owl.tags;
 
 const TEMPLATE = xml/* xml */ `
-  <div class="o-selection">
+  <div class="o-selection-input-container">
     <div t-foreach="ranges" t-as="range" t-key="range.id" class="o-selection-input">
       <input
         type="text"
@@ -20,7 +20,7 @@ const TEMPLATE = xml/* xml */ `
         t-att-class="range.isFocused ? 'o-focused' : ''"
       />
       <button
-        class="o-btn o-remove-selection"
+        class="o-btn o-remove-selection-input"
         t-if="ranges.length > 1"
         t-on-click="removeInput(range.id)">✖</button>
     </div>
@@ -30,11 +30,11 @@ const TEMPLATE = xml/* xml */ `
 
     <div class="o-selection-input">
       <button
-        class="o-btn-action o-add-selection"
+        class="o-btn-action o-add-selection-input"
         t-if="canAddRange"
         t-on-click="addEmptyInput">Add range</button>
       <button
-          class="o-btn-action o-selection-ok"
+          class="o-btn-action o-selection-input-ok"
           t-if="hasFocus"
           t-on-click="disable">Confirm</button>
     </div>
@@ -42,7 +42,7 @@ const TEMPLATE = xml/* xml */ `
   </div>`;
 
 const CSS = css/* scss */ `
-  .o-selection {
+  .o-selection-input-container {
     .o-selection-input {
       display: flex;
       flex-direction: row;
