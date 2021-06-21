@@ -385,6 +385,7 @@ describe("Grid component", () => {
       model.dispatch("SET_SELECTION", {
         anchor: [0, 0],
         zones: [toZone("A1:B2"), toZone("C4:C6")],
+        currentZone: toZone("C4:C6"),
       });
       document.activeElement!.dispatchEvent(
         new KeyboardEvent("keydown", { key: "=", altKey: true, bubbles: true })
@@ -426,6 +427,7 @@ describe("Grid component", () => {
       model.dispatch("SET_SELECTION", {
         anchor: [0, 1],
         zones: [toZone("A2:B2")],
+        currentZone: toZone("A2:B2"),
       });
       document.activeElement!.dispatchEvent(
         new KeyboardEvent("keydown", { key: "=", altKey: true, bubbles: true })
@@ -441,6 +443,7 @@ describe("Grid component", () => {
       model.dispatch("SET_SELECTION", {
         anchor: [0, 0],
         zones: [toZone("A1:A2")],
+        currentZone: toZone("A1:A2"),
       });
       document.activeElement!.dispatchEvent(
         new KeyboardEvent("keydown", { key: "=", altKey: true, bubbles: true })

@@ -464,6 +464,7 @@ export interface SetSelectionCommand extends BaseCommand {
   type: "SET_SELECTION";
   anchor: [number, number];
   zones: Zone[];
+  currentZone: Zone;
   strict?: boolean;
 }
 
