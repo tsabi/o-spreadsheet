@@ -154,10 +154,10 @@ export class SelectionInputPlugin extends UIPlugin {
   // ---------------------------------------------------------------------------
 
   private initInput(id: UID, initialRanges: string[], maximumRanges?: number) {
-    this.inputs[id] = initialRanges.map((r) =>
+    this.inputs[id] = initialRanges.map((r,i) =>
       Object.freeze({
         xc: r,
-        id: uuidv4(),
+        id: i.toString(),
       })
     ) as RangeInputValue[];
     this.activeSheets[id] = this.getters.getActiveSheetId();
@@ -289,12 +289,13 @@ export class SelectionInputPlugin extends UIPlugin {
       ranges: highlightRanges,
     });
     const highlightNumber = Object.keys(highlightRanges).length;
-    const setRange = highlightNumber ? this.insertNewRange.bind(this) : this.setRange.bind(this);
+    const setRange:(id:string, index:number, values:RangeInputValue[]) => void = highlightNumber ? this.insertNewRange.bind(this) : this.setRange.bind(this);
+    // type ?
     setRange(
       id,
       index + highlightNumber,
-      valuesNotHighlighted.map((value) => ({
-        id: uuidv4(),
+      valuesNotHighlighted.map((value,i) => ({
+        id: i.toString(),
         xc: value,
       }))
     );
@@ -325,7 +326,7 @@ export class SelectionInputPlugin extends UIPlugin {
   private highlightsToInput(highlights: Highlight[], activeSheetId: UID): RangeInputValue[] {
     const toXC = this.getters.zoneToXC;
     const sheetId = this.getters.getActiveSheetId();
-    return highlights.map((h) =>
+    return highlights.map((h,i) =>
       Object.freeze({
         xc:
           h.sheet !== activeSheetId
@@ -334,7 +335,7 @@ export class SelectionInputPlugin extends UIPlugin {
                 h.zone
               )}`
             : toXC(sheetId, h.zone),
-        id: uuidv4(),
+        id: h.toString(),
         color: h.color,
       })
     );
