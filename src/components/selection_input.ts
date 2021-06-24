@@ -105,9 +105,9 @@ export class SelectionInput extends Component<Props, SpreadsheetEnv> {
     const ranges = existingSelectionRange.length
       ? existingSelectionRange
       : this.props.ranges
-      ? this.props.ranges.map((xc) => ({
+      ? this.props.ranges.map((xc,i) => ({
           xc,
-          id: uuidv4(),
+          id: i.toString(),
           isFocused: false,
         }))
       : [];
