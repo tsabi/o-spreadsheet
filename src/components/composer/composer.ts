@@ -245,7 +245,7 @@ export class Composer extends Component<Props, SpreadsheetEnv> {
   patched() {
     if (!this.isKeyStillDown) {
       //@ts-ignore
-      console.trace(this.contentHelper.instance, "--------------------> patchy patchy <--------------------");
+      // console.trace(this.contentHelper.instance, "--------------------> patchy patchy <--------------------");
       this.processContent();
     }
   }
