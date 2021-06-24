@@ -1,5 +1,5 @@
 import { rangeReference } from "../../formulas/index";
-import { getComposerSheetName, getNextColor, uuidv4 } from "../../helpers/index";
+import { getComposerSheetName, getNextColor } from "../../helpers/index";
 import { Mode } from "../../model";
 import { Command, CommandResult, Highlight, LAYERS, UID } from "../../types/index";
 import { UIPlugin } from "../ui_plugin";
@@ -78,7 +78,7 @@ export class SelectionInputPlugin extends UIPlugin {
         break;
       }
       case "ADD_EMPTY_RANGE":
-        this.inputs[cmd.id] = [...this.inputs[cmd.id], Object.freeze({ xc: "", id: uuidv4() })];
+        this.inputs[cmd.id] = [...this.inputs[cmd.id], Object.freeze({ xc: "", id: (this.inputs[cmd.id].length + 1).toString()})];
         this.focusLast(cmd.id);
         break;
       case "REMOVE_RANGE":
