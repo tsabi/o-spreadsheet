@@ -427,6 +427,7 @@ export class ConditionalFormattingPanel extends Component<Props, SpreadsheetEnv>
   }
 
   saveConditionalFormat() {
+    console.log("insied_conditional_format");
     if (this.state.currentCF) {
       const invalidRanges = this.state.currentCF.ranges.some((xc) => !xc.match(rangeReference));
       if (invalidRanges) {
