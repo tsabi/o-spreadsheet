@@ -10,13 +10,11 @@ import {
   createEqualCF,
   GridParent,
   makeTestFixture,
-  mockUuidV4To,
   nextTick,
 } from "../test_helpers/helpers";
 jest.mock("../../src/helpers/uuid", () => require("../__mocks__/uuid"));
 
 let model: Model;
-
 
 describe("UI of conditional formats", () => {
   let fixture: HTMLElement;
@@ -256,7 +254,7 @@ describe("UI of conditional formats", () => {
     });
 
     test("can create a new CellIsRule", async () => {
-      mockUuidV4To(model, "42");
+      // mockUuidV4To(model, "42");
 
       triggerMouseEvent(selectors.buttonAdd, "click");
       await nextTick();
@@ -277,7 +275,7 @@ describe("UI of conditional formats", () => {
       await nextTick();
       expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
         cf: {
-          id: "44",
+          id: "4",
           rule: {
             operator: "BeginsWith",
             style: { bold: true, fillColor: "#b6d7a8", italic: true, strikethrough: true },
@@ -291,7 +289,7 @@ describe("UI of conditional formats", () => {
     });
 
     test("cannot create a new CF with invalid range", async () => {
-      mockUuidV4To(model, "42");
+      // mockUuidV4To(model, "42");
 
       triggerMouseEvent(selectors.buttonAdd, "click");
       await nextTick();
@@ -329,7 +327,7 @@ describe("UI of conditional formats", () => {
     });
   });
   test("can create a new ColorScaleRule with cell values", async () => {
-    mockUuidV4To(model, "43");
+    // mockUuidV4To(model, "43");
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
     triggerMouseEvent(document.querySelectorAll(selectors.cfTabSelector)[1], "click");
@@ -351,7 +349,7 @@ describe("UI of conditional formats", () => {
 
     expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
       cf: {
-        id: "45",
+        id: "4",
         rule: {
           maximum: {
             color: 0xffff00,
@@ -370,7 +368,7 @@ describe("UI of conditional formats", () => {
   });
 
   test("can create a new ColorScaleRule with fixed values", async () => {
-    mockUuidV4To(model, "44");
+    // mockUuidV4To(model, "44");
 
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
@@ -401,7 +399,7 @@ describe("UI of conditional formats", () => {
 
     expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
       cf: {
-        id: "46",
+        id: "4",
         rule: {
           maximum: {
             color: 0xffff00,
@@ -422,7 +420,7 @@ describe("UI of conditional formats", () => {
   });
 
   test("can create a new ColorScaleRule with percent values", async () => {
-    mockUuidV4To(model, "44");
+    // mockUuidV4To(model, "4");
 
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
@@ -453,7 +451,7 @@ describe("UI of conditional formats", () => {
 
     expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
       cf: {
-        id: "46",
+        id: "4",
         rule: {
           maximum: {
             color: 0xffff00,
@@ -474,7 +472,7 @@ describe("UI of conditional formats", () => {
   });
 
   test("can create a new ColorScaleRule with percentile values", async () => {
-    mockUuidV4To(model, "44");
+    // mockUuidV4To(model, "44");
 
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
@@ -505,7 +503,7 @@ describe("UI of conditional formats", () => {
 
     expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
       cf: {
-        id: "46",
+        id: "4",
         rule: {
           maximum: {
             color: 0xffff00,
@@ -526,7 +524,7 @@ describe("UI of conditional formats", () => {
   });
 
   test("can create a new ColorScaleRule with a midpoint", async () => {
-    mockUuidV4To(model, "44");
+    // mockUuidV4To(model, "44");
 
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
@@ -565,7 +563,7 @@ describe("UI of conditional formats", () => {
 
     expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
       cf: {
-        id: "46",
+        id: "4",
         rule: {
           maximum: {
             color: 0xffff00,
@@ -627,7 +625,7 @@ describe("UI of conditional formats", () => {
   test("switching sheet changes the content of CF and cancels the edition", async () => {});
 
   test("will not dispatch if minvalue > maxvalue", async () => {
-    mockUuidV4To(model, "44");
+    // mockUuidV4To(model, "44");
 
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
@@ -657,7 +655,7 @@ describe("UI of conditional formats", () => {
   });
 
   test("will show error if minvalue > midvalue", async () => {
-    mockUuidV4To(model, "44");
+    // mockUuidV4To(model, "44");
 
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
@@ -693,7 +691,7 @@ describe("UI of conditional formats", () => {
   });
 
   test("will show error if midvalue > maxvalue", async () => {
-    mockUuidV4To(model, "44");
+    // mockUuidV4To(model, "44");
 
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
@@ -726,7 +724,7 @@ describe("UI of conditional formats", () => {
   });
 
   test("will show error if async formula used", async () => {
-    mockUuidV4To(model, "44");
+    // mockUuidV4To(model, "44");
 
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
@@ -761,7 +759,7 @@ describe("UI of conditional formats", () => {
   test.each(["", "aaaa", "=SUM(1, 2)"])(
     "will display error if wrong minValue",
     async (invalidValue) => {
-      mockUuidV4To(model, "44");
+      // mockUuidV4To(model, "44");
 
       triggerMouseEvent(selectors.buttonAdd, "click");
       await nextTick();
@@ -794,7 +792,7 @@ describe("UI of conditional formats", () => {
   test.each(["", "aaaa", "=SUM(1, 2)"])(
     "will display error if wrong midValue",
     async (invalidValue) => {
-      mockUuidV4To(model, "44");
+      // mockUuidV4To(model, "44");
 
       triggerMouseEvent(selectors.buttonAdd, "click");
       await nextTick();
@@ -828,7 +826,7 @@ describe("UI of conditional formats", () => {
   test.each(["", "aaaa", "=SUM(1, 2)"])(
     "will display error if wrong maxValue",
     async (invalidValue) => {
-      mockUuidV4To(model, "44");
+      // mockUuidV4To(model, "44");
 
       triggerMouseEvent(selectors.buttonAdd, "click");
       await nextTick();
@@ -859,7 +857,7 @@ describe("UI of conditional formats", () => {
   );
 
   test("will display error if there is an invalid formula for the min", async () => {
-    mockUuidV4To(model, "44");
+    // mockUuidV4To(model, "44");
 
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
@@ -889,7 +887,7 @@ describe("UI of conditional formats", () => {
   });
 
   test("will display error if there is an invalid formula for the mid", async () => {
-    mockUuidV4To(model, "44");
+    // mockUuidV4To(model, "44");
 
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
@@ -920,7 +918,7 @@ describe("UI of conditional formats", () => {
   });
 
   test("will display error if there is an invalid formula for the max", async () => {
-    mockUuidV4To(model, "44");
+    // mockUuidV4To(model, "44");
 
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
@@ -1011,7 +1009,7 @@ describe("UI of conditional formats", () => {
     });
 
     test("can create a new IconsetRule", async () => {
-      mockUuidV4To(model, "44");
+      // mockUuidV4To(model, "44");
 
       triggerMouseEvent(selectors.buttonAdd, "click");
       await nextTick();
@@ -1029,7 +1027,7 @@ describe("UI of conditional formats", () => {
 
       expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
         cf: {
-          id: "46",
+          id: "4",
           rule: {
             type: "IconSetRule",
             icons: {
@@ -1055,7 +1053,7 @@ describe("UI of conditional formats", () => {
     });
 
     test("can change inputs", async () => {
-      mockUuidV4To(model, "44");
+      // mockUuidV4To(model, "44");
       triggerMouseEvent(selectors.buttonAdd, "click");
       await nextTick();
 
@@ -1090,7 +1088,7 @@ describe("UI of conditional formats", () => {
 
       expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
         cf: {
-          id: "46",
+          id: "4",
           rule: {
             type: "IconSetRule",
             icons: {
@@ -1117,7 +1115,7 @@ describe("UI of conditional formats", () => {
   });
 
   test("can change one icon", async () => {
-    mockUuidV4To(model, "44");
+    // mockUuidV4To(model, "44");
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
 
@@ -1140,7 +1138,7 @@ describe("UI of conditional formats", () => {
 
     expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
       cf: {
-        id: "46",
+        id: "4",
         rule: {
           type: "IconSetRule",
           icons: {
@@ -1186,7 +1184,7 @@ describe("UI of conditional formats", () => {
     "Show right error message (Command result: %s , Message: %s)",
     (error: CommandResult, errorMessage: string) => {
       test("Error message shown on wrong input", async () => {
-        mockUuidV4To(model, "44");
+        // mockUuidV4To(model, "44");
         triggerMouseEvent(selectors.buttonAdd, "click");
         await nextTick();
 
