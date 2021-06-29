@@ -255,7 +255,8 @@ describe("UI of conditional formats", () => {
 
     test("can create a new CellIsRule", async () => {
       // mockUuidV4To(model, "42");
-
+      //@ts-ignore
+      console.log("can create a new CellIsRule", model.uuidGenerator.instance);
       triggerMouseEvent(selectors.buttonAdd, "click");
       await nextTick();
 
@@ -328,6 +329,8 @@ describe("UI of conditional formats", () => {
   });
   test("can create a new ColorScaleRule with cell values", async () => {
     // mockUuidV4To(model, "43");
+    //@ts-ignore
+    console.log("can create a new ColorScaleRule with cell values", model.uuidGenerator.instance);
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
     triggerMouseEvent(document.querySelectorAll(selectors.cfTabSelector)[1], "click");
@@ -369,7 +372,8 @@ describe("UI of conditional formats", () => {
 
   test("can create a new ColorScaleRule with fixed values", async () => {
     // mockUuidV4To(model, "44");
-
+    //@ts-ignore
+    console.log("can create a new ColorScaleRule with fixed values", model.uuidGenerator.instance);
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
 
@@ -421,7 +425,11 @@ describe("UI of conditional formats", () => {
 
   test("can create a new ColorScaleRule with percent values", async () => {
     // mockUuidV4To(model, "4");
-
+    console.log(
+      "can create a new ColorScaleRule with percent values",
+      //@ts-ignore
+      model.uuidGenerator.instance
+    );
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
 
@@ -474,6 +482,11 @@ describe("UI of conditional formats", () => {
   test("can create a new ColorScaleRule with percentile values", async () => {
     // mockUuidV4To(model, "44");
 
+    console.log(
+      "can create a new ColorScaleRule with percentile values",
+      //@ts-ignore
+      model.uuidGenerator.instance
+    );
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
 
@@ -525,7 +538,8 @@ describe("UI of conditional formats", () => {
 
   test("can create a new ColorScaleRule with a midpoint", async () => {
     // mockUuidV4To(model, "44");
-
+    //@ts-ignore
+    console.log("can create a new ColorScaleRule with a midpoint", model.uuidGenerator.instance);
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
 
@@ -1009,6 +1023,8 @@ describe("UI of conditional formats", () => {
     });
 
     test("can create a new IconsetRule", async () => {
+      //@ts-ignore
+      console.log("can create a new IconsetRule", model.uuidGenerator.instance);
       // mockUuidV4To(model, "44");
 
       triggerMouseEvent(selectors.buttonAdd, "click");
@@ -1054,6 +1070,8 @@ describe("UI of conditional formats", () => {
 
     test("can change inputs", async () => {
       // mockUuidV4To(model, "44");
+      //@ts-ignore
+      console.log("can change inputs", model.uuidGenerator.instance);
       triggerMouseEvent(selectors.buttonAdd, "click");
       await nextTick();
 
@@ -1116,6 +1134,8 @@ describe("UI of conditional formats", () => {
 
   test("can change one icon", async () => {
     // mockUuidV4To(model, "44");
+    //@ts-ignore
+    console.log("can change one icon", model.uuidGenerator.instance);
     triggerMouseEvent(selectors.buttonAdd, "click");
     await nextTick();
 
