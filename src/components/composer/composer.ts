@@ -182,7 +182,7 @@ export class Composer extends Component<Props, SpreadsheetEnv> {
     functionDescription: {} as FunctionDescription,
     argToFocus: 0,
   });
-  private isKeyStillDown: boolean= false;
+  private isKeyStillDown: boolean = false;
 
   get assistantStyle(): string {
     if (this.props.delimitation && this.props.rect) {
@@ -321,15 +321,14 @@ export class Composer extends Component<Props, SpreadsheetEnv> {
     let handler = this.keyMapping[ev.key];
     if (handler) {
       handler.call(this, ev);
-      const {start, end} = this.contentHelper.getCurrentSelection();
-      if(!this.getters.isSelectingForComposer()){
-        this.dispatch("CHANGE_COMPOSER_CURSOR_SELECTION", {start, end});
-        this.isKeyStillDown = true;
-      }
-      return;
+    } else {
+      ev.stopPropagation();
     }
-
-    ev.stopPropagation();
+    const { start, end } = this.contentHelper.getCurrentSelection();
+    if (!this.getters.isSelectingForComposer()) {
+      this.dispatch("CHANGE_COMPOSER_CURSOR_SELECTION", { start, end });
+      this.isKeyStillDown = true;
+    }
   }
 
   /*
