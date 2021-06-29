@@ -7,14 +7,17 @@ export class UuidGenerator {
   private instance: number;
   constructor() {
     this.instance = UuidGenerator.genId++;
-    console.log(this.instance, "call generator constructor");
+    const worker_id = process.env.JEST_WORKER_ID;
+    console.log(this.instance, "call generator constructor  worker ", worker_id);
   }
   private nextId = 1;
 
   setIsFastStrategy(isFast: boolean) {}
 
   uuidv4(arg=undefined): string {
-    console.trace("Calling uuidv4 instance", this.instance);
+    const worker_id = process.env.JEST_WORKER_ID;
+    console.trace("Calling uuidv4 instance", this.instance, " worker ", worker_id);
+
     return String(this.nextId++);
   }
 
