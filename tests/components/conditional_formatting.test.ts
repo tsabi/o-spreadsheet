@@ -17,9 +17,6 @@ jest.mock("../../src/helpers/uuid", () => require("../__mocks__/uuid"));
 
 let model: Model;
 
-beforeEach(() => {
-  model = new Model();
-});
 
 describe("UI of conditional formats", () => {
   let fixture: HTMLElement;
@@ -27,6 +24,7 @@ describe("UI of conditional formats", () => {
 
   beforeEach(async () => {
     fixture = makeTestFixture();
+    model = new Model();
     parent = new GridParent(model);
     await parent.mount(fixture);
 
