@@ -14,7 +14,7 @@ export class UuidGenerator {
   setIsFastStrategy(isFast: boolean) {}
 
   uuidv4(arg=undefined): string {
-    console.log(this.instance, arg|| "");
+    console.trace("Calling uuidv4 instance", this.instance);
     return String(this.nextId++);
   }
 
