@@ -1,4 +1,5 @@
 import * as owl from "@odoo/owl";
+import { UuidGenerator, uuidv4 } from "../helpers";
 import { RangeInputValue } from "../plugins/ui/selection_inputs";
 import { SpreadsheetEnv } from "../types";
 
@@ -93,7 +94,7 @@ interface SelectionRange extends RangeInputValue {
 export class SelectionInput extends Component<Props, SpreadsheetEnv> {
   static template = TEMPLATE;
   static style = CSS;
-  private id = this.env.uuidGenerator.uuidv4();
+  private id = uuidv4();
   private previousRanges: string[] = this.props.ranges || [];
   private getters = this.env.getters;
   private dispatch = this.env.dispatch;
