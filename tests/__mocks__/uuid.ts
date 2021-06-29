@@ -13,8 +13,8 @@ export class UuidGenerator {
 
   setIsFastStrategy(isFast: boolean) {}
 
-  uuidv4(arg): string {
-    console.log(this.instance, arg);
+  uuidv4(arg=undefined): string {
+    console.log(this.instance, arg|| "");
     return String(this.nextId++);
   }
 
