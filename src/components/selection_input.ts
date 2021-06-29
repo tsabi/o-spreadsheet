@@ -1,5 +1,5 @@
 import * as owl from "@odoo/owl";
-import { UuidGenerator, uuidv4 } from "../helpers";
+import { uuidv4 } from "../helpers";
 import { RangeInputValue } from "../plugins/ui/selection_inputs";
 import { SpreadsheetEnv } from "../types";
 
