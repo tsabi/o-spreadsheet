@@ -276,7 +276,7 @@ describe("UI of conditional formats", () => {
       await nextTick();
       expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
         cf: {
-          id: "4",
+          id: "3",
           rule: {
             operator: "BeginsWith",
             style: { bold: true, fillColor: "#b6d7a8", italic: true, strikethrough: true },
@@ -352,7 +352,7 @@ describe("UI of conditional formats", () => {
 
     expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
       cf: {
-        id: "4",
+        id: "3",
         rule: {
           maximum: {
             color: 0xffff00,
@@ -403,7 +403,7 @@ describe("UI of conditional formats", () => {
 
     expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
       cf: {
-        id: "4",
+        id: "3",
         rule: {
           maximum: {
             color: 0xffff00,
@@ -459,7 +459,7 @@ describe("UI of conditional formats", () => {
 
     expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
       cf: {
-        id: "4",
+        id: "3",
         rule: {
           maximum: {
             color: 0xffff00,
@@ -516,7 +516,7 @@ describe("UI of conditional formats", () => {
 
     expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
       cf: {
-        id: "4",
+        id: "3",
         rule: {
           maximum: {
             color: 0xffff00,
@@ -577,7 +577,7 @@ describe("UI of conditional formats", () => {
 
     expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
       cf: {
-        id: "4",
+        id: "3",
         rule: {
           maximum: {
             color: 0xffff00,
@@ -1043,7 +1043,7 @@ describe("UI of conditional formats", () => {
 
       expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
         cf: {
-          id: "4",
+          id: "3",
           rule: {
             type: "IconSetRule",
             icons: {
@@ -1106,7 +1106,7 @@ describe("UI of conditional formats", () => {
 
       expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
         cf: {
-          id: "4",
+          id: "3",
           rule: {
             type: "IconSetRule",
             icons: {
@@ -1158,7 +1158,7 @@ describe("UI of conditional formats", () => {
 
     expect(parent.env.dispatch).toHaveBeenCalledWith("ADD_CONDITIONAL_FORMAT", {
       cf: {
-        id: "4",
+        id: "3",
         rule: {
           type: "IconSetRule",
           icons: {

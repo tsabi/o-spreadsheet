@@ -32,9 +32,6 @@ describe("selection input plugin", () => {
     model = new Model();
   });
 
-  afterAll(() => {
-    delete model;
-  });
   test("empty input should focus the first range", () => {
     model.dispatch("ENABLE_NEW_SELECTION_INPUT", { id });
     expect(model.getters.getSelectionInput(id).length).toBe(1);
