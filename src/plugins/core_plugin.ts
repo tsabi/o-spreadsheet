@@ -19,7 +19,8 @@ export interface CorePluginConstructor {
     stateObserver: StateObserver,
     range: RangeAdapter,
     dispatch: CoreCommandDispatcher["dispatch"],
-    config: ModelConfig
+    config: ModelConfig,
+    uuidGenerator:any,
   ): CorePlugin;
   getters: string[];
   modes: Mode[];
@@ -36,18 +37,21 @@ export class CorePlugin<State = any, C = CoreCommand>
   implements RangeProvider {
   protected getters: CoreGetters;
   protected range: RangeAdapter;
+  protected uuidGenerator:any;
 
   constructor(
     getters: CoreGetters,
     stateObserver: StateObserver,
     range: RangeAdapter,
     protected dispatch: CoreCommandDispatcher["dispatch"],
-    config: ModelConfig
+    config: ModelConfig,
+    uuidGenerator:any,
   ) {
     super(stateObserver, dispatch, config);
     this.range = range;
     range.addRangeProvider(this.adaptRanges.bind(this));
     this.getters = getters;
+    this.uuidGenerator = uuidGenerator;
   }
 
   // ---------------------------------------------------------------------------

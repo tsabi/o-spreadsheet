@@ -8,6 +8,7 @@ export interface SpreadsheetEnv extends Env {
   toggleSidePanel: (panel: string, panelProps?: any) => void;
   dispatch: CommandDispatcher["dispatch"];
   getters: Getters;
+  uuidGenerator:any;
   clipboard: Clipboard;
   _t: TranslationFunction;
 }

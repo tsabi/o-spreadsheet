@@ -1,9 +1,17 @@
-let nextId = 1;
+/*
+ * https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+ * */
 
-export function setIsFastStrategy() {}
+export class UuidGenerator {
+  private nextId = 1;
 
-export function uuidv4(): string {
-  return String(nextId++);
+  setIsFastStrategy(isFast: boolean) {}
+
+  uuidv4(): string {
+    return String(this.nextId++);
+  }
+
+  setNextId(i: number) {
+    this.nextId = i;
+  }
 }
-
-export const setNextId = (i) => (nextId = i);

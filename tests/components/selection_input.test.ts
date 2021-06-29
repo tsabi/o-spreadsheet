@@ -51,6 +51,7 @@ class Parent extends Component<any> {
     useSubEnv({
       dispatch: model.dispatch,
       getters: model.getters,
+      uuidGenerator: model.uuidGenerator,
     });
     this.initialRanges = config.initialRanges;
     this.maximumRanges = config.maximumRanges;
@@ -91,6 +92,7 @@ class MutliParent extends Component<any> {
     useSubEnv({
       dispatch: model.dispatch,
       getters: model.getters,
+      uuidGenerator: model.uuidGenerator,
     });
     this.model = model;
   }
@@ -247,7 +249,7 @@ describe("Selection Input", () => {
     expect(newRanges).toStrictEqual(["B4"]);
   });
 
-  test("focus is transfered from one input to another", async () => {
+  test("focus is transferred from one input to another", async () => {
     model = new Model();
     const parent = new MutliParent(model);
     await parent.mount(fixture);
