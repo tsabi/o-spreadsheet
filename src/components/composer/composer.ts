@@ -221,6 +221,8 @@ export class Composer extends Component<Props, SpreadsheetEnv> {
     F2: () => console.warn("Not implemented"),
     F4: () => console.warn("Not implemented"),
     Tab: (ev: KeyboardEvent) => this.processTabKey(ev),
+    Home: (ev: KeyboardEvent) => ev.stopPropagation(),
+    End: (ev: KeyboardEvent) => ev.stopPropagation(),
   };
 
   constructor() {
@@ -327,7 +329,9 @@ export class Composer extends Component<Props, SpreadsheetEnv> {
     const { start, end } = this.contentHelper.getCurrentSelection();
     if (!this.getters.isSelectingForComposer()) {
       this.dispatch("CHANGE_COMPOSER_CURSOR_SELECTION", { start, end });
-      this.isKeyStillDown = true;
+      if (handler){
+        this.isKeyStillDown = true;
+      }
     }
   }
 

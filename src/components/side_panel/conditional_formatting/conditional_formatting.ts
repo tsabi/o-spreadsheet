@@ -435,7 +435,7 @@ export class ConditionalFormattingPanel extends Component<Props, SpreadsheetEnv>
         );
         return;
       }
-      console.log(this.state.mode)
+      // console.log(this.state.mode)
       const result = this.env.dispatch("ADD_CONDITIONAL_FORMAT", {
         cf: {
           rule: this.getEditorRule(),
