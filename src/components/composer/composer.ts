@@ -221,8 +221,8 @@ export class Composer extends Component<Props, SpreadsheetEnv> {
     F2: () => console.warn("Not implemented"),
     F4: () => console.warn("Not implemented"),
     Tab: (ev: KeyboardEvent) => this.processTabKey(ev),
-    Home: (ev: KeyboardEvent) => ev.stopPropagation(),
-    End: (ev: KeyboardEvent) => ev.stopPropagation(),
+    // Home: (ev: KeyboardEvent) => ev.stopPropagation(),
+    // End: (ev: KeyboardEvent) => ev.stopPropagation(),
   };
 
   constructor() {
@@ -329,9 +329,9 @@ export class Composer extends Component<Props, SpreadsheetEnv> {
     const { start, end } = this.contentHelper.getCurrentSelection();
     if (!this.getters.isSelectingForComposer()) {
       this.dispatch("CHANGE_COMPOSER_CURSOR_SELECTION", { start, end });
-      if (handler){
-        this.isKeyStillDown = true;
-      }
+      this.isKeyStillDown = true;
+      // if (handler){
+      // }
     }
   }
 
@@ -351,6 +351,7 @@ export class Composer extends Component<Props, SpreadsheetEnv> {
   }
 
   onKeyup(ev: KeyboardEvent) {
+    this.isKeyStillDown = false;
     if (!this.props.focus || ["Control", "Shift", "Tab", "Enter"].includes(ev.key)) {
       return;
     }
