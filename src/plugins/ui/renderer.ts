@@ -95,11 +95,12 @@ export class RendererPlugin extends UIPlugin {
    * It returns -1 if no column is found.
    */
   getColIndex(x: number, left: number, sheet?: Sheet): number {
+    // ==> should user viewport offset and not left index
     if (x < HEADER_WIDTH) {
       return -1;
     }
     const cols = (sheet || this.getters.getActiveSheet()).cols;
-    const adjustedX = x - HEADER_WIDTH + cols[left].start + 1;
+    const adjustedX = x - HEADER_WIDTH + left + 1;
     return searchIndex(cols, adjustedX);
   }
 
@@ -108,7 +109,7 @@ export class RendererPlugin extends UIPlugin {
       return -1;
     }
     const rows = (sheet || this.getters.getActiveSheet()).rows;
-    const adjustedY = y - HEADER_HEIGHT + rows[top].start + 1;
+    const adjustedY = y - HEADER_HEIGHT + top + 1;
     return searchIndex(rows, adjustedY);
   }
 
@@ -133,7 +134,7 @@ export class RendererPlugin extends UIPlugin {
     let delay = 0;
     const { width } = this.getters.getViewportDimension();
     const { width: gridWidth } = this.getters.getGridDimension(this.getters.getActiveSheet());
-    const { left, offsetX } = this.getters.getActiveSnappedViewport();
+    const { left, offsetX } = this.getters.getActiveViewport();
     if (x < HEADER_WIDTH && left > 0) {
       canEdgeScroll = true;
       direction = -1;
@@ -153,7 +154,7 @@ export class RendererPlugin extends UIPlugin {
     let delay = 0;
     const { height } = this.getters.getViewportDimension();
     const { height: gridHeight } = this.getters.getGridDimension(this.getters.getActiveSheet());
-    const { top, offsetY } = this.getters.getActiveSnappedViewport();
+    const { top, offsetY } = this.getters.getActiveViewport();
     if (y < HEADER_HEIGHT && top > 0) {
       canEdgeScroll = true;
       direction = -1;
@@ -442,6 +443,8 @@ export class RendererPlugin extends UIPlugin {
     }
 
     ctx.stroke();
+    ctx.fillStyle = BACKGROUND_HEADER_COLOR;
+    ctx.fillRect(0, 0, HEADER_WIDTH, HEADER_HEIGHT);
   }
 
   private hasContent(col: number, row: number): boolean {

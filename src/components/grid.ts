@@ -70,8 +70,8 @@ export function useCellHovered(env: SpreadsheetEnv, getViewPort: () => Viewport)
 
   function getPosition(): [number, number] {
     const viewport = getViewPort();
-    const col = getters.getColIndex(x, viewport.left);
-    const row = getters.getRowIndex(y, viewport.top);
+    const col = getters.getColIndex(x, viewport.offsetX);
+    const row = getters.getRowIndex(y, viewport.offsetY);
     return [col, row];
   }
 
@@ -181,7 +181,7 @@ const TEMPLATE = xml/* xml */ `
     <t t-if="errorTooltip.isOpen">
       <div class="o-error-tooltip" t-esc="errorTooltip.text" t-att-style="errorTooltip.style"/>
     </t>
-    <t t-if="getters.getEditionMode() === 'inactive'">
+    <t t-if="getters.getEditionMode() === 'inactive' &amp;&amp; isAutoFillActive()">
       <Autofill position="getAutofillPosition()"/>
     </t>
     <Overlay t-on-open-contextmenu="onOverlayContextMenu" />
@@ -275,7 +275,7 @@ export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
   private clickedRow = 0;
 
   // errorTooltip = useErrorTooltip(this.env, () => this.snappedViewport);
-  hoveredCell = useCellHovered(this.env, () => this.getters.getActiveSnappedViewport());
+  hoveredCell = useCellHovered(this.env, () => this.getters.getActiveViewport());
 
   get errorTooltip() {
     const { col, row } = this.hoveredCell;
@@ -287,7 +287,7 @@ export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
     const cell = this.getters.getCell(sheetId, mainCol, mainRow);
 
     if (cell && cell.error) {
-      const viewport = this.getters.getActiveSnappedViewport();
+      const viewport = this.getters.getActiveViewport();
       const { width: viewportWidth, height: viewportHeight } = this.getters.getViewportDimension();
       const [x, y, width, height] = this.getters.getRect(
         { left: col, top: row, right: col, bottom: row },
@@ -414,10 +414,24 @@ export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
     }
   }
 
-  getAutofillPosition() {
+  isAutoFillActive() {
     const zone = this.getters.getSelectedZone();
     const sheet = this.getters.getActiveSheet();
-    const { offsetX, offsetY } = this.getters.getActiveSnappedViewport();
+    const { width, height } = this.getters.getViewportDimension();
+    const { offsetX, offsetY } = this.getters.getActiveViewport();
+    const aaa =
+      sheet.cols[zone.right].end <= offsetX + width &&
+      sheet.cols[zone.right].end >= offsetX &&
+      sheet.rows[zone.bottom].end <= offsetY + height &&
+      sheet.rows[zone.bottom].end >= offsetY;
+    return aaa;
+  }
+
+  getAutofillPosition() {
+    // we're missing a condition to display the autofill or not :) it shouldn't appear above the headers like it does atm
+    const zone = this.getters.getSelectedZone();
+    const sheet = this.getters.getActiveSheet();
+    const { offsetX, offsetY } = this.getters.getActiveViewport();
     return {
       left: sheet.cols[zone.right].end - AUTOFILL_EDGE_LENGTH / 2 + HEADER_WIDTH - offsetX,
       top: sheet.rows[zone.bottom].end - AUTOFILL_EDGE_LENGTH / 2 + HEADER_HEIGHT - offsetY,
@@ -499,9 +513,9 @@ export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
 
   getCartesianCoordinates(ev: MouseEvent): [number, number] {
     const [x, y] = this.getCoordinates(ev);
-    const { left, top } = this.getters.getActiveSnappedViewport();
-    const colIndex = this.getters.getColIndex(x, left);
-    const rowIndex = this.getters.getRowIndex(y, top);
+    const { offsetX, offsetY } = this.getters.getActiveViewport();
+    const colIndex = this.getters.getColIndex(x, offsetX);
+    const rowIndex = this.getters.getRowIndex(y, offsetY);
     return [colIndex, rowIndex];
   }
 
@@ -549,19 +563,19 @@ export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
       const colEdgeScroll = this.getters.getEdgeScrollCol(x);
       const rowEdgeScroll = this.getters.getEdgeScrollRow(y);
 
-      const { left, right, top, bottom } = this.getters.getActiveSnappedViewport();
+      const { left, right, top, bottom, offsetX, offsetY } = this.getters.getActiveViewport();
       let col: number, row: number;
       if (colEdgeScroll.canEdgeScroll) {
         col = colEdgeScroll.direction > 0 ? right : left - 1;
       } else {
-        col = this.getters.getColIndex(x, left);
+        col = this.getters.getColIndex(x, offsetX);
         col = col === -1 ? prevCol : col;
       }
 
       if (rowEdgeScroll.canEdgeScroll) {
         row = rowEdgeScroll.direction > 0 ? bottom : top - 1;
       } else {
-        row = this.getters.getRowIndex(y, top);
+        row = this.getters.getRowIndex(y, offsetY);
         row = row === -1 ? prevRow : row;
       }
 
@@ -632,7 +646,7 @@ export class Grid extends Component<{ model: Model }, SpreadsheetEnv> {
       const oldZone = this.getters.getSelectedZone();
       this.dispatch("ALTER_SELECTION", { delta });
       const newZone = this.getters.getSelectedZone();
-      const viewport = this.getters.getActiveSnappedViewport();
+      const viewport = this.getters.getActiveViewport();
       const sheet = this.getters.getActiveSheet();
       const [col, row] = findCellInNewZone(oldZone, newZone, viewport);
 

@@ -663,14 +663,14 @@ describe("Events on Grid update viewport correctly", () => {
       offsetX: 0,
       offsetY: 1200,
     });
-    expect(model.getters.getActiveSnappedViewport()).toMatchObject({
-      top: 52,
-      bottom: 94,
-      left: 0,
-      right: 9,
-      offsetX: 0,
-      offsetY: 1196,
-    });
+    // expect(model.getters.getActiveViewport()).toMatchObject({
+    //   top: 52,
+    //   bottom: 94,
+    //   left: 0,
+    //   right: 9,
+    //   offsetX: 0,
+    //   offsetY: 1196,
+    // });
   });
   test("Horizontal scroll", async () => {
     fixture
@@ -685,14 +685,14 @@ describe("Events on Grid update viewport correctly", () => {
       offsetX: 200,
       offsetY: 0,
     });
-    expect(model.getters.getActiveSnappedViewport()).toMatchObject({
-      top: 0,
-      bottom: 42,
-      left: 2,
-      right: 11,
-      offsetX: 192,
-      offsetY: 0,
-    });
+    // expect(model.getters.getActiveViewport()).toMatchObject({
+    //   top: 0,
+    //   bottom: 42,
+    //   left: 2,
+    //   right: 11,
+    //   offsetX: 192,
+    //   offsetY: 0,
+    // });
   });
   test("Move selection with keyboard", async () => {
     await simulateClick("canvas", 750, 40); // H1
@@ -749,7 +749,7 @@ describe("Events on Grid update viewport correctly", () => {
       jest.advanceTimersByTime(advanceTimer);
       triggerMouseEvent("canvas", "mouseup", 1.5 * width, y);
 
-      expect(model.getters.getActiveSnappedViewport()).toMatchObject({
+      expect(model.getters.getActiveViewport()).toMatchObject({
         left: 6,
         right: 15,
         top: 0,
@@ -762,7 +762,7 @@ describe("Events on Grid update viewport correctly", () => {
       jest.advanceTimersByTime(advanceTimer2);
       triggerMouseEvent("canvas", "mouseup", -0.5 * width, y);
 
-      expect(model.getters.getActiveSnappedViewport()).toMatchObject({
+      expect(model.getters.getActiveViewport()).toMatchObject({
         left: 3,
         right: 12,
         top: 0,
@@ -779,7 +779,7 @@ describe("Events on Grid update viewport correctly", () => {
       jest.advanceTimersByTime(advanceTimer);
       triggerMouseEvent("canvas", "mouseup", x, 1.5 * height);
 
-      expect(model.getters.getActiveSnappedViewport()).toMatchObject({
+      expect(model.getters.getActiveViewport()).toMatchObject({
         left: 0,
         right: 9,
         top: 6,
@@ -792,7 +792,7 @@ describe("Events on Grid update viewport correctly", () => {
       jest.advanceTimersByTime(advanceTimer2);
       triggerMouseEvent("canvas", "mouseup", x, -0.5 * height);
 
-      expect(model.getters.getActiveSnappedViewport()).toMatchObject({
+      expect(model.getters.getActiveViewport()).toMatchObject({
         left: 0,
         right: 9,
         top: 3,

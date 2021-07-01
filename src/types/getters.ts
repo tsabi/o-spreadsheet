@@ -162,10 +162,10 @@ export type Getters = CoreGetters & {
 
   getClientsToDisplay: SelectionMultiUserPlugin["getClientsToDisplay"];
 
-  getSnappedViewport: ViewportPlugin["getViewport"];
+  // getSnappedViewport: ViewportPlugin["getViewport"];
+  getViewport: ViewportPlugin["getViewport"];
   getViewportDimension: ViewportPlugin["getViewportDimension"];
   getActiveViewport: ViewportPlugin["getActiveViewport"];
-  getActiveSnappedViewport: ViewportPlugin["getActiveSnappedViewport"];
   getGridDimension: ViewportPlugin["getGridDimension"];
 
   getAutomaticSums: AutomaticSumPlugin["getAutomaticSums"];
