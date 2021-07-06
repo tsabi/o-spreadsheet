@@ -1,6 +1,13 @@
 import { getNextColor, isEqual, toZone } from "../../helpers/index";
 import { Mode } from "../../model";
-import { Command, GridRenderingContext, Highlight, LAYERS, Zone } from "../../types/index";
+import {
+  Command,
+  GridRenderingContext,
+  Highlight,
+  LAYERS,
+  Zone,
+  ZoneReference,
+} from "../../types/index";
 import { UIPlugin } from "../ui_plugin";
 
 /**
@@ -68,27 +75,35 @@ export class HighlightPlugin extends UIPlugin {
   // Other
   // ---------------------------------------------------------------------------
 
-  private addHighlights(ranges: { [range: string]: string }) {
+  private addHighlights(ranges: { [range: string]: ZoneReference }) {
     let highlights = this.prepareHighlights(ranges);
     this.highlights = this.highlights.concat(highlights);
   }
 
-  private addPendingHighlight(ranges: { [range: string]: string }) {
+  private addPendingHighlight(ranges: { [range: string]: ZoneReference }) {
     let highlights = this.prepareHighlights(ranges);
     this.pendingHighlights = this.pendingHighlights.concat(highlights);
   }
 
-  private prepareHighlights(ranges: { [range: string]: string }): Highlight[] {
+  private prepareHighlights(ranges: { [range: string]: ZoneReference }): Highlight[] {
     if (Object.keys(ranges).length === 0) {
       return [];
     }
     const activeSheetId = this.getters.getActiveSheetId();
+
     return Object.keys(ranges)
-      .map((r1c1) => {
+      .flatMap((r1c1) => {
         const [xc, sheet] = r1c1.split("!").reverse();
         const sheetId = this.getters.getSheetIdByName(sheet) || activeSheetId;
         const zone: Zone = this.getters.expandZone(activeSheetId, toZone(xc));
-        return { zone, color: ranges[r1c1], sheet: sheetId };
+
+        let highlights: Highlight[] = [];
+
+        for (let q = 0; q < ranges[r1c1].quantity; q++) {
+          highlights.push({ zone, color: ranges[r1c1].color, sheet: sheetId });
+        }
+
+        return highlights;
       })
       .filter(
         (x) =>
@@ -97,6 +112,21 @@ export class HighlightPlugin extends UIPlugin {
           x.zone.bottom < this.getters.getSheet(x.sheet).rows.length &&
           x.zone.right < this.getters.getSheet(x.sheet).cols.length
       );
+
+    // return Object.keys(ranges)
+    //   .map((r1c1) => {
+    //     const [xc, sheet] = r1c1.split("!").reverse();
+    //     const sheetId = this.getters.getSheetIdByName(sheet) || activeSheetId;
+    //     const zone: Zone = this.getters.expandZone(activeSheetId, toZone(xc));
+    //     return { zone, color: ranges[r1c1], sheet: sheetId };
+    //   })
+    //   .filter(
+    //     (x) =>
+    //       x.zone.top >= 0 &&
+    //       x.zone.left >= 0 &&
+    //       x.zone.bottom < this.getters.getSheet(x.sheet).rows.length &&
+    //       x.zone.right < this.getters.getSheet(x.sheet).cols.length
+    //   );
   }
 
   /**
@@ -104,14 +134,14 @@ export class HighlightPlugin extends UIPlugin {
    * @param ranges {"[sheet!]XC": color}
    * @private
    */
-  private removeHighlights(ranges: { [range: string]: string }) {
+  private removeHighlights(ranges: { [range: string]: ZoneReference }) {
     const activeSheetId = this.getters.getActiveSheetId();
     const rangesBySheets = {};
-    for (let [range, color] of Object.entries(ranges)) {
+    for (let [range, zoneReference] of Object.entries(ranges)) {
       const [xc, sheetName] = range.split("!").reverse();
       const sheetId = this.getters.getSheetIdByName(sheetName);
       rangesBySheets[sheetId || activeSheetId] = Object.assign(
-        { [xc]: color },
+        { [xc]: zoneReference.color },
         rangesBySheets[sheetId || activeSheetId] || {}
       );
     }
