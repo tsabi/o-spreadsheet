@@ -1,5 +1,6 @@
 import * as owl from "@odoo/owl";
 import { SpreadsheetEnv } from "../types/env";
+import { Popover } from "./popover";
 const { Component } = owl;
 const { css, xml } = owl.tags;
 
@@ -102,22 +103,37 @@ const COLORS = [
   ],
 ];
 
+// dimensions
+const PICKER_VERTICAL_PADDING = 6;
+
+const LINE_VERTICAL_PADDING = 3;
+const LINE_HORIZONTAL_PADDING = 6;
+const ITEM_HORIZONTAL_MARGIN = 2;
+
+const ITEM_EDGE_LENGTH = 18;
+const ITEM_BORDER_WIDTH = 1;
+
 interface Props {
   dropdownDirection?: "left" | "right";
 }
 
 export class ColorPicker extends Component<Props, SpreadsheetEnv> {
   static template = xml/* xml */ `
-  <div class="o-color-picker" t-att-class="{
-    'right': isDropdownRight(),
-    'left': !isDropdownRight()
-    }" t-on-click="onColorClick">
-    <div class="o-color-picker-line" t-foreach="COLORS" t-as="colors" t-key="colors">
-      <t t-foreach="colors" t-as="color" t-key="color">
-        <div class="o-color-picker-line-item" t-att-data-color="color" t-attf-style="background-color:{{color}};"></div>
-      </t>
+  <Popover
+      position="props.position"
+      childWidth="pickerWidth"
+      childHeight="pickerHeight">
+    <div class="o-color-picker" t-att-class="{
+      'right': isDropdownRight(),
+      'left': !isDropdownRight()
+      }" t-on-click="onColorClick">
+      <div class="o-color-picker-line" t-foreach="COLORS" t-as="colors" t-key="colors">
+        <t t-foreach="colors" t-as="color" t-key="color">
+          <div class="o-color-picker-line-item" t-att-data-color="color" t-attf-style="background-color:{{color}};"/>
+        </t>
+      </div>
     </div>
-  </div>`;
+  </Popover>`;
 
   static style = css/* scss */ `
     .o-color-picker {
@@ -145,17 +161,39 @@ export class ColorPicker extends Component<Props, SpreadsheetEnv> {
         }
       }
 
-      &.right {
-        left: 0;
-      }
+      // &.right {
+      //   left: 0;
+      // }
 
-      &.left {
-        right: 0;
-      }
+      // &.left {
+      //   right: 0;
+      // }
     }
   `;
+
+  static components = { Popover };
+
   COLORS = COLORS;
 
+  pickerWidth(): number {
+    const nbrItems = Math.max(...this.COLORS.map((line) => line.length));
+    const test =
+      nbrItems * (ITEM_EDGE_LENGTH + ITEM_HORIZONTAL_MARGIN * 2 + 2 * ITEM_BORDER_WIDTH) +
+      2 * LINE_HORIZONTAL_PADDING;
+    console.log(test);
+    return test;
+  }
+
+  pickerHeight(): number {
+    const nbrLines = this.COLORS.length;
+    const test =
+      nbrLines * (2 * LINE_VERTICAL_PADDING + ITEM_EDGE_LENGTH + 2 * ITEM_BORDER_WIDTH) +
+      2 * PICKER_VERTICAL_PADDING;
+    console.log(test);
+    return test;
+  }
+
+  // TODO should probably be removed now
   isDropdownRight() {
     return this.props.dropdownDirection !== "left";
   }

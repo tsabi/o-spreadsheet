@@ -114,7 +114,7 @@ export class TopBar extends Component<any, SpreadsheetEnv> {
             <ColorPicker t-if="state.activeTool === 'textColorTool'" t-on-color-picked="setColor('textColor')" t-key="textColor"/>
           </div>
           <div class="o-divider"/>
-          <div class="o-tool  o-dropdown o-with-color">
+          <div class="o-tool o-dropdown o-with-color">
             <span t-attf-style="border-color:{{fillColor}}" title="Fill Color" t-on-click="toggleDropdownTool('fillColorTool')">${icons.FILL_COLOR_ICON}</span>
             <ColorPicker t-if="state.activeTool === 'fillColorTool'" t-on-color-picked="setColor('fillColor')" t-key="fillColor"/>
           </div>
