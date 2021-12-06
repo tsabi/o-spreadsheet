@@ -138,7 +138,7 @@ export class ColorPicker extends Component<Props, SpreadsheetEnv> {
   static style = css/* scss */ `
     .o-color-picker {
       // position: absolute;
-      top: calc(100% + 5px);
+      // top: calc(100% + 5px);
       z-index: 10;
       box-shadow: 1px 2px 5px 2px rgba(51, 51, 51, 0.15);
       background-color: white;
@@ -174,11 +174,6 @@ export class ColorPicker extends Component<Props, SpreadsheetEnv> {
   static components = { Popover };
 
   COLORS = COLORS;
-
-  constructor() {
-    super(...arguments);
-    debugger;
-  }
 
   get pickerWidth(): number {
     const nbrItems = Math.max(...this.COLORS.map((line) => line.length));
