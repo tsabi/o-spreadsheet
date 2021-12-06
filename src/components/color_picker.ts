@@ -120,7 +120,7 @@ interface Props {
 export class ColorPicker extends Component<Props, SpreadsheetEnv> {
   static template = xml/* xml */ `
   <Popover
-      position="props.position"
+      position="props.position || {x:100, y:100} "
       childWidth="pickerWidth"
       childHeight="pickerHeight">
     <div class="o-color-picker" t-att-class="{
@@ -137,7 +137,7 @@ export class ColorPicker extends Component<Props, SpreadsheetEnv> {
 
   static style = css/* scss */ `
     .o-color-picker {
-      position: absolute;
+      // position: absolute;
       top: calc(100% + 5px);
       z-index: 10;
       box-shadow: 1px 2px 5px 2px rgba(51, 51, 51, 0.15);
@@ -175,7 +175,12 @@ export class ColorPicker extends Component<Props, SpreadsheetEnv> {
 
   COLORS = COLORS;
 
-  pickerWidth(): number {
+  constructor() {
+    super(...arguments);
+    debugger;
+  }
+
+  get pickerWidth(): number {
     const nbrItems = Math.max(...this.COLORS.map((line) => line.length));
     const test =
       nbrItems * (ITEM_EDGE_LENGTH + ITEM_HORIZONTAL_MARGIN * 2 + 2 * ITEM_BORDER_WIDTH) +
@@ -184,7 +189,7 @@ export class ColorPicker extends Component<Props, SpreadsheetEnv> {
     return test;
   }
 
-  pickerHeight(): number {
+  get pickerHeight(): number {
     const nbrLines = this.COLORS.length;
     const test =
       nbrLines * (2 * LINE_VERTICAL_PADDING + ITEM_EDGE_LENGTH + 2 * ITEM_BORDER_WIDTH) +
