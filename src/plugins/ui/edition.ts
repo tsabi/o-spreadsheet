@@ -9,6 +9,7 @@ import {
   updateSelectionOnDeletion,
   updateSelectionOnInsertion,
 } from "../../helpers/index";
+import { loopThroughReferenceType } from "../../helpers/reference_type";
 import { Mode } from "../../model";
 import { _lt } from "../../translation";
 import {
@@ -209,6 +210,9 @@ export class EditionPlugin extends UIPlugin {
           });
         }
         break;
+      case "CYCLE_EDITION_REFERENCES":
+        this.cycleReferences();
+        break;
     }
   }
 
@@ -267,6 +271,29 @@ export class EditionPlugin extends UIPlugin {
   // ---------------------------------------------------------------------------
   // Misc
   // ---------------------------------------------------------------------------
+
+  private cycleReferences() {
+    // Select tokens of this.currentTokens that are currently selected in the composer
+    const selectedTokens = this.getTokensInSelection().filter((token) => token.type === "SYMBOL");
+    if (selectedTokens.length === 0) return;
+
+    // Change Reference Type in-place of all tokens in the selection
+    selectedTokens.map((token) => loopThroughReferenceType(token));
+
+    // Get the updated end of the selection
+    let updatedSelectionEnd = 0;
+    for (let token of this.currentTokens) {
+      updatedSelectionEnd += token.value.length;
+      if (token === selectedTokens[selectedTokens.length - 1]) break;
+    }
+
+    // Update content of the composer
+    const content = this.currentTokens.map((token) => token.value).join("");
+    this.setContent(content, {
+      start: selectedTokens[0].start,
+      end: updatedSelectionEnd,
+    });
+  }
 
   private validateSelection(
     length: number,
@@ -613,5 +640,17 @@ export class EditionPlugin extends UIPlugin {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Return all the tokens between selectionStart and selectionEnd.
+   * Includes token that begin right on selectionStart or end right on selectionEnd.
+   */
+  private getTokensInSelection(): EnrichedToken[] {
+    const start = Math.min(this.selectionStart, this.selectionEnd);
+    const end = Math.max(this.selectionStart, this.selectionEnd);
+    return this.currentTokens.filter(
+      (t) => (t.start <= start && t.end >= start) || (t.start >= start && t.start < end)
+    );
   }
 }
