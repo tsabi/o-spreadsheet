@@ -57,6 +57,10 @@ export interface TargetDependentCommand {
   target: Zone[];
 }
 
+export interface TargetXcDependentCommand {
+  targetXc: string[];
+}
+
 export function isTargetDependent(cmd: CoreCommand): boolean {
   return "target" in cmd;
 }
@@ -282,11 +286,14 @@ export interface RenameSheetCommand extends SheetDependentCommand {
 // Conditional Format
 //------------------------------------------------------------------------------
 
+// /!\ TODO : migrate command ADD_CONDITIONAL_FORMAT (target : Zone[] => target : xc[])
 /**
  * todo: use id instead of a list. this is not safe to serialize and send to
  * another user
  */
-export interface AddConditionalFormatCommand extends SheetDependentCommand, TargetDependentCommand {
+export interface AddConditionalFormatCommand
+  extends SheetDependentCommand,
+    TargetXcDependentCommand {
   type: "ADD_CONDITIONAL_FORMAT";
   cf: Omit<ConditionalFormat, "ranges">;
 }

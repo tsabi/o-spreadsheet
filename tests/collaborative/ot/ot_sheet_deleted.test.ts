@@ -77,7 +77,7 @@ describe("OT with DELETE_SHEET", () => {
   const addCF: Omit<AddConditionalFormatCommand, "sheetId"> = {
     type: "ADD_CONDITIONAL_FORMAT",
     cf: createEqualCF("test", { fillColor: "orange" }, "id"),
-    target: [toZone("A1:B1")],
+    targetXc: ["A1:B1"],
   };
   const createFigure: Omit<CreateFigureCommand, "sheetId"> = {
     type: "CREATE_FIGURE",

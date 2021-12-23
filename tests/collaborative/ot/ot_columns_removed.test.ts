@@ -2,7 +2,6 @@ import { transform } from "../../../src/collaborative/ot/ot";
 import { toZone } from "../../../src/helpers";
 import {
   AddColumnsRowsCommand,
-  AddConditionalFormatCommand,
   AddMergeCommand,
   ClearCellCommand,
   ClearFormattingCommand,
@@ -16,7 +15,7 @@ import {
   UpdateCellCommand,
   UpdateCellPositionCommand,
 } from "../../../src/types";
-import { createEqualCF, target } from "../../test_helpers/helpers";
+import { target } from "../../test_helpers/helpers";
 
 describe("OT with REMOVE_COLUMN", () => {
   const sheetId = "Sheet1";
@@ -104,13 +103,14 @@ describe("OT with REMOVE_COLUMN", () => {
     step: 1,
   };
 
-  const addConditionalFormat: Omit<AddConditionalFormatCommand, "target"> = {
-    type: "ADD_CONDITIONAL_FORMAT",
-    sheetId,
-    cf: createEqualCF("1", { fillColor: "#FF0000" }, "1"),
-  };
+  // TODO Contitional format test
+  // const addConditionalFormat: Omit<AddConditionalFormatCommand, "target"> = {
+  //   type: "ADD_CONDITIONAL_FORMAT",
+  //   sheetId,
+  //   cf: createEqualCF("1", { fillColor: "#FF0000" }, "1"),
+  // };
 
-  describe.each([deleteContent, setFormatting, clearFormatting, setDecimal, addConditionalFormat])(
+  describe.each([deleteContent, setFormatting, clearFormatting, setDecimal])(
     "target commands",
     (cmd) => {
       test(`remove columns before ${cmd.type}`, () => {

@@ -1,7 +1,6 @@
 import { Component, hooks, tags, useState } from "@odoo/owl";
 import { TopBar } from "../../src/components/top_bar";
 import { DEFAULT_FONT_SIZE } from "../../src/constants";
-import { toZone } from "../../src/helpers";
 import { Model } from "../../src/model";
 import { topbarComponentRegistry } from "../../src/registries";
 import { topbarMenuRegistry } from "../../src/registries/menus/topbar_menu_registry";
@@ -419,7 +418,7 @@ describe("TopBar - CF", () => {
     model.dispatch("ADD_CONDITIONAL_FORMAT", {
       cf: cfRule,
       sheetId: model.getters.getActiveSheetId(),
-      target: cfRule.ranges.map(toZone),
+      targetXc: cfRule.ranges,
     });
     setSelection(model, ["A1:K11"]);
 
@@ -463,12 +462,12 @@ describe("TopBar - CF", () => {
     model.dispatch("ADD_CONDITIONAL_FORMAT", {
       cf: cfRule1,
       sheetId: model.getters.getActiveSheetId(),
-      target: cfRule1.ranges.map(toZone),
+      targetXc: cfRule1.ranges,
     });
     model.dispatch("ADD_CONDITIONAL_FORMAT", {
       cf: cfRule2,
       sheetId: model.getters.getActiveSheetId(),
-      target: cfRule2.ranges.map(toZone),
+      targetXc: cfRule2.ranges,
     });
     setSelection(model, ["A1:K11"]);
 

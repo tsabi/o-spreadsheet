@@ -1031,6 +1031,11 @@ export class SheetPlugin extends CorePlugin<SheetState> implements SheetState {
     if ("target" in cmd && Array.isArray(cmd.target)) {
       zones.push(...cmd.target);
     }
+    if ("targetXc" in cmd) {
+      zones.push(
+        ...cmd.targetXc.map((xc) => this.getters.getRangeFromSheetXC(cmd.sheetId, xc).zone)
+      );
+    }
     if (!zones.every(isZoneValid)) {
       return CommandResult.InvalidRange;
     } else if (zones.length && "sheetId" in cmd) {

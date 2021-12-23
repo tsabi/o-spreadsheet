@@ -1,5 +1,5 @@
 import { compile, normalize } from "../../formulas/index";
-import { isInside, zoneToXc } from "../../helpers/index";
+import { isInside } from "../../helpers/index";
 import {
   AddConditionalFormatCommand,
   ApplyRangeChange,
@@ -126,7 +126,7 @@ export class ConditionalFormatPlugin
       case "ADD_CONDITIONAL_FORMAT":
         const cf = {
           ...cmd.cf,
-          ranges: cmd.target.map(zoneToXc),
+          ranges: cmd.targetXc,
         };
         this.addConditionalFormatting(cf, cmd.sheetId);
         break;
@@ -231,9 +231,11 @@ export class ConditionalFormatPlugin
   ): ConditionalFormatInternal {
     const conditionalFormat = {
       ...cf,
-      ranges: cf.ranges.map((range) => {
-        return this.getters.getRangeFromSheetXC(sheet, range);
-      }),
+      ranges: cf.ranges
+        ? cf.ranges.map((range) => {
+            return this.getters.getRangeFromSheetXC(sheet, range);
+          })
+        : [],
     };
     return conditionalFormat;
   }
@@ -254,7 +256,7 @@ export class ConditionalFormatPlugin
   }
 
   private checkEmptyRange(cmd: AddConditionalFormatCommand) {
-    return cmd.target.length ? CommandResult.Success : CommandResult.EmptyRange;
+    return cmd.targetXc.length ? CommandResult.Success : CommandResult.EmptyRange;
   }
 
   private checkCFRule(cmd: AddConditionalFormatCommand) {

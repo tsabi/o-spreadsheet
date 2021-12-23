@@ -440,7 +440,7 @@ describe("Collaborative Sheet manipulation", () => {
         bob.dispatch("ADD_CONDITIONAL_FORMAT", {
           sheetId,
           cf,
-          target: [toZone("A1:A3"), toZone("C1:D3"), toZone("F1:F3")],
+          targetXc: ["A1:A3", "C1:D3", "F1:F3"],
         });
       });
       expect([alice, bob, charlie]).toHaveSynchronizedValue(
@@ -463,7 +463,7 @@ describe("Collaborative Sheet manipulation", () => {
         bob.dispatch("ADD_CONDITIONAL_FORMAT", {
           sheetId,
           cf,
-          target: [toZone("A1:A3"), toZone("C1:D3"), toZone("F1:G3")],
+          targetXc: ["A1:A3", "C1:D3", "F1:G3"],
         });
       });
       expect([alice, bob, charlie]).toHaveSynchronizedValue(
@@ -486,7 +486,7 @@ describe("Collaborative Sheet manipulation", () => {
         bob.dispatch("ADD_CONDITIONAL_FORMAT", {
           sheetId,
           cf,
-          target: [toZone("A1:A3"), toZone("A4:A10"), toZone("A11:A12")],
+          targetXc: ["A1:A3", "A4:A10", "A11:A12"],
         });
       });
       expect([alice, bob, charlie]).toHaveSynchronizedValue(
@@ -509,7 +509,7 @@ describe("Collaborative Sheet manipulation", () => {
         bob.dispatch("ADD_CONDITIONAL_FORMAT", {
           sheetId,
           cf,
-          target: [toZone("A1:A3"), toZone("A4:A5"), toZone("A11:A12")],
+          targetXc: ["A1:A3", "A4:A5", "A11:A12"],
         });
       });
       expect([alice, bob, charlie]).toHaveSynchronizedValue(

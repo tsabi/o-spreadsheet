@@ -101,7 +101,7 @@ describe("UI of conditional formats", () => {
       model.dispatch("ADD_CONDITIONAL_FORMAT", {
         cf: createEqualCF("2", { fillColor: "#FF0000" }, "1"),
         sheetId: model.getters.getActiveSheetId(),
-        target: [toZone("A1:A2")],
+        targetXc: ["A1:A2"],
       });
       model.dispatch("ADD_CONDITIONAL_FORMAT", {
         cf: createColorScale(
@@ -109,7 +109,7 @@ describe("UI of conditional formats", () => {
           { type: "value", color: 0xff00ff, value: "" },
           { type: "value", color: 0x123456, value: "" }
         ),
-        target: [toZone("B1:B5")],
+        targetXc: ["B1:B5"],
         sheetId: model.getters.getActiveSheetId(),
       });
       await nextTick();
@@ -177,7 +177,7 @@ describe("UI of conditional formats", () => {
             values: ["3", ""],
           },
         },
-        target: [toZone("A1:A3")],
+        target: ["A1:A3"],
         sheetId: model.getters.getActiveSheetId(),
       });
     });
@@ -187,7 +187,7 @@ describe("UI of conditional formats", () => {
 
       model.dispatch("ADD_CONDITIONAL_FORMAT", {
         cf: createEqualCF("2", { bold: true, fillColor: "#ff0000" }, "99"),
-        target: [toZone("C1:C5")],
+        targetXc: ["C1:C5"],
         sheetId: model.getters.getActiveSheetId(),
       });
 

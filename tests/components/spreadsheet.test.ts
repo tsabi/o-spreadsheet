@@ -14,7 +14,6 @@ import {
   makeTestFixture,
   MockClipboard,
   nextTick,
-  target,
   typeInComposerGrid,
   typeInComposerTopBar,
 } from "../test_helpers/helpers";
@@ -430,7 +429,7 @@ describe("Composer / selectionInput interactions", () => {
   beforeEach(() => {
     parent.model.dispatch("ADD_CONDITIONAL_FORMAT", {
       sheetId: parent.model.getters.getActiveSheetId(),
-      target: target("B2:C4"),
+      targetXc: ["B2:C4"],
       cf: {
         id: "42",
         rule: {
