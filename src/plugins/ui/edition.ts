@@ -608,31 +608,29 @@ export class EditionPlugin extends UIPlugin {
     }
     if (this.currentContent.startsWith("=")) {
       const tokenAtCursor = this.getTokenAtCursor();
-      if (tokenAtCursor) {
-        const tokenIdex = this.currentTokens
-          .map((token) => token.start)
-          .indexOf(tokenAtCursor.start);
+      if (!tokenAtCursor) {
+        return false;
+      }
 
-        let count = tokenIdex;
-        let currentToken = tokenAtCursor;
-        // check previous token
-        while (!["COMMA", "LEFT_PAREN", "OPERATOR"].includes(currentToken.type)) {
-          if (currentToken.type !== "SPACE" || count < 1) {
-            return false;
-          }
-          count--;
-          currentToken = this.currentTokens[count];
+      const tokenIdex = this.currentTokens.map((token) => token.start).indexOf(tokenAtCursor.start);
+
+      let count = tokenIdex;
+      let currentToken = tokenAtCursor;
+      // check previous token
+      while (!["COMMA", "LEFT_PAREN", "OPERATOR"].includes(currentToken.type)) {
+        if (currentToken.type !== "SPACE" || count < 1) {
+          return false;
         }
-
-        count = tokenIdex + 1;
+        count--;
         currentToken = this.currentTokens[count];
-        // check next token
-        while (currentToken && !["COMMA", "RIGHT_PAREN", "OPERATOR"].includes(currentToken.type)) {
-          if (currentToken.type !== "SPACE") {
-            return false;
-          }
-          count++;
-          currentToken = this.currentTokens[count];
+      }
+
+      count = tokenIdex + 1;
+      currentToken = this.currentTokens[count];
+      // check next token
+      while (currentToken && !["COMMA", "RIGHT_PAREN", "OPERATOR"].includes(currentToken.type)) {
+        if (currentToken.type !== "SPACE") {
+          return false;
         }
         count++;
         currentToken = this.currentTokens[count];

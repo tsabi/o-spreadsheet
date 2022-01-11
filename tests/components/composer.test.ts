@@ -1210,6 +1210,14 @@ describe("composer", () => {
     expect(cehMock.currentState).toEqual({ cursorStart: 5, cursorEnd: 25 });
   });
 
+  test("f4 shortcut doesn't make selection caret appear and allow range selection", async () => {
+    composerEl = await typeInComposerGrid("=SUM(A1,C2)");
+    model.dispatch("CHANGE_COMPOSER_CURSOR_SELECTION", { start: 0, end: 10 });
+    await keydown("F4");
+    expect(composerEl.textContent).toEqual("=SUM($A$1,$C$2)");
+    await keydown("ArrowDown");
+    expect(composerEl.textContent).toEqual("=SUM($A$1,$C$2)");
+  });
 });
 
 describe("composer formula color", () => {
