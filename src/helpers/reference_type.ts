@@ -4,6 +4,32 @@ import { rangeReference, singleCellReference } from "./references";
 
 type ReferenceType = "col" | "row" | "colrow" | "none";
 
+// superRegexQuiChopeTouteLesRefDansUnStringTavu
+const reg = new RegExp(
+  /\s*(\w*!)?\$?[A-Z]{1,3}\$?[0-9]{1,7}\s*(\s*:\s*\$?[A-Z]{1,3}\$?[0-9]{1,7}\s*)?/,
+  "ig"
+);
+
+export function loopReference(reference: string): string {
+  const extremities = reference.split(":");
+  const update = extremities.map((ref) => {
+    switch (getReferenceType(ref)) {
+      case "none":
+        return setXcToReferenceType(ref, "colrow");
+      case "colrow":
+        return setXcToReferenceType(ref, "row");
+      case "row":
+        return setXcToReferenceType(ref, "col");
+      case "col":
+        return setXcToReferenceType(ref, "none");
+    }
+  });
+  return update.join(":");
+}
+
+export function loopRef(text: string) {
+  return text.replace(reg, loopReference);
+}
 /**
  * Change the reference types inside the given token, if the token represent a range or a cell
  *
