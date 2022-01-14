@@ -1,15 +1,14 @@
 // Helper file for the reference types in Xcs (the $ symbol, eg. A$1)
-import { Token, tokenize } from "../formulas";
-import { rangeReference, singleCellReference } from "./references";
 
 type ReferenceType = "col" | "row" | "colrow" | "none";
 
 // superRegexQuiChopeTouteLesRefDansUnStringTavu
 const reg = new RegExp(
-  /\s*(\w*!)?\$?[A-Z]{1,3}\$?[0-9]{1,7}\s*(\s*:\s*\$?[A-Z]{1,3}\$?[0-9]{1,7}\s*)?/,
+  /^(?:\s*\w*!)\$?[A-Z]{1,3}\$?[0-9]{1,7}\s*(\s*:\s*\$?[A-Z]{1,3}\$?[0-9]{1,7}\s*)?/,
   "ig"
 );
 
+/** some stuff */
 export function loopReference(reference: string): string {
   const extremities = reference.split(":");
   const update = extremities.map((ref) => {
@@ -27,9 +26,6 @@ export function loopReference(reference: string): string {
   return update.join(":");
 }
 
-export function loopRef(text: string) {
-  return text.replace(reg, loopReference);
-}
 /**
  * Change the reference types inside the given token, if the token represent a range or a cell
  *
@@ -37,51 +33,14 @@ export function loopRef(text: string) {
  *   A1 => $A$1 => A$1 => $A1 => A1
  *   A1:$B$1 => $A$1:B$1 => A$1:$B1 => $A1:B1 => A1:$B$1
  */
-export function loopThroughReferenceType(token: Token) {
-  if (!(singleCellReference.test(token.value) || rangeReference.test(token.value))) return;
-
-  // Tokenise to split ranges into 2 cell symbols
-  let cellTokens = tokenize(token.value).filter((token) => token.type === "SYMBOL");
-  if (!cellTokens) return;
-  cellTokens[0] = removeTokenSheetReference(cellTokens[0]);
-
-  const updatedTokens = cellTokens.map((token) => getTokenNextReferenceType(token));
-  if (updatedTokens.length === 1) {
-    token.value = getTokenSheetReference(token) + updatedTokens[0].value;
-  } else if (updatedTokens.length === 2) {
-    token.value =
-      getTokenSheetReference(token) + updatedTokens[0].value + ":" + updatedTokens[1].value;
-  }
-}
-
-/**
- * Get a new token with a changed type of reference from the given cell token symbol.
- * Undefined behavior if given a token other than a cell or if the Xc contains a sheet reference
- *
- * A1 => $A$1 => A$1 => $A1 => A1
- */
-function getTokenNextReferenceType(cellToken: Token): Token {
-  const newToken = { ...cellToken };
-  switch (getReferenceType(cellToken.value)) {
-    case "none":
-      newToken.value = setXcToReferenceType(cellToken.value, "colrow");
-      break;
-    case "colrow":
-      newToken.value = setXcToReferenceType(cellToken.value, "row");
-      break;
-    case "row":
-      newToken.value = setXcToReferenceType(cellToken.value, "col");
-      break;
-    case "col":
-      newToken.value = setXcToReferenceType(cellToken.value, "none");
-      break;
-  }
-  return newToken;
+export function loopThroughReferenceType(text: string) {
+  return text.replace(reg, loopReference);
 }
 
 /**
  * Returns the given XC with the given reference type.
  */
+// detect and replace differently ?
 function setXcToReferenceType(xc: string, referenceType: ReferenceType): string {
   xc = xc.replace(/\$/g, "");
   let indexOfNumber: number;
@@ -114,28 +73,6 @@ function getReferenceType(xcCell: string): ReferenceType {
     return "row";
   }
   return "none";
-}
-
-/**
- * Get the string that represent the reference to another sheet in the given cell/range token
- * or an empty string if there is no sheet reference
- *
- * eg. : token(Sheet2!A1) => "Sheet2!"
- */
-function getTokenSheetReference(token: Token): string {
-  const splits = token.value.split("!");
-  return splits.length === 1 ? "" : splits[0] + "!";
-}
-
-/**
- * Remove the string that represent the reference to another sheet in the given cell/range token
- *
- * eg. : token(Sheet2!A1) => token(A1)
- */
-function removeTokenSheetReference(token: Token): Token {
-  const splits = token.value.split("!");
-  const newValue = splits.length === 1 ? token.value : splits[1];
-  return { ...token, value: newValue };
 }
 
 function isColFixed(xc: string) {

@@ -9,7 +9,7 @@ import {
   updateSelectionOnDeletion,
   updateSelectionOnInsertion,
 } from "../../helpers/index";
-import { loopRef, loopThroughReferenceType } from "../../helpers/reference_type";
+import { loopThroughReferenceType } from "../../helpers/reference_type";
 import { Mode } from "../../model";
 import { _lt } from "../../translation";
 import {
@@ -273,39 +273,21 @@ export class EditionPlugin extends UIPlugin {
   // ---------------------------------------------------------------------------
 
   cycleReferences() {
-    const selectedTokens = this.getRangesInSelection();
-    const start = selectedTokens[0].start; // start of the token on the left of selection
-    const end = selectedTokens.slice(-1)[0].end; // end of the token on the right of selection
+    const { start, end } = this.getExtendedSelection();
+    // should move to ALLOW_DISPATCH
+    const containsRefs = this.getCurrentTokens().some(
+      (t) => t.start >= start && t.end <= end && t.type === "SYMBOL"
+    );
+    if (!containsRefs) {
+      return;
+    }
     const text = this.currentContent.substring(start, end); // text we should consider (inde)
-    const cycledText = loopRef(text);
+    const cycledText = loopThroughReferenceType(text);
     const content =
       this.currentContent.substring(0, start) + cycledText + this.currentContent.substring(end);
     this.setContent(content, {
       start: start,
       end: start + cycledText.length,
-    });
-  }
-
-  cycleReferences2() {
-    // Select tokens of this.currentTokens that are currently selected in the composer
-    const selectedTokens = this.getTokensInSelection().filter((token) => token.type === "SYMBOL");
-    if (selectedTokens.length === 0) return;
-
-    // Change Reference Type in-place of all tokens in the selection
-    selectedTokens.map((token) => loopThroughReferenceType(token));
-
-    // Get the updated end of the selection
-    let updatedSelectionEnd = 0;
-    for (let token of this.currentTokens) {
-      updatedSelectionEnd += token.value.length;
-      if (token === selectedTokens[selectedTokens.length - 1]) break;
-    }
-
-    // Update content of the composer
-    const content = this.currentTokens.map((token) => token.value).join("");
-    this.setContent(content, {
-      start: selectedTokens[0].start,
-      end: updatedSelectionEnd,
     });
   }
 
@@ -654,22 +636,11 @@ export class EditionPlugin extends UIPlugin {
     return false;
   }
 
-  /**
-   * Return all the tokens between selectionStart and selectionEnd.
-   * Includes token that begin right on selectionStart or end right on selectionEnd.
-   */
-  getTokensInSelection(): EnrichedToken[] {
+  /**  returns the selection extended until it contains all (partly) included  and adjacent ranges  */
+  getExtendedSelection(): ComposerSelection {
     const start = Math.min(this.selectionStart, this.selectionEnd);
     const end = Math.max(this.selectionStart, this.selectionEnd);
-    return this.currentTokens.filter(
-      (t) => (t.start <= start && t.end >= start) || (t.start >= start && t.start < end)
-    );
-  }
-
-  getRangesInSelection(): EnrichedToken[] {
-    const start = Math.min(this.selectionStart, this.selectionEnd);
-    const end = Math.max(this.selectionStart, this.selectionEnd);
-    return this.currentTokens.filter((t) => {
+    const selectedTokens = this.currentTokens.filter((t) => {
       return (
         (t.start <= start && t.end > start) ||
         // (t.start >= start && t.start < end) ||
@@ -677,5 +648,13 @@ export class EditionPlugin extends UIPlugin {
         (t.start <= end && t.type === "SYMBOL")
       );
     });
+    if (selectedTokens.length) {
+      return {
+        start: selectedTokens[0].start, // start of the token on the left of selection
+        end: selectedTokens.slice(-1)[0].end, // end of the token on the right of selection
+      };
+    } else {
+      return this.getComposerSelection();
+    }
   }
 }
