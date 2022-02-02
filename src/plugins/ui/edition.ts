@@ -274,24 +274,26 @@ export class EditionPlugin extends UIPlugin {
 
   private cycleReferences() {
     // Select tokens of this.currentTokens that are currently selected in the composer
-    const selectedTokens = this.getTokensInSelection().filter((token) => token.type === "SYMBOL");
+    const selectedTokens = this.getTokensInSelection();
     if (selectedTokens.length === 0) return;
 
-    // Change Reference Type in-place of all tokens in the selection
-    selectedTokens.map((token) => loopThroughReferenceType(token));
-
-    // Get the updated end of the selection
-    let updatedSelectionEnd = 0;
-    for (let token of this.currentTokens) {
-      updatedSelectionEnd += token.value.length;
-      if (token === selectedTokens[selectedTokens.length - 1]) break;
-    }
-
+    const updatedReferences = selectedTokens
+      .map(loopThroughReferenceType)
+      .map((token) => token.value)
+      .join("");
+    console.log(selectedTokens);
+    const cursorStart = selectedTokens[0].start;
+    const cursorEnd = selectedTokens[selectedTokens.length - 1].end;
+    console.log(cursorStart, cursorEnd);
+    const content =
+      this.currentContent.slice(0, cursorStart) +
+      updatedReferences +
+      this.currentContent.slice(cursorEnd);
+    console.log(content);
     // Update content of the composer
-    const content = this.currentTokens.map((token) => token.value).join("");
     this.setContent(content, {
-      start: selectedTokens[0].start,
-      end: updatedSelectionEnd,
+      start: cursorStart,
+      end: cursorStart + updatedReferences.length,
     });
   }
 

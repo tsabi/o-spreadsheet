@@ -11,21 +11,27 @@ type ReferenceType = "col" | "row" | "colrow" | "none";
  *   A1 => $A$1 => A$1 => $A1 => A1
  *   A1:$B$1 => $A$1:B$1 => A$1:$B1 => $A1:B1 => A1:$B$1
  */
-export function loopThroughReferenceType(token: Token) {
-  if (!(singleCellReference.test(token.value) || rangeReference.test(token.value))) return;
+export function loopThroughReferenceType(token: Readonly<Token>): Token {
+  if (!(singleCellReference.test(token.value) || rangeReference.test(token.value))) return token;
 
   // Tokenise to split ranges into 2 cell symbols
   let cellTokens = tokenize(token.value).filter((token) => token.type === "SYMBOL");
-  if (!cellTokens) return;
+  if (!cellTokens) return token;
   cellTokens[0] = removeTokenSheetReference(cellTokens[0]);
 
   const updatedTokens = cellTokens.map((token) => getTokenNextReferenceType(token));
   if (updatedTokens.length === 1) {
-    token.value = getTokenSheetReference(token) + updatedTokens[0].value;
+    return {
+      ...token,
+      value: getTokenSheetReference(token) + updatedTokens[0].value,
+    };
   } else if (updatedTokens.length === 2) {
-    token.value =
-      getTokenSheetReference(token) + updatedTokens[0].value + ":" + updatedTokens[1].value;
+    return {
+      ...token,
+      value: getTokenSheetReference(token) + updatedTokens[0].value + ":" + updatedTokens[1].value,
+    };
   }
+  return token;
 }
 
 /**
