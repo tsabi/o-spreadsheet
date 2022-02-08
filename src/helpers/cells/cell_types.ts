@@ -23,7 +23,7 @@ import {
 } from "../../types";
 import { formatDateTime } from "../dates";
 import { markdownLink, parseMarkdownLink, parseSheetLink } from "../misc";
-import { formatComposerNumber } from "../numbers";
+import { formatComposerNumber, formatStandardNumber } from "../numbers";
 import { formatValue } from "./cell_helpers";
 
 /**
@@ -113,9 +113,13 @@ export class EmptyCell extends AbstractCell<EmptyEvaluation> {
 }
 
 export class NumberCell extends AbstractCell<NumberEvaluation> {
-  readonly content = formatComposerNumber(this.evaluated.value);
+  readonly content = formatStandardNumber(this.evaluated.value);
   constructor(id: UID, value: number, properties: CellDisplayProperties = {}) {
     super(id, { value: value, type: CellValueType.number }, properties);
+  }
+
+  get composerContent() {
+    return formatComposerNumber(this.evaluated.value);
   }
 }
 

@@ -68,6 +68,18 @@ export function formatStandardNumber(n: number): FormattedValue {
   return decimalStandardRepresentation.format(n) as FormattedValue;
 }
 
+/**
+ * Returns wether a number's amount of relevant digits is
+ */
+function requiresScientificFormat(
+  n: number,
+  limit: number = STANDARD_MAX_SIGNIFICANT_DIGITS
+): boolean {
+  const bornSup = 10 ** limit;
+  const bornInf = 1 / 10 ** (limit - 1);
+  return n < bornInf || bornSup <= n;
+}
+
 /** This function aims to give a format for number to display in the composer.
  * - the number will be displayed with all the digits stored on it
  * - the number will be displayed in scientific language if 10 digits isn't enough
@@ -83,46 +95,44 @@ export function formatComposerNumber(n: number): string {
     return "0";
   }
 
-  if (
-    10 ** STANDARD_MAX_SIGNIFICANT_DIGITS > n &&
-    n >= 1 / 10 ** (STANDARD_MAX_SIGNIFICANT_DIGITS - 1)
-  ) {
-    // for numbers value smaller  than '0.000001' --> javascript will display number
-    // with a scientific language without displaying all digits on the number.
-    // return n.toString() isn't enough to manage smaller numbers.
-
-    // we use the "toExponential" function to extract all digits on the value.
-    const [exponentialRepresentation, magnitudeOrder] = n.toExponential().split("e");
-    const significantDigits = exponentialRepresentation.replace(".", "");
-    const significantMagnitudeOrder = Number(magnitudeOrder) + 1;
-
-    // exponentialRepresentation: 1.234, magnitudeOrder: 3
-    // --> significantDigits 1234, significantMagnitudeOrder: 4
-
-    if (significantMagnitudeOrder < 1) {
-      // ex: significantDigits "1234", significantMagnitudeOrder: 0 --> "0.1234"
-      // ex: significantDigits "1234", significantMagnitudeOrder: -2 --> "0.001234"
-      return "0." + "0".repeat(-significantMagnitudeOrder) + significantDigits;
-    }
-
-    const significantDigitsLength = significantDigits.length;
-    const isInteger = significantDigitsLength <= significantMagnitudeOrder;
-    if (!isInteger) {
-      // significantDigits 123456, significantMagnitudeOrder: 3 --> 123.456
-      // significantDigits 123456, significantMagnitudeOrder: 1 --> 1.23456
-      return (
-        significantDigits.slice(0, significantMagnitudeOrder) +
-        "." +
-        significantDigits.slice(significantMagnitudeOrder)
-      );
-    }
-
-    // case isInteger:
-    // significantDigits 123456, significantMagnitudeOrder: 6 --> 123456
-    // significantDigits 123456, significantMagnitudeOrder: 8 --> 12345600
-    return significantDigits + "0".repeat(significantMagnitudeOrder - significantDigitsLength);
+  if (requiresScientificFormat(n)) {
+    return n.toExponential().toUpperCase();
   }
-  return n.toExponential().toUpperCase();
+
+  // for numbers value smaller  than '0.000001' --> javascript will display number
+  // with a scientific language without displaying all digits on the number.
+  // return n.toString() isn't enough to manage smaller numbers.
+
+  // we use the "toExponential" function to extract all digits on the value.
+  const [exponentialRepresentation, magnitudeOrder] = n.toExponential().split("e");
+  const significantDigits = exponentialRepresentation.replace(".", "");
+  const significantMagnitudeOrder = Number(magnitudeOrder) + 1;
+
+  // exponentialRepresentation: 1.234, magnitudeOrder: 3
+  // --> significantDigits 1234, significantMagnitudeOrder: 4
+
+  if (significantMagnitudeOrder < 1) {
+    // ex: significantDigits "1234", significantMagnitudeOrder: 0 --> "0.1234"
+    // ex: significantDigits "1234", significantMagnitudeOrder: -2 --> "0.001234"
+    return "0." + "0".repeat(-significantMagnitudeOrder) + significantDigits;
+  }
+
+  const significantDigitsLength = significantDigits.length;
+  const isInteger = significantDigitsLength <= significantMagnitudeOrder;
+  if (!isInteger) {
+    // significantDigits 123456, significantMagnitudeOrder: 3 --> 123.456
+    // significantDigits 123456, significantMagnitudeOrder: 1 --> 1.23456
+    return (
+      significantDigits.slice(0, significantMagnitudeOrder) +
+      "." +
+      significantDigits.slice(significantMagnitudeOrder)
+    );
+  }
+
+  // case isInteger:
+  // significantDigits 123456, significantMagnitudeOrder: 6 --> 123456
+  // significantDigits 123456, significantMagnitudeOrder: 8 --> 12345600
+  return significantDigits + "0".repeat(significantMagnitudeOrder - significantDigitsLength);
 }
 
 // this is a cache than can contains decimal representation formats
