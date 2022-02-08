@@ -1,3 +1,5 @@
+import { Format, FormattedValue } from "../types";
+
 /**
  * This regexp is supposed to be as close as possible as the numberRegexp, but
  * its purpose is to be used by the tokenizer.
@@ -45,11 +47,11 @@ const decimalStandardRepresentation = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 10,
 });
 
-export function formatStandardNumber(n: number): string {
+export function formatStandardNumber(n: number): FormattedValue {
   if (Number.isInteger(n)) {
     return n.toString();
   }
-  return decimalStandardRepresentation.format(n);
+  return decimalStandardRepresentation.format(n) as FormattedValue;
 }
 
 // this is a cache than can contains decimal representation formats
@@ -58,7 +60,36 @@ let decimalRepresentations: Intl.NumberFormat[] = [];
 
 export const maximumDecimalPlaces = 20;
 
-export function formatDecimal(n: number, decimals: number, sep: string = ""): string {
+export function formatNumber(value: any, format: Format): FormattedValue {
+  const parts = format.split(";");
+  const l = parts.length;
+  if (value < 0) {
+    if (l > 1) {
+      return _formatValue(-value, parts[1]);
+    } else {
+      return "-" + _formatValue(-value, parts[0]);
+    }
+  }
+  const index = l === 3 && value === 0 ? 2 : 0;
+  return _formatValue(value, parts[index]);
+}
+
+function _formatValue(value: any, format: Format): FormattedValue {
+  const parts = format.split(".");
+  const decimals = parts.length === 1 ? 0 : parts[1].match(/0/g)!.length;
+  const separator = parts[0].includes(",") ? "," : "";
+  const isPercent = format.includes("%");
+  if (isPercent) {
+    value = value * 100;
+  }
+  const rawNumber = formatDecimal(value, decimals, separator);
+  if (isPercent) {
+    return rawNumber + "%";
+  }
+  return rawNumber;
+}
+
+export function formatDecimal(n: number, decimals: number, sep: string = ""): FormattedValue {
   if (n < 0) {
     return "-" + formatDecimal(-n, decimals);
   }
@@ -81,37 +112,4 @@ export function formatDecimal(n: number, decimals: number, sep: string = ""): st
     );
   }
   return result;
-}
-
-export function formatPercent(n: number): string {
-  return formatDecimal(100 * n, 2) + "%";
-}
-
-export function formatNumber(value: any, format: string): string {
-  const parts = format.split(";");
-  const l = parts.length;
-  if (value < 0) {
-    if (l > 1) {
-      return _formatValue(-value, parts[1]);
-    } else {
-      return "-" + _formatValue(-value, parts[0]);
-    }
-  }
-  const index = l === 3 && value === 0 ? 2 : 0;
-  return _formatValue(value, parts[index]);
-}
-
-function _formatValue(value: any, format: string): string {
-  const parts = format.split(".");
-  const decimals = parts.length === 1 ? 0 : parts[1].match(/0/g)!.length;
-  const separator = parts[0].includes(",") ? "," : "";
-  const isPercent = format.includes("%");
-  if (isPercent) {
-    value = value * 100;
-  }
-  const rawNumber = formatDecimal(value, decimals, separator);
-  if (isPercent) {
-    return rawNumber + "%";
-  }
-  return rawNumber;
 }
