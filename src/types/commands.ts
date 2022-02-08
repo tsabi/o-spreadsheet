@@ -6,6 +6,7 @@ import {
   ChartUIDefinitionUpdate,
   ConditionalFormat,
   Figure,
+  Format,
   Increment,
   Style,
   Zone,
@@ -194,7 +195,7 @@ export interface UpdateCellCommand extends SheetDependentCommand, PositionDepend
   type: "UPDATE_CELL";
   content?: string;
   style?: Style | null;
-  format?: string;
+  format?: Format;
 }
 
 /**
@@ -352,7 +353,7 @@ export interface SetFormattingCommand extends SheetDependentCommand, TargetDepen
   type: "SET_FORMATTING";
   style?: Style;
   border?: BorderCommand;
-  format?: string;
+  format?: Format;
 }
 
 export interface SetBorderCommand extends SheetDependentCommand, PositionDependentCommand {
@@ -413,7 +414,7 @@ export interface AutoFillCellCommand {
   content?: string;
   style?: Style | null;
   border?: Border;
-  format?: string;
+  format?: Format;
 }
 
 export interface ActivatePaintFormatCommand {

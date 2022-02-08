@@ -1,5 +1,5 @@
 import { DEFAULT_FONT_SIZE } from "../../constants";
-import { Align, Border, CellData, Style, UID, WorkbookData } from "../../types";
+import { Align, Border, CellData, Format, Style, UID, WorkbookData } from "../../types";
 import { ExtractedStyle, XLSXRel, XLSXRelFile, XLSXStructure } from "../../types/xlsx";
 import { FIRST_NUMFMT_ID, HEIGHT_FACTOR, WIDTH_FACTOR, XLSX_FORMAT_MAP } from "../constants";
 
@@ -101,7 +101,7 @@ export function normalizeStyle(construct: XLSXStructure, styles: ExtractedStyle)
   return id;
 }
 
-export function convertFormat(format: string | undefined, numFmtStructure: string[]): number {
+export function convertFormat(format: Format | undefined, numFmtStructure: string[]): number {
   if (!format) {
     return 0;
   }

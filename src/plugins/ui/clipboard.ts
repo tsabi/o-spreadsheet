@@ -564,7 +564,7 @@ export class ClipboardPlugin extends UIPlugin {
 
       if (pasteOption === "onlyValue") {
         const content = formatValue(origin.cell.evaluated.value);
-        this.dispatch("UPDATE_CELL", { ...target, content });
+        this.dispatch("UPDATE_CELL", { ...target, content: content });
         return;
       }
       let content = origin.cell.content;

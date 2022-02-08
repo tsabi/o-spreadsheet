@@ -4,6 +4,7 @@
 import { Token } from "../formulas";
 import { Cell, CellValue } from "./cells";
 import { CommandResult } from "./commands";
+import { Format } from "./format";
 
 export type UID = string;
 export interface Link {
@@ -44,7 +45,7 @@ export interface UpdateCellData {
   content?: string;
   formula?: string;
   style?: Style | null;
-  format?: string;
+  format?: Format;
 }
 
 export interface Sheet {
@@ -111,7 +112,7 @@ export type _CompiledFormula = (
 export interface CompiledFormula {
   execute: _CompiledFormula;
   tokens: Token[];
-  dependenciesFormat: (string | number)[];
+  dependenciesFormat: (Format | number)[];
   dependencies: string[];
 }
 
