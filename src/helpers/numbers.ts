@@ -1,11 +1,3 @@
-import { Format, FormattedValue } from "../types";
-
-/**
- *  Constant used to indicate the maximum of digits that is possible to display
- *  in a cell with standard size.
- */
-const STANDARD_MAX_SIGNIFICANT_DIGITS = 10;
-
 /**
  * This regexp is supposed to be as close as possible as the numberRegexp, but
  * its purpose is to be used by the tokenizer.
@@ -56,10 +48,14 @@ export function parseNumber(str: string): number {
   return n;
 }
 
-const decimalStandardRepresentation = new Intl.NumberFormat("en-US", {
-  useGrouping: false,
-  maximumFractionDigits: 10,
-});
+// -----------------------------------------------------------------------------
+// format
+// -----------------------------------------------------------------------------
+
+// const decimalStandardRepresentation = new Intl.NumberFormat("en-US", {
+//   useGrouping: false,
+//   maximumFractionDigits: 10,
+// });
 
 export function formatStandardNumber(n: number): FormattedValue {
   if (Number.isInteger(n)) {
@@ -68,75 +64,98 @@ export function formatStandardNumber(n: number): FormattedValue {
   return decimalStandardRepresentation.format(n) as FormattedValue;
 }
 
-/**
- * Returns wether a number's amount of relevant digits is
- */
-function requiresScientificFormat(
-  n: number,
-  limit: number = STANDARD_MAX_SIGNIFICANT_DIGITS
-): boolean {
-  const bornSup = 10 ** limit;
-  const bornInf = 1 / 10 ** (limit - 1);
-  return n < bornInf || bornSup <= n;
-}
+// export interface InternalNumberFormat {
+//   minimumIntegerDigits: number;
+//   maximumIntegerDigits: number;
+//   minimumDecimalDigits: number;
+//   maximumDecimalDigits: number;
+//   scientificDigit: number;
+//   hasPercentSymbol: boolean;
+//   hasSeparatorSymbol: boolean;
+// }
 
-/** This function aims to give a format for number to display in the composer.
- * - the number will be displayed with all the digits stored on it
- * - the number will be displayed in scientific language if 10 digits isn't enough
- * to represent its magnitude order (mean if it is greater or equal than
- * 10 000 000 000 or less than 0.000 000 001)
- */
-export function formatComposerNumber(n: number): string {
-  if (n < 0) {
-    return "-" + formatComposerNumber(-n);
-  }
+// const aMaximum = 20;
 
-  if (n === 0) {
-    return "0";
-  }
+// export function createComposerNumberFormat(value: number): InternalNumberFormat {
+//   if (requiresScientificFormat(value)) {
+//     return {
+//       minimumIntegerDigits: 1,
+//       maximumIntegerDigits: 1,
+//       minimumDecimalDigits: 0,
+//       maximumDecimalDigits: aMaximum,
+//       scientificDigit: 2,
+//       hasPercentSymbol: false,
+//       hasSeparatorSymbol: false,
+//     };
+//   }
+//   return {
+//     minimumIntegerDigits: 1,
+//     maximumIntegerDigits: aMaximum,
+//     minimumDecimalDigits: 0,
+//     maximumDecimalDigits: aMaximum,
+//     scientificDigit: 0,
+//     hasPercentSymbol: false,
+//     hasSeparatorSymbol: false,
+//   };
+// }
 
-  if (requiresScientificFormat(n)) {
-    return n.toExponential().toUpperCase();
-  }
+// /** This function aims to give a format for number to display in the composer.
+//  * - the number will be displayed with all the digits stored on it
+//  * - the number will be displayed in scientific language if 10 digits isn't enough
+//  * to represent its magnitude order (mean if it is greater or equal than
+//  * 10 000 000 000 or less than 0.000 000 001)
+//  */
+// export function formatComposerNumber(n: number): string {
+//   if (n < 0) {
+//     return "-" + formatComposerNumber(-n);
+//   }
 
-  // for numbers value smaller  than '0.000001' --> javascript will display number
-  // with a scientific language without displaying all digits on the number.
-  // return n.toString() isn't enough to manage smaller numbers.
+//   if (n === 0) {
+//     return "0";
+//   }
 
-  // we use the "toExponential" function to extract all digits on the value.
-  const [exponentialRepresentation, magnitudeOrder] = n.toExponential().split("e");
-  const significantDigits = exponentialRepresentation.replace(".", "");
-  const significantMagnitudeOrder = Number(magnitudeOrder) + 1;
+//   if (requiresScientificFormat(n)) {
+//     return n.toExponential().toUpperCase();
+//   }
 
-  // exponentialRepresentation: 1.234, magnitudeOrder: 3
-  // --> significantDigits 1234, significantMagnitudeOrder: 4
+//   // for numbers value smaller  than '0.000001' --> javascript will display number
+//   // with a scientific language without displaying all digits on the number.
+//   // return n.toString() isn't enough to manage smaller numbers.
 
-  if (significantMagnitudeOrder < 1) {
-    // ex: significantDigits "1234", significantMagnitudeOrder: 0 --> "0.1234"
-    // ex: significantDigits "1234", significantMagnitudeOrder: -2 --> "0.001234"
-    return "0." + "0".repeat(-significantMagnitudeOrder) + significantDigits;
-  }
+//   // we use the "toExponential" function to extract all digits on the value.
+//   const [exponentialRepresentation, magnitudeOrder] = n.toExponential().split("e");
+//   const significantDigits = exponentialRepresentation.replace(".", "");
+//   const significantMagnitudeOrder = Number(magnitudeOrder) + 1;
 
-  const significantDigitsLength = significantDigits.length;
-  const isInteger = significantDigitsLength <= significantMagnitudeOrder;
-  if (!isInteger) {
-    // significantDigits 123456, significantMagnitudeOrder: 3 --> 123.456
-    // significantDigits 123456, significantMagnitudeOrder: 1 --> 1.23456
-    return (
-      significantDigits.slice(0, significantMagnitudeOrder) +
-      "." +
-      significantDigits.slice(significantMagnitudeOrder)
-    );
-  }
+//   // exponentialRepresentation: 1.234, magnitudeOrder: 3
+//   // --> significantDigits 1234, significantMagnitudeOrder: 4
 
-  // case isInteger:
-  // significantDigits 123456, significantMagnitudeOrder: 6 --> 123456
-  // significantDigits 123456, significantMagnitudeOrder: 8 --> 12345600
-  return significantDigits + "0".repeat(significantMagnitudeOrder - significantDigitsLength);
-}
+//   if (significantMagnitudeOrder < 1) {
+//     // ex: significantDigits "1234", significantMagnitudeOrder: 0 --> "0.1234"
+//     // ex: significantDigits "1234", significantMagnitudeOrder: -2 --> "0.001234"
+//     return "0." + "0".repeat(-significantMagnitudeOrder) + significantDigits;
+//   }
 
-// this is a cache than can contains decimal representation formats
-// from 0 (minimum) to 20 (maximum) digits after the decimal point
+//   const significantDigitsLength = significantDigits.length;
+//   const isInteger = significantDigitsLength <= significantMagnitudeOrder;
+//   if (!isInteger) {
+//     // significantDigits 123456, significantMagnitudeOrder: 3 --> 123.456
+//     // significantDigits 123456, significantMagnitudeOrder: 1 --> 1.23456
+//     return (
+//       significantDigits.slice(0, significantMagnitudeOrder) +
+//       "." +
+//       significantDigits.slice(significantMagnitudeOrder)
+//     );
+//   }
+
+//   // case isInteger:
+//   // significantDigits 123456, significantMagnitudeOrder: 6 --> 123456
+//   // significantDigits 123456, significantMagnitudeOrder: 8 --> 12345600
+//   return significantDigits + "0".repeat(significantMagnitudeOrder - significantDigitsLength);
+// }
+
+// // this is a cache than can contains decimal representation formats
+// // from 0 (minimum) to 20 (maximum) digits after the decimal point
 let decimalRepresentations: Intl.NumberFormat[] = [];
 
 export const maximumDecimalPlaces = 20;

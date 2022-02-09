@@ -22,9 +22,9 @@ import {
   UID,
 } from "../../types";
 import { formatDateTime } from "../dates";
+import { applyFormat } from "../format";
 import { markdownLink, parseMarkdownLink, parseSheetLink } from "../misc";
-import { formatComposerNumber, formatStandardNumber } from "../numbers";
-import { formatValue } from "./cell_helpers";
+import { formatComposerNumber } from "../numbers";
 
 /**
  * Abstract base implementation of a cell.
@@ -53,7 +53,7 @@ abstract class AbstractCell<T extends CellEvaluation = CellEvaluation> implement
   }
 
   get formattedValue() {
-    return formatValue(this.evaluated.value, this.format);
+    return applyFormat(this.evaluated.value, this.format);
   }
 
   get composerContent() {
@@ -113,7 +113,7 @@ export class EmptyCell extends AbstractCell<EmptyEvaluation> {
 }
 
 export class NumberCell extends AbstractCell<NumberEvaluation> {
-  readonly content = formatStandardNumber(this.evaluated.value);
+  readonly content = applyNumberFormat(this.evaluated.value);
   constructor(id: UID, value: number, properties: CellDisplayProperties = {}) {
     super(id, { value: value, type: CellValueType.number }, properties);
   }

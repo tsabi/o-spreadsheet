@@ -1,6 +1,5 @@
 import { SELECTION_BORDER_COLOR } from "../../constants";
-import { formatValue } from "../../helpers/cells/index";
-import { clip, mergeOverlappingZones, overlap, positions } from "../../helpers/index";
+import { applyFormat, clip, mergeOverlappingZones, overlap, positions } from "../../helpers/index";
 import { Mode } from "../../model";
 import {
   CellPosition,
@@ -563,7 +562,7 @@ export class ClipboardPlugin extends UIPlugin {
       }
 
       if (pasteOption === "onlyValue") {
-        const content = formatValue(origin.cell.evaluated.value);
+        const content = applyFormat(origin.cell.evaluated.value);
         this.dispatch("UPDATE_CELL", { ...target, content: content });
         return;
       }
