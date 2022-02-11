@@ -42,6 +42,9 @@ export function parseNumber(str: string): number {
   return n;
 }
 
+//@ts-ignore
+const MAX_DECIMAL_PLACES = 20;
+
 const decimalStandardRepresentation = new Intl.NumberFormat("en-US", {
   useGrouping: false,
   maximumFractionDigits: 10,
@@ -53,6 +56,22 @@ export function formatStandardNumber(n: number): FormattedValue {
   }
   return decimalStandardRepresentation.format(n) as FormattedValue;
 }
+
+export function createDefaultNumberFormat(value: number): Format {
+  // value = 1.2 -> value % 1 = 0.19999999999996
+  // value = 1 => value%1 = 0 -> .toString().length = 1
+
+  const decimals = decimalStandardRepresentation.format(value).split(".")[1];
+  return decimals ? "0." + "0".repeat(decimals.length) : "0";
+  // const decimalDigitsLength = (value % 1).toString().length - 2;
+  // return decimalDigitsLength
+  //   ? "0." + "0".repeat(Math.max(decimalDigitsLength, MAX_DECIMAL_PLACES))
+  //   : "0";
+}
+
+// export function formatStandardNumber_2(n: number): FormattedValue {
+//   return
+// }
 
 // this is a cache than can contains decimal representation formats
 // from 0 (minimum) to 20 (maximum) digits after the decimal point
