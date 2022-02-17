@@ -1,5 +1,12 @@
 import { ICON_SETS } from "../src/components/icons";
-import { markdownLink, numberToLetters, toCartesian, toXC, toZone } from "../src/helpers";
+import {
+  buildSheetLink,
+  markdownLink,
+  numberToLetters,
+  toCartesian,
+  toXC,
+  toZone,
+} from "../src/helpers";
 import { Border, CellIsRule, ChartUIDefinition, IconSet, IconSetRule, Style } from "../src/types";
 import { XLSXCFOperatorType, XLSXSharedFormula } from "../src/types/xlsx";
 import { rgbaToInt } from "../src/xlsx/conversion/color_conversion";
@@ -87,6 +94,9 @@ describe("Import xlsx data", () => {
       testSheet
     );
     expect(linkXc).toBeTruthy();
+    const sheetLink = markdownLink("sheetLink", buildSheetLink("jestSheet"));
+    const sheetLinkXc = findXcCellWithContent(sheetLink, testSheet);
+    expect(sheetLinkXc).toBeTruthy();
   });
 
   test("Can import row size", () => {
