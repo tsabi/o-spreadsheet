@@ -8,6 +8,7 @@ const {
   useSubEnv,
   onWillStart,
   onMounted,
+  useState,
   mount,
   onWillUnmount,
   useExternalListener,
@@ -47,6 +48,7 @@ let start;
 class Demo extends Component {
   setup() {
     this.stateUpdateMessages = [];
+    this.state = useState({ key: 1 });
     this.client = {
       id: uuidGenerator.uuidv4(),
       name: "Local",
@@ -66,6 +68,39 @@ class Demo extends Component {
       isReadonlyAllowed: true,
       action: async (env) => {
         this.model.updateReadOnly(false);
+      },
+    });
+
+    topbarMenuRegistry.addChild("xlsxImport", ["file"], {
+      name: "Import XLSX",
+      sequence: 25,
+      action: async (env) => {
+        const input = document.createElement("input");
+        input.setAttribute("type", "file");
+        input.setAttribute("id", "inputFile");
+        input.setAttribute("id", "display: none");
+        document.body.appendChild(input);
+        input.onchange = async () => {
+          console.log(input.files);
+          if (input.files.length <= 0) {
+            return false;
+          }
+          const myjszip = new JSZip();
+          const zip = await myjszip.loadAsync(input.files[0]);
+          console.log("Hey :)");
+          const files = Object.keys(zip.files);
+          const contents = await Promise.all(files.map((file) => zip.files[file].async("text")));
+          const inputfiles = {};
+          for (let i = 0; i < contents.length; i++) {
+            inputfiles[files[i]] = contents[i];
+          }
+          const data = env.importXLSX(inputfiles);
+          await fetch("http://localhost:9000/clear");
+          this.createModel(data);
+          this.state.key = this.state.key + 1;
+          input.remove();
+        };
+        input.click();
       },
     });
 
@@ -98,9 +133,13 @@ class Demo extends Component {
       this.transportService = undefined;
       this.stateUpdateMessages = [];
     }
+    this.createModel(demoData);
+    // this.createModel(makeLargeDataset(26, 10_000, ["numbers"]));
+  }
+
+  createModel(data) {
     this.model = new Model(
-      demoData,
-      // makeLargeDataset(26, 10_000, ["numbers"]);
+      data,
       {
         evalContext: { env: this.env },
         transportService: this.transportService,
@@ -112,7 +151,6 @@ class Demo extends Component {
     this.model.joinSession();
     this.activateFirstSheet();
   }
-
   askConfirmation(content, confirm, cancel) {
     if (window.confirm(content)) {
       confirm();
@@ -161,7 +199,7 @@ class Demo extends Component {
 
 Demo.template = xml/* xml */ `
   <div>
-    <Spreadsheet model="model"/>
+    <Spreadsheet model="model" t-key="state.key"/>
   </div>`;
 Demo.components = { Spreadsheet };
 

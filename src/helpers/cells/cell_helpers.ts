@@ -14,6 +14,10 @@ export function formatValue(value: CellValue, format?: string): string {
     case "boolean":
       return value ? "TRUE" : "FALSE";
     case "number":
+      //TODO delete this if when fixing formats import
+      if (format && !format.match) {
+        return value.toString();
+      }
       if (format?.match(DATETIME_FORMAT)) {
         return formatDateTime({ value, format: format });
       }

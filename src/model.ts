@@ -32,9 +32,9 @@ import {
   isCoreCommand,
   LAYERS,
   UID,
-  WorkbookData,
 } from "./types/index";
 import { NotifyUIEvent } from "./types/ui";
+import { WorkbookData } from "./types/workbook_data";
 import { XLSXExport } from "./types/xlsx";
 import { getXLSX } from "./xlsx/xlsx_writer";
 

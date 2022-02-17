@@ -1,5 +1,8 @@
 import { ExcelIconSet } from "../types/xlsx";
 
+/** In XLSX color format (no #)  */
+export const AUTO_COLOR = "000000";
+
 export const XLSX_FORMAT_MAP = {
   General: 0,
   "0": 1,
@@ -58,13 +61,24 @@ export const CONTENT_TYPES = {
   styles: "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml",
   drawing: "application/vnd.openxmlformats-officedocument.drawing+xml",
   chart: "application/vnd.openxmlformats-officedocument.drawingml.chart+xml",
+  themes: "application/vnd.openxmlformats-officedocument.theme+xml",
+  table: "application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml",
+  pivot: "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotTable+xml",
 } as const;
 
 export const RELATIONSHIP_NSR =
   "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
 
 export const HEIGHT_FACTOR = 0.75; // 100px => 75 u
-export const WIDTH_FACTOR = 0.1425; // 100px => 14.25 u
+export const WIDTH_FACTOR = 0.1317; // 100px => 13.17 u
+
+/** unit : maximum number of characters a column can hold at the standard font size. What. */
+export const EXCEL_DEFAULT_COL_WIDTH = 8.43;
+/** unit : points */
+export const EXCEL_DEFAULT_ROW_HEIGHT = 12.75;
+
+export const EXCEL_DEFAULT_NUMBER_OF_COLS = 30;
+export const EXCEL_DEFAULT_NUMBER_OF_ROWS = 100;
 
 export const FIRST_NUMFMT_ID = 164;
 
@@ -206,3 +220,5 @@ export const NON_RETROCOMPATIBLE_FUNCTIONS = [
   "XOR",
   "Z.TEST",
 ];
+
+export const CONTENT_TYPES_FILE = "[Content_Types].xml";

@@ -6,7 +6,7 @@ export interface DataSet {
 }
 
 export type ChartTypes = "line" | "bar" | "pie";
-
+export type LegendPosition = "top" | "bottom" | "left" | "right";
 export interface ExcelChartDataset {
   label?: string;
   range: string;
@@ -19,7 +19,7 @@ export interface ChartDefinition {
   type: ChartTypes;
   background: string;
   verticalAxisPosition: "left" | "right";
-  legendPosition: "top" | "bottom" | "left" | "right";
+  legendPosition: LegendPosition;
   stackedBar: boolean;
 }
 
@@ -38,12 +38,12 @@ export interface ChartUIDefinitionUpdate extends Omit<Partial<ChartUIDefinition>
 }
 
 export interface ExcelChartDefinition {
-  title: string;
+  title?: string;
   type: ChartTypes;
   dataSets: ExcelChartDataset[];
   labelRange?: string;
   backgroundColor: string;
   verticalAxisPosition: "left" | "right";
-  legendPosition: "top" | "bottom" | "left" | "right";
+  legendPosition: LegendPosition;
   stackedBar: boolean;
 }

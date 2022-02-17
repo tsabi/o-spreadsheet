@@ -32,7 +32,7 @@ export function addFonts(fonts: XLSXFont[]): XMLString {
         ${font.underline ? escapeXml/*xml*/ `<u />` : ""}
         ${font.strike ? escapeXml/*xml*/ `<strike />` : ""}
         <sz val="${font.size}" />
-        <color rgb="${toHex6(font.color)}" />
+        <color rgb="${font.color?.rgb ? toHex6(font.color.rgb) : "#000000"}" />
         <name val="${font.name}" />
       </font>
     `);
@@ -57,7 +57,7 @@ export function addFills(fills: XLSXFill[]): XMLString {
       fillNodes.push(escapeXml/*xml*/ `
         <fill>
           <patternFill patternType="solid">
-            <fgColor rgb="${toHex6(fill.fgColor!)}" />
+            <fgColor rgb="${toHex6(fill.fgColor!.rgb!)}" />
             <bgColor indexed="64" />
           </patternFill>
         </fill>
@@ -143,7 +143,7 @@ export function addCellWiseConditionalFormatting(
     let fontNode: XMLString = escapeXml``;
     if (dxf.font?.color) {
       fontNode = escapeXml/*xml*/ `
-        <font rgb="${toHex6(dxf.font.color)}" />
+        <font rgb="${toHex6(dxf.font.color.rgb!)}" />
       `;
     }
     let fillNode: XMLString = escapeXml``;
@@ -151,7 +151,7 @@ export function addCellWiseConditionalFormatting(
       fillNode = escapeXml/*xml*/ `
         <fill>
           <patternFill>
-            <bgColor rgb="${toHex6(dxf.fill.fgColor!)}" />
+            <bgColor rgb="${toHex6(dxf.fill.fgColor!.rgb!)}" />
           </patternFill>
         </fill>
       `;

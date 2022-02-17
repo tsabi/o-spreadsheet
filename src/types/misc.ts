@@ -6,6 +6,8 @@ import { Cell, CellValue } from "./cells";
 import { CommandResult } from "./commands";
 
 export type UID = string;
+export type Color = string;
+
 export interface Link {
   label: string;
   url: string;
@@ -75,7 +77,7 @@ export interface CellPosition {
 
 // A border description is a pair [style, ]
 export type BorderStyle = "thin" | "medium" | "thick" | "dashed" | "dotted" | "double";
-export type BorderDescr = [BorderStyle, string];
+export type BorderDescr = [BorderStyle, Color];
 
 export interface Border {
   top?: BorderDescr;

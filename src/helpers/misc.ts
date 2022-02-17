@@ -303,3 +303,36 @@ export function debounce(func: Function, wait: number, immediate?: boolean): Fun
     }
   };
 }
+
+/**
+ * Compare two objects.
+ */
+export function deepEquals<T extends Object>(o1: T, o2: T): boolean {
+  if (o1 === o2) return true;
+  if ((o1 && !o2) || (o2 && !o1)) return false;
+
+  // Objects can have different keys if the values are undefined
+  const keys = new Set<string>();
+  Object.keys(o1).forEach((key) => keys.add(key));
+  Object.keys(o2).forEach((key) => keys.add(key));
+
+  for (let key of keys) {
+    if (typeof o1[key] !== typeof o1[key]) return false;
+    if (typeof o1[key] === "object") {
+      if (!deepEquals(o1[key], o2[key])) return false;
+    } else {
+      if (o1[key] !== o2[key]) return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Return an object with all the keys in the object that have a falsly value removed.
+ */
+export function removeFalslyAttributes(obj: Object): Object {
+  const cleanObject = { ...obj };
+  Object.keys(cleanObject).forEach((key) => !cleanObject[key] && delete cleanObject[key]);
+  return cleanObject;
+}

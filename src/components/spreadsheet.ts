@@ -14,10 +14,14 @@ import {
   ICON_EDGE_LENGTH,
   TOPBAR_HEIGHT,
 } from "../constants";
+import { DEBUG } from "../helpers";
+import { createEmptyExcelWorkbookData } from "../migrations/data";
 import { Model } from "../model";
 import { ComposerSelection } from "../plugins/ui/edition";
 import { SpreadsheetChildEnv, WorkbookData } from "../types";
 import { NotifyUIEvent } from "../types/ui";
+import { ImportedFiles } from "../types/xlsx";
+import { XlsxReader } from "../xlsx/xlsx_reader";
 import { BottomBar } from "./bottom_bar";
 import { Grid } from "./grid";
 import { css } from "./helpers/css";
@@ -145,6 +149,7 @@ export class Spreadsheet extends Component<SpreadsheetProps, SpreadsheetChildEnv
       openSidePanel: this.openSidePanel.bind(this),
       toggleSidePanel: this.toggleSidePanel.bind(this),
       openLinkEditor: this.openLinkEditor.bind(this),
+      importXLSX: this.importXLSX.bind(this),
       _t: Spreadsheet._t,
       clipboard: navigator.clipboard,
     });
@@ -172,6 +177,7 @@ export class Spreadsheet extends Component<SpreadsheetProps, SpreadsheetChildEnv
   private bindModelEvents() {
     this.model.on("update", this, this.render);
     this.model.on("notify-ui", this, this.onNotifyUI);
+    DEBUG.model = this.model;
   }
 
   private unbindModelEvents() {
@@ -291,5 +297,36 @@ export class Spreadsheet extends Component<SpreadsheetProps, SpreadsheetChildEnv
     } else if (content) {
       this.model.dispatch("SET_CURRENT_CONTENT", { content, selection });
     }
+  }
+
+  private importXLSX(importData: ImportedFiles) {
+    let data: WorkbookData = createEmptyExcelWorkbookData();
+    let reader: XlsxReader | undefined = undefined;
+    try {
+      reader = new XlsxReader(importData);
+      data = reader.convertXlsx();
+    } catch (error) {
+      console.error(error);
+    }
+    if (reader) {
+      for (let parsingError of reader.warningManager.warnings) {
+        console.warn(parsingError);
+      }
+    }
+    return data;
+    // if (!data) {
+    //   return;
+    // }
+    // this.model = new Model(
+    //   data,
+    //   {
+    //     evalContext: { env: this.env },
+    //     transportService: this.props.transportService,
+    //     client: this.props.client,
+    //     isReadonly: this.props.isReadonly,
+    //     snapshotRequested: this.props.snapshotRequested,
+    //   },
+    //   this.props.stateUpdateMessages
+    // );
   }
 }
