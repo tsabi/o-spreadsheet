@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:c16r2="http://schemas.microsoft.com/office/drawing/2015/06/chart">
   <c:date1904 val="0"/>
-  <c:lang val="en-US"/>
+  <c:lang val="fr-FR"/>
   <c:roundedCorners val="0"/>
   <mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
     <mc:Choice xmlns:c14="http://schemas.microsoft.com/office/drawing/2007/8/2/chart" Requires="c14">
@@ -277,25 +277,25 @@
                   <c:v>10</c:v>
                 </c:pt>
                 <c:pt idx="2">
-                  <c:v>41</c:v>
+                  <c:v>4</c:v>
                 </c:pt>
                 <c:pt idx="3">
-                  <c:v>9</c:v>
+                  <c:v>48</c:v>
                 </c:pt>
                 <c:pt idx="4">
-                  <c:v>14</c:v>
+                  <c:v>48</c:v>
                 </c:pt>
                 <c:pt idx="5">
-                  <c:v>39</c:v>
+                  <c:v>38</c:v>
                 </c:pt>
                 <c:pt idx="6">
-                  <c:v>33</c:v>
+                  <c:v>22</c:v>
                 </c:pt>
                 <c:pt idx="7">
                   <c:v>19</c:v>
                 </c:pt>
                 <c:pt idx="8">
-                  <c:v>46</c:v>
+                  <c:v>20</c:v>
                 </c:pt>
               </c:numCache>
             </c:numRef>
@@ -338,7 +338,7 @@
               <a:latin typeface="+mn-lt"/>
             </a:defRPr>
           </a:pPr>
-          <a:endParaRPr lang="en-US"/>
+          <a:endParaRPr lang="fr-FR"/>
         </a:p>
       </c:txPr>
     </c:legend>

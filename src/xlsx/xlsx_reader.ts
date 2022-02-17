@@ -11,6 +11,7 @@ import {
 import { WorkbookData } from "./../types/workbook_data";
 import { CONTENT_TYPES } from "./constants";
 import {
+  cleanFormats,
   cleanImportedBorders,
   cleanImportedStyles,
   convertBorders,
@@ -24,7 +25,7 @@ import { getXLSXFilesOfType } from "./helpers/xlsx_helper";
 import { XLSXImportWarningManager } from "./helpers/xlsx_parser_error_manager";
 import { parseXML } from "./helpers/xml_helpers";
 
-const EXCEL_IMPORT_VERSION = 10;
+const EXCEL_IMPORT_VERSION = 11;
 
 // TODO check indexes for styles, shared strings, shared formulas, dxfs ?
 export class XlsxReader {
@@ -122,7 +123,7 @@ export class XlsxReader {
       version: EXCEL_IMPORT_VERSION,
       sheets: convertSheets(data, this.warningManager),
       styles: convertStyles(data, this.warningManager),
-      formats: convertFormats(data),
+      formats: convertFormats(data, this.warningManager),
       borders: convertBorders(data, this.warningManager),
       entities: {},
       revisionId: DEFAULT_REVISION_ID,
@@ -143,5 +144,6 @@ export class XlsxReader {
   cleanImportedData(data: WorkbookData) {
     cleanImportedStyles(data);
     cleanImportedBorders(data);
+    cleanFormats(data);
   }
 }

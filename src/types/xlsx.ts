@@ -26,6 +26,7 @@ import { Align } from "./misc";
  *  - figure (XLSXFigure): §20.5.2.35 (wsDr (Worksheet Drawing))
  *  - fonts (XLSXFont): §18.8.22 (font)
  *  - merge (string): §18.3.1.55 (mergeCell)
+ *  - number format (XLSXNumFmt) : §18.8.30 (numFumt)
  *  - rows (XLSXSRow): §18.3.1.73 (row)
  *  - sheet (XLSXWorksheet): §18.3.1.99 (worksheet)
  *  - sheet format (XLSXSheetFormat): §18.3.1.81 (sheetFormatPr)
@@ -103,7 +104,7 @@ export interface XLSXImportData {
   fills: XLSXFill[];
   borders: XLSXBorder[];
   dxfs: XLSXDxf[];
-  numFmts: string[];
+  numFmts: XLSXNumFormat[];
   styles: XLSXStyle[];
   sheets: XLSXWorksheet[];
 }
@@ -129,7 +130,7 @@ export class XMLString {
 export interface XLSXDxf {
   font?: Partial<XLSXFont>; // TODO : check if partial really needed for export
   fill?: XLSXFill;
-  numFmt?: string;
+  numFmt?: XLSXNumFormat;
   alignment?: XLSXCellAlignement;
   border?: XLSXBorder;
 }
@@ -262,6 +263,10 @@ export interface XLSXColorScheme {
   lastClr?: string;
 }
 
+export interface XLSXNumFormat {
+  id: number;
+  format: string;
+}
 export interface XLSXBorder {
   top?: XLSXBorderDescr;
   left?: XLSXBorderDescr;

@@ -1,3 +1,4 @@
+import { SUPPORTED_FORMATS } from ".";
 import { fontSizeMap } from "../../fonts";
 import { Border, BorderDescr, Style } from "../../types";
 import {
@@ -8,6 +9,7 @@ import {
   XLSXFont,
   XLSXHorizontalAlignment,
   XLSXImportData,
+  XLSXNumFormat,
   XLSXVerticalAlignment,
 } from "../../types/xlsx";
 import { arrayToObject } from "../helpers/misc";
@@ -20,6 +22,8 @@ import {
   SUPPORTED_FILL_PATTERNS,
   SUPPORTED_FONTS,
   SUPPORTED_HORIZONTAL_ALIGNMENTS,
+  SUPPORTED_NUMBER_FORMATS_REGEX,
+  XLSX_FORMATS_CONVERSION_MAP,
 } from "./conversion_maps";
 
 interface StyleStruct {
@@ -105,14 +109,47 @@ export function convertStyle(
   };
 }
 
-export function convertFormats(data: XLSXImportData): { [key: number]: string } {
-  // TODO
+export function convertFormats(
+  data: XLSXImportData,
+  warningManager: XLSXImportWarningManager
+): { [key: number]: string } {
+  const formats: string[] = [];
+
   for (let style of data.styles) {
-    if (style.numFmtId) console.log(style.numFmtId);
+    const format = convertFormat(style.numFmtId, data.numFmts, warningManager);
+    if (format) {
+      formats[style.numFmtId] = format;
+    }
   }
-  console.log(data.numFmts);
-  return {};
-  // return arrayToObject([...data.numFmts], 1);
+
+  return arrayToObject(formats, 1);
+}
+
+function convertFormat(
+  numFmtId: number,
+  formats: XLSXNumFormat[],
+  warningManager: XLSXImportWarningManager
+): string | undefined {
+  if (numFmtId === 0) {
+    return undefined;
+  }
+  // Format is either defined in the imported data, or the formatId is defined in openXML §18.8.30
+  if (formats[numFmtId]) {
+    const format = formats[numFmtId].format;
+    if (SUPPORTED_FORMATS[format] || SUPPORTED_NUMBER_FORMATS_REGEX.test(format)) {
+      return format;
+    }
+  }
+
+  const format = XLSX_FORMATS_CONVERSION_MAP[numFmtId];
+  if (!format) {
+    warningManager.generateNotsupportedWarning(
+      WarningTypes.NumFmtIdNotSupported,
+      numFmtId.toString()
+    );
+  }
+
+  return format;
 }
 
 /**

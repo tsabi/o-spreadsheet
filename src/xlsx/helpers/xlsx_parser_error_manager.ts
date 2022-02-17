@@ -17,6 +17,7 @@ export enum WarningTypes {
   CfFormatNumFmtNotSupported = "Num formats in conditional formats",
   CfIconSetEmptyIconNotSupported = "IconSets with empty icons",
   BadlyFormattedHyperlink = "Badly formatted hyperlink",
+  NumFmtIdNotSupported = "Unsupported num format",
 }
 
 export class XLSXImportWarningManager {

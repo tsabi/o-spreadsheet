@@ -6,7 +6,7 @@
       <selection activeCell="I12" sqref="I12"/>
     </sheetView>
   </sheetViews>
-  <sheetFormatPr defaultColWidth="13.7109375" defaultRowHeight="12.75" x14ac:dyDescent="0.2"/>
+  <sheetFormatPr baseColWidth="10" defaultColWidth="13.7109375" defaultRowHeight="12.75" x14ac:dyDescent="0.2"/>
   <cols>
     <col min="1" max="1" width="22.28515625" customWidth="1"/>
     <col min="2" max="2" width="13.7109375" customWidth="1"/>
@@ -34,10 +34,10 @@
       <c r="G2" s="2">
         <v>5</v>
       </c>
-      <c r="H2" s="116" t="s">
+      <c r="H2" s="115" t="s">
         <v>4</v>
       </c>
-      <c r="I2" s="117"/>
+      <c r="I2" s="116"/>
       <c r="K2" s="4"/>
     </row>
     <row r="3" spans="1:12" ht="17.25" customHeight="1" x14ac:dyDescent="0.2">
@@ -47,10 +47,10 @@
       <c r="G3" s="2">
         <v>8</v>
       </c>
-      <c r="H3" s="117"/>
-      <c r="I3" s="117"/>
+      <c r="H3" s="116"/>
+      <c r="I3" s="116"/>
       <c r="J3" s="6"/>
-      <c r="K3" s="118">
+      <c r="K3" s="117">
         <v>5</v>
       </c>
       <c r="L3" s="7"/>
@@ -68,10 +68,10 @@
       <c r="G4" s="2">
         <v>9</v>
       </c>
-      <c r="H4" s="117"/>
-      <c r="I4" s="117"/>
+      <c r="H4" s="116"/>
+      <c r="I4" s="116"/>
       <c r="J4" s="6"/>
-      <c r="K4" s="119"/>
+      <c r="K4" s="118"/>
       <c r="L4" s="7"/>
     </row>
     <row r="5" spans="1:12" ht="17.25" customHeight="1" x14ac:dyDescent="0.2">
@@ -81,10 +81,10 @@
       <c r="G5" s="2">
         <v>15</v>
       </c>
-      <c r="H5" s="117"/>
-      <c r="I5" s="117"/>
+      <c r="H5" s="116"/>
+      <c r="I5" s="116"/>
       <c r="J5" s="6"/>
-      <c r="K5" s="119"/>
+      <c r="K5" s="118"/>
       <c r="L5" s="7"/>
     </row>
     <row r="6" spans="1:12" ht="17.25" customHeight="1" x14ac:dyDescent="0.2">
@@ -92,7 +92,7 @@
         <v>22</v>
       </c>
       <c r="J6" s="6"/>
-      <c r="K6" s="119"/>
+      <c r="K6" s="118"/>
       <c r="L6" s="7"/>
     </row>
     <row r="7" spans="1:12" ht="17.25" customHeight="1" x14ac:dyDescent="0.2">
@@ -100,7 +100,7 @@
         <v>3</v>
       </c>
       <c r="J7" s="6"/>
-      <c r="K7" s="119"/>
+      <c r="K7" s="118"/>
       <c r="L7" s="7"/>
     </row>
     <row r="8" spans="1:12" ht="17.25" customHeight="1" x14ac:dyDescent="0.2">
@@ -108,7 +108,7 @@
         <v>30</v>
       </c>
       <c r="J8" s="6"/>
-      <c r="K8" s="120"/>
+      <c r="K8" s="119"/>
       <c r="L8" s="7"/>
     </row>
     <row r="9" spans="1:12" ht="17.25" customHeight="1" x14ac:dyDescent="0.2">
@@ -271,7 +271,7 @@
       </c>
       <c r="C27" s="2">
         <f t="shared" ref="C27:C35" ca="1" si="0">FLOOR(RAND()*50,1)</f>
-        <v>1</v>
+        <v>25</v>
       </c>
       <c r="H27" s="2">
         <v>4</v>
@@ -290,7 +290,7 @@
       </c>
       <c r="C28" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>8</v>
+        <v>42</v>
       </c>
       <c r="H28" s="2">
         <v>5</v>
@@ -305,11 +305,11 @@
       </c>
       <c r="B29" s="2">
         <f t="shared" ca="1" si="1"/>
-        <v>41</v>
+        <v>4</v>
       </c>
       <c r="C29" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>16</v>
+        <v>25</v>
       </c>
       <c r="H29" s="2">
         <v>6</v>
@@ -324,11 +324,11 @@
       </c>
       <c r="B30" s="2">
         <f t="shared" ca="1" si="1"/>
-        <v>9</v>
+        <v>48</v>
       </c>
       <c r="C30" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>15</v>
+        <v>6</v>
       </c>
       <c r="H30" s="2">
         <v>7</v>
@@ -343,11 +343,11 @@
       </c>
       <c r="B31" s="2">
         <f t="shared" ca="1" si="1"/>
-        <v>14</v>
+        <v>48</v>
       </c>
       <c r="C31" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>26</v>
+        <v>29</v>
       </c>
       <c r="H31" s="2">
         <v>8</v>
@@ -362,11 +362,11 @@
       </c>
       <c r="B32" s="2">
         <f t="shared" ca="1" si="1"/>
-        <v>39</v>
+        <v>38</v>
       </c>
       <c r="C32" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>32</v>
+        <v>22</v>
       </c>
       <c r="H32" s="2">
         <v>9</v>
@@ -381,11 +381,11 @@
       </c>
       <c r="B33" s="2">
         <f t="shared" ca="1" si="1"/>
-        <v>33</v>
+        <v>22</v>
       </c>
       <c r="C33" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>13</v>
+        <v>16</v>
       </c>
       <c r="H33" s="2">
         <v>10</v>
@@ -403,7 +403,7 @@
       </c>
       <c r="C34" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>44</v>
+        <v>9</v>
       </c>
     </row>
     <row r="35" spans="1:9" ht="17.25" customHeight="1" x14ac:dyDescent="0.2">
@@ -412,11 +412,11 @@
       </c>
       <c r="B35" s="2">
         <f ca="1">FLOOR(RAND()*50,1)</f>
-        <v>46</v>
+        <v>20</v>
       </c>
       <c r="C35" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>28</v>
+        <v>30</v>
       </c>
     </row>
   </sheetData>

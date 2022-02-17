@@ -8,6 +8,7 @@ import {
   XLSXFill,
   XLSXFont,
   XLSXHorizontalAlignment,
+  XLSXNumFormat,
   XLSXStyle,
   XLSXTheme,
   XLSXVerticalAlignment,
@@ -29,20 +30,25 @@ export class XlsxStyleExtractor extends XlsxBaseExtractor {
     this.theme = theme;
   }
 
-  getNumFormats(): string[] {
+  getNumFormats(): XLSXNumFormat[] {
     return this.mapOnElements(
       { document: this.rootFile.file, query: "numFmt" },
-      (numFmtElement): string => {
+      (numFmtElement): XLSXNumFormat => {
         return this.extractNumFormats(numFmtElement);
       }
     );
   }
 
-  private extractNumFormats(numFmtElement: Element): string {
-    return this.extractAttr(numFmtElement, "formatCode", {
-      required: true,
-      default: "",
-    }).asString()!;
+  private extractNumFormats(numFmtElement: Element): XLSXNumFormat {
+    return {
+      id: this.extractAttr(numFmtElement, "numFmtId", {
+        required: true,
+      }).asNum()!,
+      format: this.extractAttr(numFmtElement, "formatCode", {
+        required: true,
+        default: "",
+      }).asString()!,
+    };
   }
 
   getFonts(): XLSXFont[] {

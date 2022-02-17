@@ -15,6 +15,10 @@ export function getWorkbookCellStyle(cell: CellData, data: WorkbookData): Style 
   return cell.style ? data.styles[cell.style] : undefined;
 }
 
+export function getWorkbookCellFormat(cell: CellData, data: WorkbookData): string | undefined {
+  return cell.format ? data.formats[cell.format] : undefined;
+}
+
 export function getWorkbookCellBorder(cell: CellData, data: WorkbookData): Border | undefined {
   const border = cell.border ? data.borders[cell.border] : undefined;
   // Add undefined borders for toMatchObject matchers
@@ -26,10 +30,11 @@ export function getWorkbookCellBorder(cell: CellData, data: WorkbookData): Borde
   return cell.border ? data.borders[cell.border] : undefined;
 }
 
-export function findXcCellWithContent(content: string, sheetData: SheetData): string {
-  return Object.entries(sheetData.cells).find(
+export function findXcCellWithContent(content: string, sheetData: SheetData): string | undefined {
+  const cellEntry = Object.entries(sheetData.cells).find(
     (cellEntry) => cellEntry[1]?.content?.trim() === content
-  )![0];
+  );
+  return cellEntry ? cellEntry[0] : undefined;
 }
 
 export function findCellWithContent(content: string, sheetData: SheetData): CellData | undefined {

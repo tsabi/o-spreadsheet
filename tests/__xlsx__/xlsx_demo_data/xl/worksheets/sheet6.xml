@@ -6,7 +6,7 @@
       <selection activeCell="F12" sqref="F12"/>
     </sheetView>
   </sheetViews>
-  <sheetFormatPr defaultRowHeight="12.75" x14ac:dyDescent="0.2"/>
+  <sheetFormatPr baseColWidth="10" defaultColWidth="9.140625" defaultRowHeight="12.75" x14ac:dyDescent="0.2"/>
   <cols>
     <col min="3" max="3" width="17.28515625" customWidth="1"/>
     <col min="4" max="4" width="9.5703125" customWidth="1"/>
@@ -50,96 +50,96 @@
       </c>
     </row>
     <row r="4" spans="1:10" x14ac:dyDescent="0.2">
-      <c r="C4" s="103" t="s">
+      <c r="C4" s="102" t="s">
         <v>41</v>
       </c>
-      <c r="D4" s="103">
+      <c r="D4" s="102">
         <v>26</v>
       </c>
-      <c r="E4" s="103">
+      <c r="E4" s="102">
         <v>5</v>
       </c>
-      <c r="F4" s="103">
+      <c r="F4" s="102">
         <f>Table3[[#This Row],[Rank]]+Table3[[#This Row],[Age]]</f>
         <v>31</v>
       </c>
-      <c r="G4" s="103">
+      <c r="G4" s="102">
         <f>SUM(Table3[Rank])</f>
         <v>12</v>
       </c>
-      <c r="H4" s="103">
+      <c r="H4" s="102">
         <f>SUM(Table3[[#All],[Rank]])</f>
         <v>24</v>
       </c>
-      <c r="I4" s="106">
+      <c r="I4" s="105">
         <f>Table3[[#Totals],[Rank]]</f>
         <v>12</v>
       </c>
-      <c r="J4" s="106" t="str">
+      <c r="J4" s="105" t="str">
         <f>Table3[[#Headers],[Rank]]</f>
         <v>Rank</v>
       </c>
     </row>
     <row r="5" spans="1:10" x14ac:dyDescent="0.2">
-      <c r="C5" s="103" t="s">
+      <c r="C5" s="102" t="s">
         <v>43</v>
       </c>
-      <c r="D5" s="103">
+      <c r="D5" s="102">
         <v>13</v>
       </c>
-      <c r="E5" s="103">
+      <c r="E5" s="102">
         <v>7</v>
       </c>
-      <c r="F5" s="106">
+      <c r="F5" s="105">
         <f>Table3[[#This Row],[Rank]]+Table3[[#This Row],[Age]]</f>
         <v>20</v>
       </c>
-      <c r="G5" s="106">
+      <c r="G5" s="105">
         <f>SUM(Table3[Rank])</f>
         <v>12</v>
       </c>
-      <c r="H5" s="106">
+      <c r="H5" s="105">
         <f>SUM(Table3[[#All],[Rank]])</f>
         <v>24</v>
       </c>
-      <c r="I5" s="106">
+      <c r="I5" s="105">
         <f>Table3[[#Totals],[Rank]]</f>
         <v>12</v>
       </c>
-      <c r="J5" s="106" t="str">
+      <c r="J5" s="105" t="str">
         <f>Table3[[#Headers],[Rank]]</f>
         <v>Rank</v>
       </c>
     </row>
     <row r="6" spans="1:10" x14ac:dyDescent="0.2">
-      <c r="C6" s="103" t="s">
+      <c r="C6" s="102" t="s">
         <v>363</v>
       </c>
-      <c r="D6" s="103">
+      <c r="D6" s="102">
         <f>SUBTOTAL(109,Table3[Age])</f>
         <v>39</v>
       </c>
-      <c r="E6" s="103">
+      <c r="E6" s="102">
         <f>SUBTOTAL(109,Table3[Rank])</f>
         <v>12</v>
       </c>
-      <c r="F6" s="103">
+      <c r="F6" s="102">
         <f>SUBTOTAL(109,Table3[Rank+Age =E4+D4])</f>
         <v>51</v>
       </c>
-      <c r="G6" s="103">
+      <c r="G6" s="102">
         <f>SUBTOTAL(109,Table3[Data =SUM(E4:E5)])</f>
         <v>24</v>
       </c>
-      <c r="H6" s="103">
+      <c r="H6" s="102">
         <f>SUBTOTAL(109,Table3[All =SUM(E3:E6)])</f>
         <v>48</v>
       </c>
-      <c r="I6" s="103">
+      <c r="I6" s="102">
         <f>SUBTOTAL(109,Table3[Totals =E6])</f>
         <v>24</v>
       </c>
-      <c r="J6" s="103">
+      <c r="J6" s="102">
         <f>SUBTOTAL(109,Table3[Headers =E3])</f>
         <v>0</v>
       </c>
@@ -183,110 +183,110 @@
       </c>
     </row>
     <row r="14" spans="1:10" x14ac:dyDescent="0.2">
-      <c r="B14" s="104" t="s">
+      <c r="B14" s="103" t="s">
         <v>374</v>
       </c>
-      <c r="C14" s="104">
+      <c r="C14" s="103">
         <v>1</v>
       </c>
-      <c r="D14" s="104">
+      <c r="D14" s="103">
         <v>2</v>
       </c>
     </row>
     <row r="15" spans="1:10" x14ac:dyDescent="0.2">
-      <c r="B15" s="104"/>
-      <c r="C15" s="104">
+      <c r="B15" s="103"/>
+      <c r="C15" s="103">
         <v>3</v>
       </c>
-      <c r="D15" s="104">
+      <c r="D15" s="103">
         <v>4</v>
       </c>
     </row>
     <row r="17" spans="2:4" x14ac:dyDescent="0.2">
-      <c r="B17" s="104" t="s">
+      <c r="B17" s="103" t="s">
         <v>375</v>
       </c>
-      <c r="C17" s="104">
+      <c r="C17" s="103">
         <v>1</v>
       </c>
-      <c r="D17" s="104">
+      <c r="D17" s="103">
         <v>2</v>
       </c>
     </row>
     <row r="18" spans="2:4" x14ac:dyDescent="0.2">
-      <c r="B18" s="104"/>
-      <c r="C18" s="104">
+      <c r="B18" s="103"/>
+      <c r="C18" s="103">
         <v>3</v>
       </c>
-      <c r="D18" s="104">
+      <c r="D18" s="103">
         <v>4</v>
       </c>
     </row>
     <row r="20" spans="2:4" x14ac:dyDescent="0.2">
-      <c r="B20" s="104" t="s">
+      <c r="B20" s="103" t="s">
         <v>377</v>
       </c>
-      <c r="C20" s="104">
+      <c r="C20" s="103">
         <v>1</v>
       </c>
-      <c r="D20" s="104">
+      <c r="D20" s="103">
         <v>2</v>
       </c>
     </row>
     <row r="21" spans="2:4" x14ac:dyDescent="0.2">
-      <c r="B21" s="104"/>
-      <c r="C21" s="104">
+      <c r="B21" s="103"/>
+      <c r="C21" s="103">
         <v>3</v>
       </c>
-      <c r="D21" s="104">
+      <c r="D21" s="103">
         <v>4</v>
       </c>
     </row>
     <row r="23" spans="2:4" x14ac:dyDescent="0.2">
-      <c r="B23" s="104" t="s">
+      <c r="B23" s="103" t="s">
         <v>378</v>
       </c>
-      <c r="C23" s="104">
+      <c r="C23" s="103">
         <v>1</v>
       </c>
-      <c r="D23" s="104">
+      <c r="D23" s="103">
         <v>2</v>
       </c>
     </row>
     <row r="24" spans="2:4" x14ac:dyDescent="0.2">
-      <c r="B24" s="104"/>
-      <c r="C24" s="104">
+      <c r="B24" s="103"/>
+      <c r="C24" s="103">
         <v>3</v>
       </c>
-      <c r="D24" s="104">
+      <c r="D24" s="103">
         <v>4</v>
       </c>
     </row>
     <row r="26" spans="2:4" x14ac:dyDescent="0.2">
-      <c r="B26" s="104" t="s">
+      <c r="B26" s="103" t="s">
         <v>376</v>
       </c>
-      <c r="C26" s="104">
+      <c r="C26" s="103">
         <v>1</v>
       </c>
-      <c r="D26" s="104">
+      <c r="D26" s="103">
         <v>2</v>
       </c>
     </row>
     <row r="27" spans="2:4" x14ac:dyDescent="0.2">
-      <c r="B27" s="104"/>
-      <c r="C27" s="104">
+      <c r="B27" s="103"/>
+      <c r="C27" s="103">
         <v>3</v>
       </c>
-      <c r="D27" s="104">
+      <c r="D27" s="103">
         <v>4</v>
       </c>
     </row>
     <row r="28" spans="2:4" x14ac:dyDescent="0.2">
-      <c r="C28" s="104" t="s">
+      <c r="C28" s="103" t="s">
         <v>363</v>
       </c>
-      <c r="D28" s="104">
+      <c r="D28" s="103">
         <f>SUBTOTAL(109,Table4910[Column2])</f>
         <v>6</v>
       </c>

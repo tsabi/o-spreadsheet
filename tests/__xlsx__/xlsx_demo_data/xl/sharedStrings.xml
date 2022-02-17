@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="440" uniqueCount="394">
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="444" uniqueCount="398">
   <si>
     <t>CF =42</t>
   </si>
@@ -1181,5 +1181,17 @@
   </si>
   <si>
     <t>{"title": "pie chart","type":"pie", "zone":"C38:L56", "dataset":"Sheet1!B27:B35", "labels":"Sheet1!A27:A35"}</t>
+  </si>
+  <si>
+    <t>Formats:</t>
+  </si>
+  <si>
+    <t>0.00%</t>
+  </si>
+  <si>
+    <t>m/d/yyyy</t>
+  </si>
+  <si>
+    <t>0.00</t>
   </si>
 </sst>

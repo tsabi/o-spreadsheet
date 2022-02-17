@@ -33,6 +33,13 @@ export const SUPPORTED_CF_TYPES = [
   "containsBlanks",
   "notContainsBlanks",
 ];
+export const SUPPORTED_NUMBER_FORMATS_REGEX = new RegExp("^[#0,.]*%?$");
+export const SUPPORTED_FORMATS = {
+  "3": "m/d/yyyy",
+  "4": "hh:mm:ss a",
+  "5": "m/d/yyyy hh:mm:ss",
+  "6": "hhhh:mm:ss",
+};
 
 /** Map between cell type in XLSX file and human readable cell type  */
 export const CELL_TYPE_CONVERSION_MAP: Record<string, XLSXCellType> = {
@@ -178,7 +185,7 @@ export const CHART_TYPE_CONVERSION_MAP: Record<XLSXChartType, ChartTypes | undef
 };
 
 /** Conversion map for the SUBTOTAL(index, formula) function in xlsx, index <=> actual function*/
-export const SUBTOTAL_FUNCTION_CONVERSION_MAP = {
+export const SUBTOTAL_FUNCTION_CONVERSION_MAP: Record<number, string> = {
   "1": "AVERAGE",
   "2": "COUNT",
   "3": "COUNTA",
@@ -201,4 +208,36 @@ export const SUBTOTAL_FUNCTION_CONVERSION_MAP = {
   "109": "SUM",
   "110": "VAR",
   "111": "VARP",
+};
+
+/** Mapping between Excel format indexes (see XLSX_FORMAT_MAP) and some supported formats  */
+export const XLSX_FORMATS_CONVERSION_MAP: Record<number, string | undefined> = {
+  0: "",
+  1: "0",
+  2: "0.00",
+  3: "#,#00",
+  4: "#,##0.00",
+  9: "0%",
+  10: "0.00%",
+  11: undefined,
+  12: undefined,
+  13: undefined,
+  14: "m/d/yyyy",
+  15: "m/d/yyyy",
+  16: "m/d/yyyy",
+  17: "m/d/yyyy",
+  18: "hh:mm:ss a",
+  19: "hh:mm:ss a",
+  20: "hhhh:mm:ss",
+  21: "hhhh:mm:ss",
+  22: "m/d/yy h:mm",
+  37: undefined,
+  38: undefined,
+  39: undefined,
+  40: undefined,
+  45: "hhhh:mm:ss",
+  46: "hhhh:mm:ss",
+  47: "hhhh:mm:ss",
+  48: undefined,
+  49: undefined,
 };

@@ -9,7 +9,7 @@ import { WorkbookData } from "./../../types/workbook_data";
  * which leave us with a lot of duplicate styles.
  */
 export function cleanImportedStyles(data: WorkbookData) {
-  const { newMap: styles, conversionMap } = removeDuplicates(data.styles);
+  const { newMap: styles, conversionMap } = cleanMap(data.styles);
 
   for (let sheet of data.sheets) {
     for (let cell of Object.values(sheet.cells)) {
@@ -33,7 +33,7 @@ export function cleanImportedStyles(data: WorkbookData) {
  * Duplicates borders may happen for borders styles that we don't support and that are replaced by another style
  */
 export function cleanImportedBorders(data: WorkbookData) {
-  const { newMap: borders, conversionMap } = removeDuplicates(data.borders);
+  const { newMap: borders, conversionMap } = cleanMap(data.borders);
 
   for (let sheet of data.sheets) {
     for (let cell of Object.values(sheet.cells)) {
@@ -46,12 +46,28 @@ export function cleanImportedBorders(data: WorkbookData) {
   data.borders = borders;
 }
 
+export function cleanFormats(data: WorkbookData) {
+  const { newMap: formats, conversionMap } = cleanMap(data.formats);
+
+  for (let sheet of data.sheets) {
+    for (let cell of Object.values(sheet.cells)) {
+      if (cell?.format) {
+        cell.format = conversionMap[cell.format];
+      }
+    }
+  }
+  data.formats = formats;
+}
+
 /**
- * Removes the duplicates in a map <key :number, Object>.
+ * Removes the duplicates and the undefined values in a map <key :number, Object>.
  *
- * Returns the map without the duplicates, and a map to convert the keys of the old map to keys of the new map.
+ * Returns the map without the duplicates
+ *
+ *
+ * , and a map to convert the keys of the old map to keys of the new map.
  */
-function removeDuplicates<T>(objectMap: Record<number, T>): {
+function cleanMap<T>(objectMap: Record<number, T>): {
   newMap: Record<number, T>;
   conversionMap: Record<number, number>;
 } {
@@ -63,7 +79,7 @@ function removeDuplicates<T>(objectMap: Record<number, T>): {
     const objJson = stringify(obj);
     if (!uniquesJsons.has(objJson)) {
       uniquesJsons.add(objJson);
-      const newKey = uniquesJsons.size - 1;
+      const newKey = uniquesJsons.size;
       newObjs[newKey] = obj;
       indexesMap[key] = newKey;
     } else {

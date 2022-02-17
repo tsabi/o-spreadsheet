@@ -29,6 +29,7 @@ import {
   getRowPosition,
   getWorkbookCell,
   getWorkbookCellBorder,
+  getWorkbookCellFormat,
   getWorkbookCellStyle,
   getWorkbookSheet,
   standardizeColor,
@@ -64,9 +65,15 @@ describe("Import xlsx data", () => {
     expect(cellXC).toBeTruthy();
   });
 
+  test("Can import formula", () => {
+    const testSheet = getWorkbookSheet("jestSheet", convertedData)!;
+    const cellXC = findXcCellWithContent("=SUM(A1)", testSheet);
+    expect(cellXC).toBeTruthy();
+  });
+
   test("Can import merge", () => {
     const testSheet = getWorkbookSheet("jestSheet", convertedData)!;
-    const mergeXc = findXcCellWithContent("merge 2x2", testSheet);
+    const mergeXc = findXcCellWithContent("merge 2x2", testSheet)!;
     const mergeTopPosition = toCartesian(mergeXc);
     const mergeRange =
       mergeXc + `:${numberToLetters(mergeTopPosition[0] + 1)}${mergeTopPosition[1] + 2}`;
@@ -84,14 +91,14 @@ describe("Import xlsx data", () => {
 
   test("Can import row size", () => {
     const testSheet = getWorkbookSheet("jestSheet", convertedData)!;
-    const xc = findXcCellWithContent("rowSize 100", testSheet);
+    const xc = findXcCellWithContent("rowSize 100", testSheet)!;
     const position = toCartesian(xc);
     expect(testSheet.rows[position[1]].size).toEqual(100);
   });
 
   test("Can import col size", () => {
     const testSheet = getWorkbookSheet("jestSheet", convertedData)!;
-    const xc = findXcCellWithContent("colSize 100", testSheet);
+    const xc = findXcCellWithContent("colSize 100", testSheet)!;
     const position = toCartesian(xc);
     // Columns size in excel are dumb, I don't want to spend days finding out exactly how it works.
     // In the UI it was saying "size 13.57, 100 px", then it saves size = 14.28 in the xml...
@@ -101,14 +108,14 @@ describe("Import xlsx data", () => {
 
   test("Can import hidden rows", () => {
     const testSheet = getWorkbookSheet("jestSheet", convertedData)!;
-    const xc = findXcCellWithContent("hidden row", testSheet);
+    const xc = findXcCellWithContent("hidden row", testSheet)!;
     const position = toCartesian(xc);
     expect(testSheet.rows[position[1]].isHidden).toBeTruthy();
   });
 
   test("Can import hidden cols", () => {
     const testSheet = getWorkbookSheet("jestSheet", convertedData)!;
-    const xc = findXcCellWithContent("hidden col", testSheet);
+    const xc = findXcCellWithContent("hidden col", testSheet)!;
     const position = toCartesian(xc);
     expect(testSheet.cols[position[0]].isHidden).toBeTruthy();
   });
@@ -179,10 +186,20 @@ describe("Import xlsx data", () => {
     "distributed",
   ])("Can import Horizontal Alignements", (alignType) => {
     const testSheet = getWorkbookSheet("jestStyles", convertedData)!;
-    const descrCellPosition = toCartesian(findXcCellWithContent(alignType, testSheet));
+    // In sheet : cell at (x,y) : name of alignment, cell at (x+1, y) text with the alignment
+    const descrCellPosition = toCartesian(findXcCellWithContent(alignType, testSheet)!);
     const styledCell = testSheet.cells[toXC(descrCellPosition[0] + 1, descrCellPosition[1])]!;
     const cellStyle = getWorkbookCellStyle(styledCell, convertedData);
     expect(cellStyle?.align).toEqual(H_ALIGNMENT_CONVERSION_MAP[alignType]);
+  });
+
+  test.each(["0.00", "0.00%", "m/d/yyyy"])("Can import formats", (format) => {
+    const testSheet = getWorkbookSheet("jestStyles", convertedData)!;
+    // In sheet : cell at (x,y) content = format, cell at (x+1, y) content = text with the format
+    const descrCellPosition = toCartesian(findXcCellWithContent(format, testSheet)!);
+    const formattedCell = testSheet.cells[toXC(descrCellPosition[0] + 1, descrCellPosition[1])]!;
+    const cellFormat = getWorkbookCellFormat(formattedCell, convertedData);
+    expect(cellFormat).toEqual(format);
   });
 
   test.each(["Normal", "Red", "Italic", "Bold", "Striked", "Underlined", "size12", "size16"])(
@@ -222,7 +239,7 @@ describe("Import xlsx data", () => {
 
   test("Can import conditional formats", () => {
     const testSheet = getWorkbookSheet("jestCfs", convertedData)!;
-    const originCellXc = findXcCellWithContent("Conditional Formats:", testSheet);
+    const originCellXc = findXcCellWithContent("Conditional Formats:", testSheet)!;
     const position = toCartesian(originCellXc);
     let cell = testSheet.cells[toXC(position[0], ++position[1])];
     while (cell && cell.content) {
@@ -277,7 +294,7 @@ describe("Import xlsx data", () => {
 
   test("Can import Color Scales", () => {
     const testSheet = getWorkbookSheet("jestCfs", convertedData)!;
-    const originCellXc = findXcCellWithContent("Color Scales:", testSheet);
+    const originCellXc = findXcCellWithContent("Color Scales:", testSheet)!;
     const position = toCartesian(originCellXc);
     let cell = testSheet.cells[toXC(position[0], ++position[1])];
     while (cell && cell.content) {
@@ -337,7 +354,7 @@ describe("Import xlsx data", () => {
 
   test("Can import icon sets", () => {
     const testSheet = getWorkbookSheet("jestCfs", convertedData)!;
-    const originCellXc = findXcCellWithContent("Icon Sets:", testSheet);
+    const originCellXc = findXcCellWithContent("Icon Sets:", testSheet)!;
     const position = toCartesian(originCellXc);
     let cell = testSheet.cells[toXC(position[0], ++position[1])];
     while (cell && cell.content) {
@@ -412,7 +429,7 @@ describe("Import xlsx data", () => {
     });
 
     test("Can display basic table style (borders on table outline)", () => {
-      const position = toCartesian(findXcCellWithContent("BasicTable", tableTestSheet));
+      const position = toCartesian(findXcCellWithContent("BasicTable", tableTestSheet)!);
       const [tabLeft, tabTop] = [position[0] + 1, position[1]];
       expect(
         getWorkbookCellBorder(getWorkbookCell(tabLeft, tabTop, tableTestSheet)!, convertedData)
@@ -452,7 +469,7 @@ describe("Import xlsx data", () => {
     });
 
     test("Can display header style", () => {
-      const position = toCartesian(findXcCellWithContent("Header", tableTestSheet));
+      const position = toCartesian(findXcCellWithContent("Header", tableTestSheet)!);
       const [tabLeft, tabTop] = [position[0] + 1, position[1]];
       expect(
         getWorkbookCellStyle(getWorkbookCell(tabLeft, tabTop, tableTestSheet)!, convertedData)
@@ -463,7 +480,7 @@ describe("Import xlsx data", () => {
     });
 
     test("Can highlight first table column", () => {
-      const position = toCartesian(findXcCellWithContent("HighlightFirstCol", tableTestSheet));
+      const position = toCartesian(findXcCellWithContent("HighlightFirstCol", tableTestSheet)!);
       const [tabLeft, tabTop] = [position[0] + 1, position[1]];
       expect(
         getWorkbookCellStyle(getWorkbookCell(tabLeft, tabTop, tableTestSheet)!, convertedData)
@@ -474,7 +491,7 @@ describe("Import xlsx data", () => {
     });
 
     test("Can highlight last table column", () => {
-      const position = toCartesian(findXcCellWithContent("HighlightLastCol", tableTestSheet));
+      const position = toCartesian(findXcCellWithContent("HighlightLastCol", tableTestSheet)!);
       const [tabLeft, tabTop] = [position[0] + 1, position[1]];
       expect(
         getWorkbookCellStyle(getWorkbookCell(tabLeft + 1, tabTop, tableTestSheet)!, convertedData)
@@ -488,7 +505,7 @@ describe("Import xlsx data", () => {
     });
 
     test("Can display banded rows (borders between rows)", () => {
-      const position = toCartesian(findXcCellWithContent("BandedRows", tableTestSheet));
+      const position = toCartesian(findXcCellWithContent("BandedRows", tableTestSheet)!);
       const [tabLeft, tabTop] = [position[0] + 1, position[1]];
       expect(
         getWorkbookCellBorder(getWorkbookCell(tabLeft, tabTop + 1, tableTestSheet)!, convertedData)
@@ -502,7 +519,7 @@ describe("Import xlsx data", () => {
     });
 
     test("Can display banded columns (borders between columns)", () => {
-      const position = toCartesian(findXcCellWithContent("BandedCols", tableTestSheet));
+      const position = toCartesian(findXcCellWithContent("BandedCols", tableTestSheet)!);
       const [tabLeft, tabTop] = [position[0] + 1, position[1]];
       expect(
         getWorkbookCellBorder(getWorkbookCell(tabLeft + 1, tabTop, tableTestSheet)!, convertedData)
@@ -516,7 +533,7 @@ describe("Import xlsx data", () => {
     });
 
     test("Can display total row", () => {
-      const position = toCartesian(findXcCellWithContent("TotalRow", tableTestSheet));
+      const position = toCartesian(findXcCellWithContent("TotalRow", tableTestSheet)!);
       const [tabLeft, tabTop] = [position[0] + 1, position[1]];
       expect(getWorkbookCell(tabLeft, tabTop + 2, tableTestSheet)!.content).toEqual("Total");
     });
