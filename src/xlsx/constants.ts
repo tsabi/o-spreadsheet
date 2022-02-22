@@ -1,7 +1,7 @@
 import { ExcelIconSet } from "../types/xlsx";
 
 /** In XLSX color format (no #)  */
-export const AUTO_COLOR = "0000";
+export const AUTO_COLOR = "000000";
 
 export const XLSX_FORMAT_MAP = {
   General: 0,
