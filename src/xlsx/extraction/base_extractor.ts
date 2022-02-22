@@ -359,24 +359,24 @@ export class XlsxBaseExtractor {
 
   /**
    * Get a color from its id in the Theme's colorScheme.
+   *
+   * Note that Excel don't use the colors from the theme but from its own internal theme, so the displayed
+   * colors will be different in the import than in excel.
+   * .
    */
   private getThemeColor(colorId: string, clrScheme: XLSXColorScheme[]): string {
-    const colorValue = clrScheme[colorId].value;
-    if (!isNaN(parseInt(colorValue, 16))) {
-      return colorValue;
-    } else {
-      const lastColor = clrScheme[colorId].lastClr;
-      // I'm pretty sure theme = 0 and 1 are hardcoded in excel, because their "lastColor" attribute is
-      // the opposite color of what they really display as...
-      if (colorId === "0") {
+    switch (colorId) {
+      case "0": // 0 : sysColor window text
         return "FFFFFF";
-      } else if (colorId === "1") {
+      case "1": // 1 : sysColor window background
         return "000000";
-      } else if (lastColor) {
-        return lastColor;
-      } else {
-        throw new Error(_lt("Undefined color in the theme").toString());
-      }
+      // Don't ask me why these 2 are inverted, I cannot find any documentation for it but everyone does it
+      case "2":
+        return clrScheme["3"].value;
+      case "3":
+        return clrScheme["2"].value;
+      default:
+        return clrScheme[colorId].value;
     }
   }
 }

@@ -34,12 +34,7 @@ export const SUPPORTED_CF_TYPES = [
   "notContainsBlanks",
 ];
 export const SUPPORTED_NUMBER_FORMATS_REGEX = new RegExp("^[#0,.]*%?$");
-export const SUPPORTED_FORMATS = {
-  "3": "m/d/yyyy",
-  "4": "hh:mm:ss a",
-  "5": "m/d/yyyy hh:mm:ss",
-  "6": "hhhh:mm:ss",
-};
+export const SUPPORTED_FORMATS = ["m/d/yyyy", "hh:mm:ss a", "m/d/yyyy hh:mm:ss", "hhhh:mm:ss"];
 
 /** Map between cell type in XLSX file and human readable cell type  */
 export const CELL_TYPE_CONVERSION_MAP: Record<string, XLSXCellType> = {

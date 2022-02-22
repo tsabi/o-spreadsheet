@@ -123,12 +123,17 @@ function applyTableStyle(convertedData: WorkbookData, xlsxData: XLSXImportData) 
   convertedData.borders = arrayToObject(borders);
 }
 
+/**
+ * Apply a style to all the cells in the zone. The applied style WILL NOT overwrite values in existing style of the cell.
+ *
+ * If a style that was not in the styles array was applied, push it into the style array.
+ */
 function applyStyleToZone(appliedStyle: Style, zone: Zone, cells: CellMap, styles: Style[]) {
   for (let col = zone.left; col <= zone.right; col++) {
     for (let row = zone.top; row <= zone.bottom; row++) {
       const xc = toXC(col, row);
       const cell = cells[xc];
-      const newStyle = cell?.style ? { ...styles[cell.style], ...appliedStyle } : appliedStyle;
+      const newStyle = cell?.style ? { ...appliedStyle, ...styles[cell.style] } : appliedStyle;
       let styleIndex = styles.findIndex((style) => deepEquals(style, newStyle));
       if (styleIndex === -1) {
         styleIndex = styles.length;

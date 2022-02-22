@@ -173,6 +173,7 @@ export class XlsxSheetExtractor extends XlsxBaseExtractor {
           hidden: this.extractAttr(colElement, "hidden").asBool(),
           min: this.extractAttr(colElement, "min", { required: true }).asNum()!,
           max: this.extractAttr(colElement, "max", { required: true }).asNum()!,
+          styleIndex: this.extractAttr(colElement, "style").asNum(),
         };
       }
     );
@@ -188,6 +189,7 @@ export class XlsxSheetExtractor extends XlsxBaseExtractor {
           height: this.extractAttr(rowElement, "ht").asNum(),
           customHeight: this.extractAttr(rowElement, "customHeight").asBool(),
           hidden: this.extractAttr(rowElement, "hidden").asBool(),
+          styleIndex: this.extractAttr(rowElement, "s").asNum(),
         };
       }
     );

@@ -1,7 +1,6 @@
-import { _lt } from "../../translation";
 import { Color } from "../../types";
 import { XLSXColor } from "../../types/xlsx";
-import { AUTO_COLOR } from "../constants";
+import { AUTO_COLOR, XLSX_INDEXED_COLORS } from "../constants";
 import { XLSXImportWarningManager } from "../helpers/xlsx_parser_error_manager";
 
 /**
@@ -24,7 +23,8 @@ export interface HSLA {
 
 /**
  *
- * Extract the color referenced inside of an XML element and return it as an hax string #RRGGBBAA.
+ * Extract the color referenced inside of an XML element and return it as an hex string #RRGGBBAA (or #RRGGBB
+ * if alpha = FF)
  *
  *  The color is an attribute of the element that can be :
  *  - rgb : an rgb string
@@ -37,6 +37,7 @@ export function convertColor(
   xlsxColor: XLSXColor | undefined,
   warningManager: XLSXImportWarningManager
 ): Color | undefined {
+  //TODO remove warningManager
   if (!xlsxColor) {
     return undefined;
   }
@@ -46,13 +47,7 @@ export function convertColor(
   } else if (xlsxColor.auto) {
     rgb = AUTO_COLOR;
   } else if (xlsxColor.indexed) {
-    const indexedColorId = xlsxColor.indexed;
-    if (indexedColorId !== 64) {
-      warningManager.addConversionWarning(
-        _lt("Unsupported legacy color index %s. Ignoring it.", indexedColorId.toString()).toString()
-      );
-    }
-    rgb = AUTO_COLOR;
+    rgb = XLSX_INDEXED_COLORS[xlsxColor.indexed];
   } else {
     return undefined;
   }
@@ -62,12 +57,18 @@ export function convertColor(
   if (xlsxColor.tint) {
     rgb = applyTint(rgb, xlsxColor.tint);
   }
+  rgb = rgb.toUpperCase();
 
+  // Remve unnecessary alpha
+  if (rgb.length === 9 && rgb.endsWith("FF")) {
+    rgb = rgb.slice(0, 7);
+  }
   return rgb;
 }
 
 /**
- * Convert a hex color AARRGGBB (or RRGGBB)(representation inside XLSX Xmls) to a standard js color representation #RRGGBBAA
+ * Convert a hex color AARRGGBB (or RRGGBB)(representation inside XLSX Xmls) to a standard js color
+ * representation #RRGGBBAA
  */
 function xlsxColorToRGBA(color: Color): Color {
   if (color.length === 6) return "#" + color + "FF";
@@ -77,7 +78,7 @@ function xlsxColorToRGBA(color: Color): Color {
 /**
  *  Apply tint to a color (see OpenXml spec §18.3.1.15);
  */
-function applyTint(color: Color, tint: number): Color {
+export function applyTint(color: Color, tint: number): Color {
   const rgba = hexToRGBA(color);
   const hsla = rgbaToHSLA(rgba);
 

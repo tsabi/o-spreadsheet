@@ -239,7 +239,7 @@
       </c>
       <c r="B12" s="48">
         <f ca="1">TODAY()</f>
-        <v>44609</v>
+        <v>44613</v>
       </c>
       <c r="C12" s="48">
         <f>DATE(2010,10,2)</f>
@@ -785,67 +785,67 @@
   </sheetData>
   <phoneticPr fontId="21" type="noConversion"/>
   <conditionalFormatting sqref="B3:C3">
-    <cfRule type="beginsWith" dxfId="40" priority="73" operator="beginsWith" text="rule">
+    <cfRule type="beginsWith" dxfId="22" priority="73" operator="beginsWith" text="rule">
       <formula>LEFT(B3,LEN("rule"))="rule"</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B4:C4">
-    <cfRule type="containsBlanks" dxfId="39" priority="71">
+    <cfRule type="containsBlanks" dxfId="21" priority="71">
       <formula>LEN(TRIM(B4))=0</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B5:C5">
-    <cfRule type="containsErrors" dxfId="38" priority="70">
+    <cfRule type="containsErrors" dxfId="20" priority="70">
       <formula>ISERROR(B5)</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B6:C6">
-    <cfRule type="containsText" dxfId="37" priority="69" operator="containsText" text="rule">
+    <cfRule type="containsText" dxfId="19" priority="69" operator="containsText" text="rule">
       <formula>NOT(ISERROR(SEARCH("rule",B6)))</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B8:C8">
-    <cfRule type="endsWith" dxfId="36" priority="67" operator="endsWith" text="rule">
+    <cfRule type="endsWith" dxfId="18" priority="67" operator="endsWith" text="rule">
       <formula>RIGHT(B8,LEN("rule"))="rule"</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B9:C9">
-    <cfRule type="notContainsBlanks" dxfId="35" priority="66">
+    <cfRule type="notContainsBlanks" dxfId="17" priority="66">
       <formula>LEN(TRIM(B9))&gt;0</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B10:C10">
-    <cfRule type="notContainsErrors" dxfId="34" priority="65">
+    <cfRule type="notContainsErrors" dxfId="16" priority="65">
       <formula>NOT(ISERROR(B10))</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B11:C11">
-    <cfRule type="notContainsText" dxfId="33" priority="64" operator="notContains" text="rule">
+    <cfRule type="notContainsText" dxfId="15" priority="64" operator="notContains" text="rule">
       <formula>ISERROR(SEARCH("rule",B11))</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B12:C12">
-    <cfRule type="timePeriod" dxfId="32" priority="63" timePeriod="today">
+    <cfRule type="timePeriod" dxfId="14" priority="63" timePeriod="today">
       <formula>FLOOR(B12,1)=TODAY()</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B15">
-    <cfRule type="expression" dxfId="31" priority="58">
+    <cfRule type="expression" dxfId="13" priority="58">
       <formula>ODD(B15)</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B17:C17">
-    <cfRule type="cellIs" dxfId="30" priority="56" operator="notEqual">
+    <cfRule type="cellIs" dxfId="12" priority="56" operator="notEqual">
       <formula>2</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B26:B27">
-    <cfRule type="cellIs" dxfId="29" priority="46" operator="equal">
+    <cfRule type="cellIs" dxfId="11" priority="46" operator="equal">
       <formula>2</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B16:C16">
-    <cfRule type="cellIs" dxfId="28" priority="45" operator="equal">
+    <cfRule type="cellIs" dxfId="10" priority="45" operator="equal">
       <formula>2</formula>
     </cfRule>
   </conditionalFormatting>
@@ -1011,10 +1011,10 @@
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B7:D7">
-    <cfRule type="duplicateValues" dxfId="27" priority="82"/>
+    <cfRule type="duplicateValues" dxfId="9" priority="82"/>
   </conditionalFormatting>
   <conditionalFormatting sqref="B14:D14">
-    <cfRule type="uniqueValues" dxfId="26" priority="96"/>
+    <cfRule type="uniqueValues" dxfId="8" priority="96"/>
   </conditionalFormatting>
   <conditionalFormatting sqref="B24:C24">
     <cfRule type="dataBar" priority="100">
@@ -1031,10 +1031,10 @@
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B2:C2">
-    <cfRule type="aboveAverage" dxfId="25" priority="114"/>
+    <cfRule type="aboveAverage" dxfId="7" priority="114"/>
   </conditionalFormatting>
   <conditionalFormatting sqref="B13:C13">
-    <cfRule type="top10" dxfId="24" priority="115" rank="1"/>
+    <cfRule type="top10" dxfId="6" priority="115" rank="1"/>
   </conditionalFormatting>
   <conditionalFormatting sqref="H21:K21">
     <cfRule type="iconSet" priority="18">
@@ -1131,33 +1131,33 @@
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B18:C18">
-    <cfRule type="cellIs" dxfId="23" priority="6" operator="greaterThan">
+    <cfRule type="cellIs" dxfId="5" priority="6" operator="greaterThan">
       <formula>2</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B19:C19">
-    <cfRule type="cellIs" dxfId="22" priority="5" operator="greaterThanOrEqual">
+    <cfRule type="cellIs" dxfId="4" priority="5" operator="greaterThanOrEqual">
       <formula>2</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B20:C20">
-    <cfRule type="cellIs" dxfId="21" priority="4" operator="lessThan">
+    <cfRule type="cellIs" dxfId="3" priority="4" operator="lessThan">
       <formula>2</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B21:C21">
-    <cfRule type="cellIs" dxfId="20" priority="3" operator="lessThanOrEqual">
+    <cfRule type="cellIs" dxfId="2" priority="3" operator="lessThanOrEqual">
       <formula>2</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B22:C22">
-    <cfRule type="cellIs" dxfId="19" priority="2" operator="between">
+    <cfRule type="cellIs" dxfId="1" priority="2" operator="between">
       <formula>2</formula>
       <formula>4</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="B23:C23">
-    <cfRule type="cellIs" dxfId="18" priority="1" operator="notBetween">
+    <cfRule type="cellIs" dxfId="0" priority="1" operator="notBetween">
       <formula>2</formula>
       <formula>4</formula>
     </cfRule>

@@ -890,6 +890,10 @@
     <xf numFmtId="0" fontId="23" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1">
       <alignment vertical="center"/>
     </xf>
+    <xf numFmtId="0" fontId="24" fillId="0" borderId="21" xfId="0" applyFont="1" applyBorder="1"/>
+    <xf numFmtId="2" fontId="0" fillId="0" borderId="26" xfId="0" applyNumberFormat="1" applyBorder="1"/>
+    <xf numFmtId="10" fontId="0" fillId="0" borderId="27" xfId="0" applyNumberFormat="1" applyBorder="1"/>
+    <xf numFmtId="14" fontId="0" fillId="0" borderId="27" xfId="0" applyNumberFormat="1" applyBorder="1"/>
     <xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1">
       <alignment vertical="center"/>
     </xf>
@@ -906,10 +910,6 @@
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1">
       <alignment horizontal="center"/>
     </xf>
-    <xf numFmtId="0" fontId="24" fillId="0" borderId="21" xfId="0" applyFont="1" applyBorder="1"/>
-    <xf numFmtId="2" fontId="0" fillId="0" borderId="26" xfId="0" applyNumberFormat="1" applyBorder="1"/>
-    <xf numFmtId="10" fontId="0" fillId="0" borderId="27" xfId="0" applyNumberFormat="1" applyBorder="1"/>
-    <xf numFmtId="14" fontId="0" fillId="0" borderId="27" xfId="0" applyNumberFormat="1" applyBorder="1"/>
   </cellXfs>
   <cellStyles count="3">
     <cellStyle name="Lien hypertexte" xfId="2" builtinId="8"/>
@@ -917,6 +917,213 @@
     <cellStyle name="Normal 2" xfId="1" xr:uid="{1493241F-B85D-4F84-BBA0-86191B8FD032}"/>
   </cellStyles>
   <dxfs count="44">
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <font>
+        <b/>
+        <i/>
+        <strike/>
+        <u/>
+        <color theme="7"/>
+      </font>
+      <numFmt numFmtId="19" formatCode="dd/mm/yyyy"/>
+      <fill>
+        <patternFill patternType="lightTrellis">
+          <fgColor theme="4"/>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+      <border>
+        <left style="thin">
+          <color auto="1"/>
+        </left>
+        <right style="thin">
+          <color auto="1"/>
+        </right>
+        <top style="thin">
+          <color auto="1"/>
+        </top>
+        <bottom style="thin">
+          <color auto="1"/>
+        </bottom>
+        <vertical/>
+        <horizontal/>
+      </border>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor theme="9"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor rgb="FFEE9090"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor rgb="FF90EE90"/>
+        </patternFill>
+      </fill>
+    </dxf>
+    <dxf>
+      <fill>
+        <patternFill>
+          <bgColor rgb="FFFFA500"/>
+        </patternFill>
+      </fill>
+    </dxf>
     <dxf>
       <font>
         <b val="0"/>
@@ -1263,213 +1470,6 @@
         <scheme val="none"/>
       </font>
       <alignment horizontal="general" vertical="center" textRotation="0" wrapText="0" indent="0" justifyLastLine="0" shrinkToFit="0" readingOrder="0"/>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <font>
-        <b/>
-        <i/>
-        <strike/>
-        <u/>
-        <color theme="7"/>
-      </font>
-      <numFmt numFmtId="19" formatCode="dd/mm/yyyy"/>
-      <fill>
-        <patternFill patternType="lightTrellis">
-          <fgColor theme="4"/>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-      <border>
-        <left style="thin">
-          <color auto="1"/>
-        </left>
-        <right style="thin">
-          <color auto="1"/>
-        </right>
-        <top style="thin">
-          <color auto="1"/>
-        </top>
-        <bottom style="thin">
-          <color auto="1"/>
-        </bottom>
-        <vertical/>
-        <horizontal/>
-      </border>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor theme="9"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor rgb="FFEE9090"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor rgb="FF90EE90"/>
-        </patternFill>
-      </fill>
-    </dxf>
-    <dxf>
-      <fill>
-        <patternFill>
-          <bgColor rgb="FFFFA500"/>
-        </patternFill>
-      </fill>
     </dxf>
   </dxfs>
   <tableStyles count="0" defaultTableStyle="TableStyleMedium2" defaultPivotStyle="PivotStyleLight16"/>

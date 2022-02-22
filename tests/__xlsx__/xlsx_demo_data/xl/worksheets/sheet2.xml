@@ -1869,7 +1869,7 @@
       </c>
       <c r="B100" s="20">
         <f ca="1">NOW()</f>
-        <v>44609.660239583332</v>
+        <v>44613.675597453701</v>
       </c>
       <c r="D100" s="2">
         <f ca="1">IF(ISNUMBER(B100),1,0)</f>
@@ -2058,7 +2058,7 @@
       </c>
       <c r="B112" s="2">
         <f ca="1">RAND()</f>
-        <v>0.87022639099006838</v>
+        <v>0.54856847888980098</v>
       </c>
       <c r="D112" s="2">
         <f ca="1">IF(AND(B112&gt;=0,B112&lt;1),1,0)</f>
@@ -2567,7 +2567,7 @@
       </c>
       <c r="B144" s="19">
         <f ca="1">TODAY()</f>
-        <v>44609</v>
+        <v>44613</v>
       </c>
       <c r="D144" s="2">
         <f ca="1">IF(ISNUMBER(B144),1,0)</f>
@@ -2849,12 +2849,12 @@
     </row>
   </sheetData>
   <conditionalFormatting sqref="D1:D180">
-    <cfRule type="cellIs" dxfId="42" priority="1" operator="equal">
+    <cfRule type="cellIs" dxfId="24" priority="1" operator="equal">
       <formula>1</formula>
     </cfRule>
   </conditionalFormatting>
   <conditionalFormatting sqref="D1:D180">
-    <cfRule type="cellIs" dxfId="41" priority="2" operator="equal">
+    <cfRule type="cellIs" dxfId="23" priority="2" operator="equal">
       <formula>0</formula>
     </cfRule>
   </conditionalFormatting>

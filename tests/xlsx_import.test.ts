@@ -10,7 +10,7 @@ import {
 import { Border, CellIsRule, ChartUIDefinition, IconSet, IconSetRule, Style } from "../src/types";
 import { XLSXCFOperatorType, XLSXSharedFormula } from "../src/types/xlsx";
 import { rgbaToInt } from "../src/xlsx/conversion/color_conversion";
-import { adaptFormula } from "../src/xlsx/conversion/sheet_conversion";
+import { adaptFormula } from "../src/xlsx/conversion/formula_conversion";
 import {
   TABLE_BORDER_STYLE,
   TABLE_HEADER_STYLE,

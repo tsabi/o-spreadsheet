@@ -7,7 +7,6 @@ What we don't support at parsing of the XML :
 			- From my testing, this doesn't seems to be taken into account by excel/calc
 		- boolean applyAlignment/applyFont/applyFill... :
 			- From my testing, this doesn't seems to be taken into account by excel/calc
-		- row/col style
 
 	- strings : 
 		- richText (text with non-uniform formatting)
@@ -27,6 +26,8 @@ What we don't support at parsing of the XML :
 		- we don't support excel-like pivot. Import them as Table (values + not-too-ugly styling)
 
 What we don't support at conversion (!NW = no warning generated for these): 
+	- Style : 
+		- col/row style. We apply the style on each cell of the row/col.
 	- Borders :
 		- most border styles
 		- diagonal borders
@@ -64,6 +65,9 @@ What we don't support at conversion (!NW = no warning generated for these):
 What they do we don't : 
 	- normalize formulas at export, basically if a formula can be autofilled from another, they don't export it
 
+What will fuck up : 
+	- Excel don't really use the theme.xml for theme colors, but define its own. So the colors will be different at import than in excel.
+		Import in GSheet et Calc both correctly use the theme.xml
 
 
  	formats : menu_item_action.ts

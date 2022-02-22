@@ -140,6 +140,7 @@ export class XlsxReader {
    * Clean the imported data. This will :
    *  - remove duplicate styles + remove undefined values in Style objects
    *  - remove duplicate borders + remove undefined values in border objects
+   *  - remove duplicate formats + remove undefined values in Style objects
    */
   cleanImportedData(data: WorkbookData) {
     cleanImportedStyles(data);

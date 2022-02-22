@@ -231,6 +231,7 @@ export interface XLSXColumn {
   customWidth?: boolean;
   bestFit?: boolean;
   hidden?: boolean;
+  styleIndex?: number;
 }
 export interface XLSXRow {
   index: number;
@@ -238,6 +239,7 @@ export interface XLSXRow {
   customHeight?: boolean;
   hidden?: boolean;
   cells: XLSXCell[];
+  styleIndex?: number;
 }
 
 export interface XLSXFormula {

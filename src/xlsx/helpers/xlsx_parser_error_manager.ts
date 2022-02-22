@@ -17,7 +17,7 @@ export enum WarningTypes {
   CfFormatNumFmtNotSupported = "Num formats in conditional formats",
   CfIconSetEmptyIconNotSupported = "IconSets with empty icons",
   BadlyFormattedHyperlink = "Badly formatted hyperlink",
-  NumFmtIdNotSupported = "Unsupported num format",
+  NumFmtIdNotSupported = "Number format",
 }
 
 export class XLSXImportWarningManager {
@@ -44,7 +44,7 @@ export class XLSXImportWarningManager {
    * @param supported optional, list of the supported elements
    */
   generateNotsupportedWarning(type: WarningTypes, name?: string, supported?: string[]) {
-    let warning = `${type} ${name ? name + " is" : "are"} not yet supported. `;
+    let warning = `${type} ${name ? '"' + name + '" is' : "are"} not yet supported. `;
     if (supported) {
       warning += `Only ${supported.join(", ")} are currently supported.`;
     }

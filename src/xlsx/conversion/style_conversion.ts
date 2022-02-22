@@ -134,22 +134,21 @@ function convertFormat(
     return undefined;
   }
   // Format is either defined in the imported data, or the formatId is defined in openXML §18.8.30
-  if (formats[numFmtId]) {
-    const format = formats[numFmtId].format;
-    if (SUPPORTED_FORMATS[format] || SUPPORTED_NUMBER_FORMATS_REGEX.test(format)) {
+  let format = XLSX_FORMATS_CONVERSION_MAP[numFmtId];
+  if (format) {
+    return format;
+  }
+
+  format = formats.find((f) => f.id === numFmtId)?.format;
+  if (format) {
+    if (SUPPORTED_FORMATS.includes(format) || SUPPORTED_NUMBER_FORMATS_REGEX.test(format)) {
       return format;
     }
   }
 
-  const format = XLSX_FORMATS_CONVERSION_MAP[numFmtId];
-  if (!format) {
-    warningManager.generateNotsupportedWarning(
-      WarningTypes.NumFmtIdNotSupported,
-      numFmtId.toString()
-    );
-  }
+  warningManager.generateNotsupportedWarning(WarningTypes.NumFmtIdNotSupported, format);
 
-  return format;
+  return undefined;
 }
 
 /**
