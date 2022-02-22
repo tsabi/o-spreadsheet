@@ -14,7 +14,7 @@ export function convertFormulasContent(sheet: XLSXWorksheet, data: XLSXImportDat
         cell.formula.sharedIndex !== undefined && !cell.formula.content
           ? "=" + adaptFormula(cell.xc, sfMap[cell.formula.sharedIndex])
           : "=" + cell.formula.content;
-      cell.formula.content = convertFormula(cell.formula.content);
+      cell.formula.content = convertFormula(cell.formula.content, data);
     }
   }
 }
@@ -36,16 +36,46 @@ function getSharedFormulasMap(sheet: XLSXWorksheet): SharedFormulasMap {
  * - remove _xlfn. flags before function names
  * - convert the SUBTOTAL(index, formula) function to the function given by its index
  * - change #REF! into #REF
+ * - convert external references into their value
  */
-function convertFormula(formula: string): string {
+function convertFormula(formula: string, data: XLSXImportData): string {
   formula = formula.replace("_xlfn.", "");
 
   formula = formula.replace(/#REF!/g, "#REF");
 
-  formula = formula.replace(new RegExp("SUBTOTAL\\(([0-9]*),", "g"), (match, p1) => {
-    const convertedFunction = SUBTOTAL_FUNCTION_CONVERSION_MAP[p1];
+  // SUBOTOTAL function, eg. =SUBTOTAL(3, {formula})
+  formula = formula.replace(/SUBTOTAL\(([0-9]*),/g, (match, functionId) => {
+    const convertedFunction = SUBTOTAL_FUNCTION_CONVERSION_MAP[functionId];
     return convertedFunction ? convertedFunction + "(" : match;
   });
+
+  // External references, eg. ='[1]Sheet 3'!$B$4
+  formula = formula.replace(
+    /'?\[([0-9]*)\](.*)'?!(\$?[a-zA-Z]*\$?[0-9]*)/g,
+    (match, externalRefId, sheetName, cellRef) => {
+      externalRefId = Number(externalRefId) - 1;
+      cellRef = cellRef.replace(/\$/g, "");
+
+      const sheetIndex = data.externalBooks[externalRefId].sheetNames.findIndex(
+        (name) => name === sheetName
+      );
+      if (sheetIndex === -1) {
+        return match;
+      }
+
+      const externalDataset = data.externalBooks[externalRefId].datasets.find(
+        (dataset) => dataset.sheetId === sheetIndex
+      )?.data;
+      if (!externalDataset) {
+        return match;
+      }
+
+      const datasetValue = externalDataset && externalDataset[cellRef];
+      const convertedValue = Number(datasetValue) ? datasetValue : `"${datasetValue}"`;
+      return convertedValue || match;
+    }
+  );
+
   return formula;
 }
 

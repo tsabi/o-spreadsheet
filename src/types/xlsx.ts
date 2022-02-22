@@ -95,7 +95,7 @@ export interface XLSXFileStructure {
   charts: XLSXImportFile[];
   figures: XLSXImportFile[];
   tables: XLSXImportFile[];
-  pivots: XLSXImportFile[];
+  externalLinks: XLSXImportFile[];
 }
 
 export interface XLSXImportData {
@@ -107,6 +107,7 @@ export interface XLSXImportData {
   numFmts: XLSXNumFormat[];
   styles: XLSXStyle[];
   sheets: XLSXWorksheet[];
+  externalBooks: XLSXExternalBook[];
 }
 
 export type XMLAttributeValue = string | number | boolean;
@@ -546,4 +547,15 @@ export interface XLSXTable {
   totalsRowCount: number;
   cols: XLSXTableCol[];
   style?: XLSXTableStyleInfo;
+}
+
+export interface XLSXExternalBook {
+  rId: string;
+  sheetNames: string[];
+  datasets: XLSXExternalSheetData[];
+}
+
+export interface XLSXExternalSheetData {
+  sheetId: number;
+  data: Record<string, string>; // Record XC : value
 }

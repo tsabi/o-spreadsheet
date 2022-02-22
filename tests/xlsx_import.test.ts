@@ -130,6 +130,15 @@ describe("Import xlsx data", () => {
     expect(testSheet.cols[position[0]].isHidden).toBeTruthy();
   });
 
+  test("Can import external reference", () => {
+    const testSheet = getWorkbookSheet("jestSheet", convertedData)!;
+    const xc = findXcCellWithContent("External Reference:", testSheet)!;
+    const position = toCartesian(xc);
+    expect(getWorkbookCell(position[0], position[1] + 1, testSheet)?.content).toEqual(
+      '="referenced string"'
+    );
+  });
+
   test.each([
     "darkGray",
     "mediumGray",

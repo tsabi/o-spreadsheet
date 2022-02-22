@@ -64,6 +64,7 @@ export const CONTENT_TYPES = {
   themes: "application/vnd.openxmlformats-officedocument.theme+xml",
   table: "application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml",
   pivot: "application/vnd.openxmlformats-officedocument.spreadsheetml.pivotTable+xml",
+  externalLink: "application/vnd.openxmlformats-officedocument.spreadsheetml.externalLink+xml",
 } as const;
 
 export const RELATIONSHIP_NSR =

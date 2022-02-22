@@ -60,6 +60,9 @@ What we don't support at conversion (!NW = no warning generated for these):
 		- we don't support tables the same way as Excel, the most we can do is import cells with formatting to represent a table
 		- table style in XLSX is a string that represent a stlye... and there's 80+ different styles supported. Yep. We'll just slap a style
 			not too ugly to the table and call it a day.
+	- External References (!NW):
+		- We cannot support references to external files (obviously), but we can replace the reference by its last known value (this is stored
+				in the xlsx)
 
 
 What they do we don't : 

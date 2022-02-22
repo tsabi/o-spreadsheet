@@ -7,9 +7,9 @@
       <x15ac:absPath xmlns:x15ac="http://schemas.microsoft.com/office/spreadsheetml/2010/11/ac" url="D:\code\odoo\spreadsheet\tests\__xlsx__\"/>
     </mc:Choice>
   </mc:AlternateContent>
-  <xr:revisionPtr revIDLastSave="0" documentId="13_ncr:1_{07238A3A-E63B-452C-991E-9D3B5555D8AB}" xr6:coauthVersionLast="47" xr6:coauthVersionMax="47" xr10:uidLastSave="{00000000-0000-0000-0000-000000000000}"/>
+  <xr:revisionPtr revIDLastSave="0" documentId="13_ncr:20001_{4A44541A-DDF2-470F-A787-AE5290AE6251}" xr6:coauthVersionLast="47" xr6:coauthVersionMax="47" xr10:uidLastSave="{00000000-0000-0000-0000-000000000000}"/>
   <bookViews>
-    <workbookView xWindow="2745" yWindow="2895" windowWidth="17280" windowHeight="9060" activeTab="2" xr2:uid="{00000000-000D-0000-FFFF-FFFF00000000}"/>
+    <workbookView xWindow="-120" yWindow="-120" windowWidth="29040" windowHeight="15840" activeTab="2" xr2:uid="{00000000-000D-0000-FFFF-FFFF00000000}"/>
   </bookViews>
   <sheets>
     <sheet name="Sheet1" sheetId="1" r:id="rId1"/>
@@ -21,10 +21,14 @@
     <sheet name="jestPivot" sheetId="11" r:id="rId7"/>
     <sheet name="jestCharts" sheetId="2" r:id="rId8"/>
   </sheets>
+  <externalReferences>
+    <externalReference r:id="rId9"/>
+  </externalReferences>
   <calcPr calcId="191029"/>
   <pivotCaches>
-    <pivotCache cacheId="0" r:id="rId9"/>
+    <pivotCache cacheId="1" r:id="rId10"/>
   </pivotCaches>
+  <fileRecoveryPr repairLoad="1"/>
   <extLst>
     <ext xmlns:xcalcf="http://schemas.microsoft.com/office/spreadsheetml/2018/calcfeatures" uri="{B58B0392-4F1F-4190-BB64-5DF3571DCE5F}">
       <xcalcf:calcFeatures>

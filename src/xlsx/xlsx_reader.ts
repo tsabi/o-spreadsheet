@@ -2,6 +2,7 @@ import { DEFAULT_REVISION_ID } from "../constants";
 import { _lt } from "../translation";
 import {
   ImportedFiles,
+  XLSXExternalBook,
   XLSXFileStructure,
   XLSXImportData,
   XLSXWorksheet,
@@ -21,6 +22,7 @@ import {
   convertTables,
 } from "./conversion";
 import { XlsxMiscExtractor, XlsxSheetExtractor, XlsxStyleExtractor } from "./extraction";
+import { XlsxExternalBookExtractor } from "./extraction/external_book_extractor";
 import { getXLSXFilesOfType } from "./helpers/xlsx_helper";
 import { XLSXImportWarningManager } from "./helpers/xlsx_parser_error_manager";
 import { parseXML } from "./helpers/xml_helpers";
@@ -80,6 +82,16 @@ export class XlsxReader {
       ).getSheet();
     });
 
+    const externalBooks = xlsxFileStructure.externalLinks.map(
+      (externalLinkFile): XLSXExternalBook => {
+        return new XlsxExternalBookExtractor(
+          externalLinkFile,
+          xlsxFileStructure,
+          this.warningManager
+        ).getExternalBook();
+      }
+    );
+
     const styleExtractor = new XlsxStyleExtractor(xlsxFileStructure, this.warningManager, theme);
 
     return {
@@ -91,6 +103,7 @@ export class XlsxReader {
       styles: styleExtractor.getStyles(),
       sheets: sheets,
       sharedStrings,
+      externalBooks,
     };
   }
 
@@ -105,6 +118,7 @@ export class XlsxReader {
       figures: getXLSXFilesOfType(CONTENT_TYPES.drawing, this.xmls),
       tables: getXLSXFilesOfType(CONTENT_TYPES.table, this.xmls),
       pivots: getXLSXFilesOfType(CONTENT_TYPES.pivot, this.xmls),
+      externalLinks: getXLSXFilesOfType(CONTENT_TYPES.externalLink, this.xmls),
     };
 
     if (!xlsxFileStructure.workbook.rels) {

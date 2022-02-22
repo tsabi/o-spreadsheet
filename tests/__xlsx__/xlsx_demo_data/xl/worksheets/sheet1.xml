@@ -271,7 +271,7 @@
       </c>
       <c r="C27" s="2">
         <f t="shared" ref="C27:C35" ca="1" si="0">FLOOR(RAND()*50,1)</f>
-        <v>2</v>
+        <v>14</v>
       </c>
       <c r="H27" s="2">
         <v>4</v>
@@ -286,11 +286,11 @@
       </c>
       <c r="B28" s="2">
         <f t="shared" ref="B28:B33" ca="1" si="1">FLOOR(RAND()*50,1)</f>
-        <v>48</v>
+        <v>47</v>
       </c>
       <c r="C28" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>23</v>
+        <v>38</v>
       </c>
       <c r="H28" s="2">
         <v>5</v>
@@ -305,11 +305,11 @@
       </c>
       <c r="B29" s="2">
         <f t="shared" ca="1" si="1"/>
-        <v>2</v>
+        <v>5</v>
       </c>
       <c r="C29" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>17</v>
+        <v>41</v>
       </c>
       <c r="H29" s="2">
         <v>6</v>
@@ -324,11 +324,11 @@
       </c>
       <c r="B30" s="2">
         <f t="shared" ca="1" si="1"/>
-        <v>44</v>
+        <v>39</v>
       </c>
       <c r="C30" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>14</v>
+        <v>9</v>
       </c>
       <c r="H30" s="2">
         <v>7</v>
@@ -343,11 +343,11 @@
       </c>
       <c r="B31" s="2">
         <f t="shared" ca="1" si="1"/>
-        <v>17</v>
+        <v>10</v>
       </c>
       <c r="C31" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>15</v>
+        <v>19</v>
       </c>
       <c r="H31" s="2">
         <v>8</v>
@@ -362,11 +362,11 @@
       </c>
       <c r="B32" s="2">
         <f t="shared" ca="1" si="1"/>
-        <v>17</v>
+        <v>10</v>
       </c>
       <c r="C32" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>27</v>
+        <v>42</v>
       </c>
       <c r="H32" s="2">
         <v>9</v>
@@ -381,11 +381,11 @@
       </c>
       <c r="B33" s="2">
         <f t="shared" ca="1" si="1"/>
-        <v>1</v>
+        <v>30</v>
       </c>
       <c r="C33" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>18</v>
+        <v>22</v>
       </c>
       <c r="H33" s="2">
         <v>10</v>
@@ -403,7 +403,7 @@
       </c>
       <c r="C34" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>19</v>
+        <v>25</v>
       </c>
     </row>
     <row r="35" spans="1:9" ht="17.25" customHeight="1" x14ac:dyDescent="0.2">
@@ -412,11 +412,11 @@
       </c>
       <c r="B35" s="2">
         <f ca="1">FLOOR(RAND()*50,1)</f>
-        <v>26</v>
+        <v>44</v>
       </c>
       <c r="C35" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>0</v>
+        <v>41</v>
       </c>
     </row>
   </sheetData>
