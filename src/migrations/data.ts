@@ -7,6 +7,7 @@ import {
 import { getItemId, toXC, toZone } from "../helpers/index";
 import { _t } from "../translation";
 import { ExcelSheetData, ExcelWorkbookData, SheetData, WorkbookData } from "../types/index";
+import { XlsxReader } from "../xlsx/xlsx_reader";
 import { normalizeV9 } from "./legacy_tools";
 
 /**
@@ -26,6 +27,21 @@ export const CURRENT_VERSION = 11;
 export function load(data?: any): WorkbookData {
   if (!data) {
     return createEmptyWorkbookData();
+  }
+  if (data["[Content_Types].xml"]) {
+    let reader: XlsxReader | undefined = undefined;
+    try {
+      reader = new XlsxReader(data);
+      data = reader.convertXlsx();
+    } catch (error) {
+      console.error(error);
+      data = createEmptyWorkbookData();
+    }
+    if (reader) {
+      for (let parsingError of reader.warningManager.warnings) {
+        console.warn(parsingError);
+      }
+    }
   }
   data = JSON.parse(JSON.stringify(data));
 

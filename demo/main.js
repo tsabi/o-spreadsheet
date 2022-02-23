@@ -94,9 +94,8 @@ class Demo extends Component {
           for (let i = 0; i < contents.length; i++) {
             inputfiles[files[i]] = contents[i];
           }
-          const data = env.importXLSX(inputfiles);
           await fetch("http://localhost:9000/clear");
-          this.createModel(data);
+          this.createModel(inputfiles);
           this.state.key = this.state.key + 1;
           input.remove();
         };
