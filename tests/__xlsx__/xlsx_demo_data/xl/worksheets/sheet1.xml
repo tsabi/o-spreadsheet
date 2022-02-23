@@ -6,7 +6,7 @@
       <selection activeCell="I12" sqref="I12"/>
     </sheetView>
   </sheetViews>
-  <sheetFormatPr baseColWidth="10" defaultColWidth="13.7109375" defaultRowHeight="12.75" x14ac:dyDescent="0.2"/>
+  <sheetFormatPr defaultColWidth="13.7109375" defaultRowHeight="12.75" x14ac:dyDescent="0.2"/>
   <cols>
     <col min="1" max="1" width="22.28515625" customWidth="1"/>
     <col min="2" max="2" width="13.7109375" customWidth="1"/>
@@ -271,7 +271,7 @@
       </c>
       <c r="C27" s="2">
         <f t="shared" ref="C27:C35" ca="1" si="0">FLOOR(RAND()*50,1)</f>
-        <v>14</v>
+        <v>47</v>
       </c>
       <c r="H27" s="2">
         <v>4</v>
@@ -286,11 +286,11 @@
       </c>
       <c r="B28" s="2">
         <f t="shared" ref="B28:B33" ca="1" si="1">FLOOR(RAND()*50,1)</f>
-        <v>47</v>
+        <v>10</v>
       </c>
       <c r="C28" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>38</v>
+        <v>33</v>
       </c>
       <c r="H28" s="2">
         <v>5</v>
@@ -305,11 +305,11 @@
       </c>
       <c r="B29" s="2">
         <f t="shared" ca="1" si="1"/>
-        <v>5</v>
+        <v>35</v>
       </c>
       <c r="C29" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>41</v>
+        <v>49</v>
       </c>
       <c r="H29" s="2">
         <v>6</v>
@@ -324,11 +324,11 @@
       </c>
       <c r="B30" s="2">
         <f t="shared" ca="1" si="1"/>
-        <v>39</v>
+        <v>20</v>
       </c>
       <c r="C30" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>9</v>
+        <v>40</v>
       </c>
       <c r="H30" s="2">
         <v>7</v>
@@ -343,11 +343,11 @@
       </c>
       <c r="B31" s="2">
         <f t="shared" ca="1" si="1"/>
-        <v>10</v>
+        <v>0</v>
       </c>
       <c r="C31" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>19</v>
+        <v>30</v>
       </c>
       <c r="H31" s="2">
         <v>8</v>
@@ -362,11 +362,11 @@
       </c>
       <c r="B32" s="2">
         <f t="shared" ca="1" si="1"/>
-        <v>10</v>
+        <v>21</v>
       </c>
       <c r="C32" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>42</v>
+        <v>13</v>
       </c>
       <c r="H32" s="2">
         <v>9</v>
@@ -381,11 +381,11 @@
       </c>
       <c r="B33" s="2">
         <f t="shared" ca="1" si="1"/>
-        <v>30</v>
+        <v>28</v>
       </c>
       <c r="C33" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>22</v>
+        <v>0</v>
       </c>
       <c r="H33" s="2">
         <v>10</v>
@@ -403,7 +403,7 @@
       </c>
       <c r="C34" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>25</v>
+        <v>36</v>
       </c>
     </row>
     <row r="35" spans="1:9" ht="17.25" customHeight="1" x14ac:dyDescent="0.2">
@@ -412,11 +412,11 @@
       </c>
       <c r="B35" s="2">
         <f ca="1">FLOOR(RAND()*50,1)</f>
-        <v>44</v>
+        <v>0</v>
       </c>
       <c r="C35" s="2">
         <f t="shared" ca="1" si="0"/>
-        <v>41</v>
+        <v>11</v>
       </c>
     </row>
   </sheetData>
@@ -463,5 +463,5 @@
     <hyperlink ref="A23" r:id="rId2" xr:uid="{00000000-0004-0000-0000-000002000000}"/>
   </hyperlinks>
   <pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>
-  <pageSetup paperSize="9" orientation="portrait" horizontalDpi="0" verticalDpi="0" r:id="rId3"/>
+  <pageSetup paperSize="9" orientation="portrait" horizontalDpi="0" verticalDpi="0"/>
 </worksheet>

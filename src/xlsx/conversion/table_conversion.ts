@@ -133,7 +133,7 @@ function applyStyleToZone(appliedStyle: Style, zone: Zone, cells: CellMap, style
     for (let row = zone.top; row <= zone.bottom; row++) {
       const xc = toXC(col, row);
       const cell = cells[xc];
-      const newStyle = cell?.style ? { ...appliedStyle, ...styles[cell.style] } : appliedStyle;
+      const newStyle = cell?.style ? { ...styles[cell.style], ...appliedStyle } : appliedStyle;
       let styleIndex = styles.findIndex((style) => deepEquals(style, newStyle));
       if (styleIndex === -1) {
         styleIndex = styles.length;

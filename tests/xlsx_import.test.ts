@@ -221,16 +221,13 @@ describe("Import xlsx data", () => {
     expect(cellFormat).toEqual(format);
   });
 
-  test.each(["Normal", "Red", "Italic", "Bold", "Striked", "Underlined", "size12", "size16"])(
+  test.each(["Red", "Italic", "Bold", "Striked", "Underlined", "size12", "size16"])(
     "Can import font styles",
     (style) => {
       const testSheet = getWorkbookSheet("jestStyles", convertedData)!;
       const cell = findCellWithContent(style, testSheet)!;
       const cellStyle = getWorkbookCellStyle(cell, convertedData);
       switch (style) {
-        case "Normal":
-          expect(cellStyle).toBeUndefined();
-          break;
         case "Red":
           expect(standardizeColor(cellStyle!.textColor!)).toEqual("#FF0000FF");
           break;

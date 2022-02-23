@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:c16r2="http://schemas.microsoft.com/office/drawing/2015/06/chart">
   <c:date1904 val="0"/>
-  <c:lang val="fr-FR"/>
+  <c:lang val="en-US"/>
   <c:roundedCorners val="0"/>
   <mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
     <mc:Choice xmlns:c14="http://schemas.microsoft.com/office/drawing/2007/8/2/chart" Requires="c14">
@@ -57,7 +57,7 @@
               <a:cs typeface="+mn-cs"/>
             </a:defRPr>
           </a:pPr>
-          <a:endParaRPr lang="fr-FR"/>
+          <a:endParaRPr lang="en-US"/>
         </a:p>
       </c:txPr>
     </c:title>
@@ -153,28 +153,28 @@
                   <c:v>12</c:v>
                 </c:pt>
                 <c:pt idx="1">
-                  <c:v>47</c:v>
+                  <c:v>10</c:v>
                 </c:pt>
                 <c:pt idx="2">
-                  <c:v>5</c:v>
+                  <c:v>35</c:v>
                 </c:pt>
                 <c:pt idx="3">
-                  <c:v>39</c:v>
+                  <c:v>20</c:v>
                 </c:pt>
                 <c:pt idx="4">
-                  <c:v>10</c:v>
+                  <c:v>0</c:v>
                 </c:pt>
                 <c:pt idx="5">
-                  <c:v>10</c:v>
+                  <c:v>21</c:v>
                 </c:pt>
                 <c:pt idx="6">
-                  <c:v>30</c:v>
+                  <c:v>28</c:v>
                 </c:pt>
                 <c:pt idx="7">
                   <c:v>19</c:v>
                 </c:pt>
                 <c:pt idx="8">
-                  <c:v>44</c:v>
+                  <c:v>0</c:v>
                 </c:pt>
               </c:numCache>
             </c:numRef>
@@ -269,31 +269,31 @@
                 <c:formatCode>General</c:formatCode>
                 <c:ptCount val="9"/>
                 <c:pt idx="0">
-                  <c:v>14</c:v>
+                  <c:v>47</c:v>
                 </c:pt>
                 <c:pt idx="1">
-                  <c:v>38</c:v>
+                  <c:v>33</c:v>
                 </c:pt>
                 <c:pt idx="2">
-                  <c:v>41</c:v>
+                  <c:v>49</c:v>
                 </c:pt>
                 <c:pt idx="3">
-                  <c:v>9</c:v>
+                  <c:v>40</c:v>
                 </c:pt>
                 <c:pt idx="4">
-                  <c:v>19</c:v>
+                  <c:v>30</c:v>
                 </c:pt>
                 <c:pt idx="5">
-                  <c:v>42</c:v>
+                  <c:v>13</c:v>
                 </c:pt>
                 <c:pt idx="6">
-                  <c:v>22</c:v>
+                  <c:v>0</c:v>
                 </c:pt>
                 <c:pt idx="7">
-                  <c:v>25</c:v>
+                  <c:v>36</c:v>
                 </c:pt>
                 <c:pt idx="8">
-                  <c:v>41</c:v>
+                  <c:v>11</c:v>
                 </c:pt>
               </c:numCache>
             </c:numRef>
@@ -379,7 +379,7 @@
                   <a:cs typeface="+mn-cs"/>
                 </a:defRPr>
               </a:pPr>
-              <a:endParaRPr lang="fr-FR"/>
+              <a:endParaRPr lang="en-US"/>
             </a:p>
           </c:txPr>
         </c:title>
@@ -412,7 +412,7 @@
                 <a:cs typeface="+mn-cs"/>
               </a:defRPr>
             </a:pPr>
-            <a:endParaRPr lang="fr-FR"/>
+            <a:endParaRPr lang="en-US"/>
           </a:p>
         </c:txPr>
         <c:crossAx val="88853993"/>
@@ -483,7 +483,7 @@
                   <a:cs typeface="+mn-cs"/>
                 </a:defRPr>
               </a:pPr>
-              <a:endParaRPr lang="fr-FR"/>
+              <a:endParaRPr lang="en-US"/>
             </a:p>
           </c:txPr>
         </c:title>
@@ -516,7 +516,7 @@
                 <a:cs typeface="+mn-cs"/>
               </a:defRPr>
             </a:pPr>
-            <a:endParaRPr lang="fr-FR"/>
+            <a:endParaRPr lang="en-US"/>
           </a:p>
         </c:txPr>
         <c:crossAx val="17781237"/>
@@ -560,7 +560,7 @@
               <a:cs typeface="+mn-cs"/>
             </a:defRPr>
           </a:pPr>
-          <a:endParaRPr lang="fr-FR"/>
+          <a:endParaRPr lang="en-US"/>
         </a:p>
       </c:txPr>
     </c:legend>
@@ -588,7 +588,7 @@
       <a:pPr>
         <a:defRPr/>
       </a:pPr>
-      <a:endParaRPr lang="fr-FR"/>
+      <a:endParaRPr lang="en-US"/>
     </a:p>
   </c:txPr>
   <c:printSettings>

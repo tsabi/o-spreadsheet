@@ -912,7 +912,7 @@
     </xf>
   </cellXfs>
   <cellStyles count="3">
-    <cellStyle name="Lien hypertexte" xfId="2" builtinId="8"/>
+    <cellStyle name="Hyperlink" xfId="2" builtinId="8"/>
     <cellStyle name="Normal" xfId="0" builtinId="0"/>
     <cellStyle name="Normal 2" xfId="1" xr:uid="{1493241F-B85D-4F84-BBA0-86191B8FD032}"/>
   </cellStyles>
