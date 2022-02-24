@@ -60,7 +60,7 @@ function convertBorderDescr(
   addBorderDescrWarnings(borderDescr, warningManager);
 
   const style = BORDER_STYLE_CONVERSION_MAP[borderDescr.style];
-  return style ? [style, convertColor(borderDescr.color, warningManager)!] : undefined;
+  return style ? [style, convertColor(borderDescr.color)!] : undefined;
 }
 
 export function convertStyles(
@@ -100,9 +100,9 @@ export function convertStyle(
     // In xlsx fills, bgColor is the color of the fill, and fgColor is the color of the pattern above the background, except in solid fills
     fillColor:
       styleStruct.fillStyle?.patternType === "solid"
-        ? convertColor(styleStruct.fillStyle?.fgColor, warningManager)
-        : convertColor(styleStruct.fillStyle?.bgColor, warningManager),
-    textColor: convertColor(styleStruct.fontStyle?.color, warningManager),
+        ? convertColor(styleStruct.fillStyle?.fgColor)
+        : convertColor(styleStruct.fillStyle?.bgColor),
+    textColor: convertColor(styleStruct.fontStyle?.color),
     fontSize: styleStruct.fontStyle?.size
       ? getClosestFontSize(styleStruct.fontStyle.size)
       : undefined,

@@ -46,6 +46,12 @@ export function cleanImportedBorders(data: WorkbookData) {
   data.borders = borders;
 }
 
+/**
+ * Remove duplicates formats in the WorkbookData.
+ * This will make a pass on the cells of the sheet to update the format index with the new index.
+ *
+ * Duplicates formats may happen for formats that we don't support and that are replaced by another format.
+ */
 export function cleanFormats(data: WorkbookData) {
   const { newMap: formats, conversionMap } = cleanMap(data.formats);
 
@@ -62,10 +68,7 @@ export function cleanFormats(data: WorkbookData) {
 /**
  * Removes the duplicates and the undefined values in a map <key :number, Object>.
  *
- * Returns the map without the duplicates
- *
- *
- * , and a map to convert the keys of the old map to keys of the new map.
+ * Returns the map without the duplicates and a map to convert the keys of the old map to keys of the new map.
  */
 function cleanMap<T>(objectMap: Record<number, T>): {
   newMap: Record<number, T>;

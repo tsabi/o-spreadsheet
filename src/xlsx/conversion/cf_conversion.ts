@@ -49,7 +49,7 @@ export function convertConditionalFormats(
         // Not supported
         continue;
       case "colorScale":
-        const colorScale = convertColorScale(cfId++, cf, warningManager);
+        const colorScale = convertColorScale(cfId++, cf);
         if (colorScale) {
           cfs.push(colorScale);
         }
@@ -103,8 +103,7 @@ export function convertConditionalFormats(
 
 function convertColorScale(
   id: number,
-  xlsxCf: XLSXConditionalFormat,
-  warningManager: XLSXImportWarningManager
+  xlsxCf: XLSXConditionalFormat
 ): ConditionalFormat | undefined {
   const scale = xlsxCf.cfRules[0].colorScale;
   if (
@@ -119,7 +118,7 @@ function convertColorScale(
   const thresholds: ColorScaleThreshold[] = [];
   for (let i = 0; i < scale.cfvos.length; i++) {
     thresholds.push({
-      color: rgbaToInt(convertColor(scale.colors[i], warningManager) || "#FFFFFF"),
+      color: rgbaToInt(convertColor(scale.colors[i]) || "#FFFFFF"),
       type: CF_THRESHOLD_CONVERSION_MAP[scale.cfvos[i].type],
       value: scale.cfvos[i].value,
     });

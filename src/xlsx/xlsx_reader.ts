@@ -29,7 +29,6 @@ import { parseXML } from "./helpers/xml_helpers";
 
 const EXCEL_IMPORT_VERSION = 11;
 
-// TODO check indexes for styles, shared strings, shared formulas, dxfs ?
 export class XlsxReader {
   warningManager: XLSXImportWarningManager;
   xmls: XLSXXmlDocuments;
@@ -154,9 +153,10 @@ export class XlsxReader {
    * Clean the imported data. This will :
    *  - remove duplicate styles + remove undefined values in Style objects
    *  - remove duplicate borders + remove undefined values in border objects
-   *  - remove duplicate formats + remove undefined values in Style objects
+   *  - remove duplicate formats
    */
   cleanImportedData(data: WorkbookData) {
+    // TODO : discuss : is it even needed ? I'm not too sure.
     cleanImportedStyles(data);
     cleanImportedBorders(data);
     cleanFormats(data);

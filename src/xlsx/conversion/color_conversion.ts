@@ -1,7 +1,6 @@
 import { Color } from "../../types";
 import { XLSXColor } from "../../types/xlsx";
 import { AUTO_COLOR, XLSX_INDEXED_COLORS } from "../constants";
-import { XLSXImportWarningManager } from "../helpers/xlsx_parser_error_manager";
 
 /**
  * Most of the functions could stay private, but are exported for testing purposes
@@ -33,11 +32,7 @@ export interface HSLA {
  *  - indexed : a legacy indexing scheme for colors. The only value that should be present in a xlsx is
  *      64 = System Foreground, that we can replace with AUTO_COLOR.
  */
-export function convertColor(
-  xlsxColor: XLSXColor | undefined,
-  warningManager: XLSXImportWarningManager
-): Color | undefined {
-  //TODO remove warningManager
+export function convertColor(xlsxColor: XLSXColor | undefined): Color | undefined {
   if (!xlsxColor) {
     return undefined;
   }
