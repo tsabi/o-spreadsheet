@@ -21,7 +21,7 @@ import {
   UID,
 } from "../../types";
 import { formatDateTime } from "../dates";
-import { markdownLink, parseMarkdownLink, parseSheetLink } from "../misc";
+import { markdownLink, parseSheetLink } from "../misc";
 import { formatStandardNumber } from "../numbers";
 import { formatValue } from "./cell_helpers";
 
@@ -161,8 +161,7 @@ export abstract class LinkCell extends AbstractCell<TextEvaluation> implements I
   abstract isUrlEditable: boolean;
   abstract urlRepresentation: string;
 
-  constructor(id: UID, content: string, properties: CellDisplayProperties = {}) {
-    const link = parseMarkdownLink(content);
+  constructor(id: UID, link: Link, properties: CellDisplayProperties = {}) {
     properties = {
       ...properties,
       style: {
@@ -173,7 +172,7 @@ export abstract class LinkCell extends AbstractCell<TextEvaluation> implements I
     };
     super(id, { value: link.label, type: CellValueType.text }, properties);
     this.link = link;
-    this.content = content;
+    this.content = markdownLink(this.link.label, this.link.url);
   }
   abstract action(env: SpreadsheetChildEnv): void;
 
@@ -194,8 +193,8 @@ export class WebLinkCell extends LinkCell {
   readonly content: string;
   readonly isUrlEditable: boolean;
 
-  constructor(id: UID, content: string, properties: CellDisplayProperties = {}) {
-    super(id, content, properties);
+  constructor(id: UID, link: Link, properties: CellDisplayProperties = {}) {
+    super(id, link, properties);
     this.link.url = this.withHttp(this.link.url);
     this.link.isExternal = true;
     this.content = markdownLink(this.link.label, this.link.url);
@@ -224,11 +223,11 @@ export class SheetLinkCell extends LinkCell {
 
   constructor(
     id: UID,
-    content: string,
+    link: Link,
     properties: CellDisplayProperties = {},
     private sheetName: (sheetId: UID) => string | undefined
   ) {
-    super(id, content, properties);
+    super(id, link, properties);
     this.sheetId = parseSheetLink(this.link.url);
     this.isUrlEditable = false;
   }

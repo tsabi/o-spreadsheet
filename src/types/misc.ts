@@ -7,7 +7,7 @@ import { CommandResult } from "./commands";
 
 export type UID = string;
 export interface Link {
-  label: string;
+  label: LinkLabel;
   url: string;
   /**
    * Specifies if the resource is external and can
