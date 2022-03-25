@@ -29,7 +29,7 @@ export class BasicChart extends Component<Props, SpreadsheetChildEnv> {
   setup() {
     onMounted(() => {
       const figure = this.props.figure;
-      const chartData = this.env.model.getters.getChartRuntime(figure.id);
+      const chartData = this.env.model.getters.getBasicChartRuntime(figure.id);
       if (chartData) {
         this.createChart(chartData);
       }
@@ -37,7 +37,7 @@ export class BasicChart extends Component<Props, SpreadsheetChildEnv> {
 
     onPatched(() => {
       const figure = this.props.figure;
-      const chartData = this.env.model.getters.getChartRuntime(figure.id);
+      const chartData = this.env.model.getters.getBasicChartRuntime(figure.id);
       if (chartData) {
         if (chartData.type !== this.chart!.config.type) {
           // Updating a chart type requires to update its options accordingly, if feasible at all.
@@ -60,7 +60,7 @@ export class BasicChart extends Component<Props, SpreadsheetChildEnv> {
       } else {
         this.chart && this.chart.destroy();
       }
-      const def = this.env.model.getters.getChartDefinition(figure.id);
+      const def = this.env.model.getters.getBasicChartDefinition(figure.id);
       if (def) {
         this.state.background = def.background;
       }
@@ -72,7 +72,7 @@ export class BasicChart extends Component<Props, SpreadsheetChildEnv> {
     const ctx = canvas.getContext("2d")!;
     this.chart = new window.Chart(ctx, chartData);
 
-    const def = this.env.model.getters.getChartDefinition(this.props.figure.id);
+    const def = this.env.model.getters.getBasicChartDefinition(this.props.figure.id);
     if (def) {
       this.state.background = def.background;
     }
