@@ -1,7 +1,7 @@
 import { Model } from "../../src";
 import { BACKGROUND_CHART_COLOR } from "../../src/constants";
 import { lettersToNumber, numberToLetters, range, toZone } from "../../src/helpers";
-import { ChartUIDefinition } from "../../src/types";
+import { BasicChartUIDefinition } from "../../src/types";
 import {
   activateSheet,
   addColumns,
@@ -552,7 +552,7 @@ describe("Collaborative Sheet manipulation", () => {
 
   describe("Chart creation & update", () => {
     const chartId = "42";
-    const chartDef: ChartUIDefinition = {
+    const chartDef: BasicChartUIDefinition = {
       dataSets: ["A1:A3", "F1:F3"],
       labelRange: "F3",
       title: "chart title",
@@ -571,7 +571,7 @@ describe("Collaborative Sheet manipulation", () => {
         createChart(bob, chartDef, chartId);
       });
       expect([alice, bob, charlie]).toHaveSynchronizedValue(
-        (user) => user.getters.getChartDefinitionUI(sheetId, chartId),
+        (user) => user.getters.getBasicChartDefinitionUI(sheetId, chartId),
         { ...chartDef, dataSets: ["A1:A3", "H1:H3"], labelRange: "H3" }
       );
       network.concurrent(() => {
@@ -583,7 +583,7 @@ describe("Collaborative Sheet manipulation", () => {
         });
       });
       expect([alice, bob, charlie]).toHaveSynchronizedValue(
-        (user) => user.getters.getChartDefinitionUI(sheetId, chartId),
+        (user) => user.getters.getBasicChartDefinitionUI(sheetId, chartId),
         { ...chartDef, dataSets: ["A1:A3", "H1:H3"], labelRange: "H3" }
       );
     });
@@ -602,7 +602,7 @@ describe("Collaborative Sheet manipulation", () => {
         );
       });
       expect([alice, bob, charlie]).toHaveSynchronizedValue(
-        (user) => user.getters.getChartDefinitionUI(sheetId, chartId),
+        (user) => user.getters.getBasicChartDefinitionUI(sheetId, chartId),
         {
           ...chartDef,
           dataSets: ["A1:A3", "E1:E3"],
@@ -616,7 +616,7 @@ describe("Collaborative Sheet manipulation", () => {
         });
       });
       expect([alice, bob, charlie]).toHaveSynchronizedValue(
-        (user) => user.getters.getChartDefinitionUI(sheetId, chartId),
+        (user) => user.getters.getBasicChartDefinitionUI(sheetId, chartId),
         {
           ...chartDef,
           dataSets: ["A1:A3", "E1:E3"],
@@ -636,7 +636,7 @@ describe("Collaborative Sheet manipulation", () => {
         );
       });
       expect([alice, bob, charlie]).toHaveSynchronizedValue(
-        (user) => user.getters.getChartDefinitionUI(sheetId, chartId),
+        (user) => user.getters.getBasicChartDefinitionUI(sheetId, chartId),
         { ...chartDef, dataSets: ["A1:A3", "A4:A12", "A13:A14"], labelRange: "F12" }
       );
       network.concurrent(() => {
@@ -644,7 +644,7 @@ describe("Collaborative Sheet manipulation", () => {
         updateChart(bob, chartId, { dataSets: ["A1:A3", "A4:A10", "A11:A12"], labelRange: "F10" });
       });
       expect([alice, bob, charlie]).toHaveSynchronizedValue(
-        (user) => user.getters.getChartDefinitionUI(sheetId, chartId),
+        (user) => user.getters.getBasicChartDefinitionUI(sheetId, chartId),
         { ...chartDef, dataSets: ["A1:A3", "A4:A12", "A13:A14"], labelRange: "F12" }
       );
     });
@@ -685,7 +685,7 @@ describe("Collaborative Sheet manipulation", () => {
         );
       });
       expect([alice, bob, charlie]).toHaveSynchronizedValue(
-        (user) => user.getters.getChartDefinitionUI(sheetId, chartId),
+        (user) => user.getters.getBasicChartDefinitionUI(sheetId, chartId),
         {
           ...chartDef,
           dataSets: ["A1:A3", "A9"],
@@ -697,7 +697,7 @@ describe("Collaborative Sheet manipulation", () => {
         updateChart(bob, chartId, { dataSets: ["A1:A3", "A4:A5", "A11:A12"], labelRange: "F10" });
       });
       expect([alice, bob, charlie]).toHaveSynchronizedValue(
-        (user) => user.getters.getChartDefinitionUI(sheetId, chartId),
+        (user) => user.getters.getBasicChartDefinitionUI(sheetId, chartId),
         {
           ...chartDef,
           dataSets: ["A1:A3", "A9"],

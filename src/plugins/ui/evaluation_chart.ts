@@ -6,13 +6,13 @@ import { isDefined, isInside, overlap, recomputeZones, zoneToXc } from "../../he
 import { range } from "../../helpers/misc";
 import { Mode } from "../../model";
 import { Cell } from "../../types";
-import { ChartData, ChartDataSet, ChartDefinition, DataSet } from "../../types/chart";
+import { BasicChartDefinition, ChartData, ChartDataSet, DataSet } from "../../types/chart";
 import { Command } from "../../types/commands";
 import { UID, Zone } from "../../types/misc";
 import { UIPlugin } from "../ui_plugin";
 
 export class EvaluationChartPlugin extends UIPlugin {
-  static getters = ["getChartRuntime"] as const;
+  static getters = ["getBasicChartRuntime"] as const;
   static modes: Mode[] = ["normal"];
   // contains the configuration of the chart with it's values like they should be displayed,
   // as well as all the options needed for the chart library to work correctly
@@ -43,8 +43,10 @@ export class EvaluationChartPlugin extends UIPlugin {
     switch (cmd.type) {
       case "UPDATE_CHART":
       case "CREATE_CHART":
-        const chartDefinition = this.getters.getChartDefinition(cmd.id)!;
-        this.chartRuntime[cmd.id] = this.mapDefinitionToRuntime(chartDefinition);
+        const chartDefinition = this.getters.getBasicChartDefinition(cmd.id);
+        if (chartDefinition) {
+          this.chartRuntime[cmd.id] = this.mapDefinitionToRuntime(chartDefinition);
+        }
         break;
       case "DELETE_FIGURE":
         delete this.chartRuntime[cmd.id];
@@ -66,7 +68,7 @@ export class EvaluationChartPlugin extends UIPlugin {
         break;
       case "DELETE_SHEET":
         for (let chartId of Object.keys(this.chartRuntime)) {
-          if (!this.getters.getChartDefinition(chartId)) {
+          if (!this.getters.getBasicChartDefinition(chartId)) {
             delete this.chartRuntime[chartId];
           }
         }
@@ -107,9 +109,9 @@ export class EvaluationChartPlugin extends UIPlugin {
   // Getters
   // ---------------------------------------------------------------------------
 
-  getChartRuntime(figureId: string): ChartConfiguration | undefined {
+  getBasicChartRuntime(figureId: string): ChartConfiguration | undefined {
     if (this.outOfDate.has(figureId) || !(figureId in this.chartRuntime)) {
-      const chartDefinition = this.getters.getChartDefinition(figureId);
+      const chartDefinition = this.getters.getBasicChartDefinition(figureId);
       if (chartDefinition === undefined) return;
       this.chartRuntime[figureId] = this.mapDefinitionToRuntime(chartDefinition);
       this.outOfDate.delete(figureId);
@@ -128,7 +130,7 @@ export class EvaluationChartPlugin extends UIPlugin {
   }
 
   private getDefaultConfiguration(
-    definition: ChartDefinition,
+    definition: BasicChartDefinition,
     labels: string[]
   ): ChartConfiguration {
     const legend: ChartLegendOptions = {};
@@ -215,7 +217,7 @@ export class EvaluationChartPlugin extends UIPlugin {
   }
 
   private areZonesUsedInChart(sheetId: UID, zones: Zone[], chartId: UID): boolean {
-    const chartDefinition = this.getters.getChartDefinition(chartId);
+    const chartDefinition = this.getters.getBasicChartDefinition(chartId);
     if (!chartDefinition || sheetId !== chartDefinition?.sheetId) {
       return false;
     }
@@ -234,7 +236,7 @@ export class EvaluationChartPlugin extends UIPlugin {
   }
 
   private isCellUsedInChart(sheetId: UID, chartId: UID, col: number, row: number): boolean {
-    const chartDefinition = this.getters.getChartDefinition(chartId);
+    const chartDefinition = this.getters.getBasicChartDefinition(chartId);
     if (chartDefinition === undefined) {
       return false;
     }
@@ -251,7 +253,7 @@ export class EvaluationChartPlugin extends UIPlugin {
     return false;
   }
 
-  private getSheetIdsUsedInChart(chartDefinition: ChartDefinition): Set<UID> {
+  private getSheetIdsUsedInChart(chartDefinition: BasicChartDefinition): Set<UID> {
     const sheetIds: Set<UID> = new Set();
     for (let ds of chartDefinition.dataSets) {
       sheetIds.add(ds.dataRange.sheetId);
@@ -265,7 +267,7 @@ export class EvaluationChartPlugin extends UIPlugin {
   private evaluateUsedSheets(chartsIds: UID[]) {
     const usedSheetsId: Set<UID> = new Set();
     for (let chartId of chartsIds) {
-      const chartDefinition = this.getters.getChartDefinition(chartId);
+      const chartDefinition = this.getters.getBasicChartDefinition(chartId);
       const sheetsIds =
         chartDefinition !== undefined ? this.getSheetIdsUsedInChart(chartDefinition) : [];
       sheetsIds.forEach((sheetId) => {
@@ -279,7 +281,7 @@ export class EvaluationChartPlugin extends UIPlugin {
     }
   }
 
-  private mapDefinitionToRuntime(definition: ChartDefinition): ChartConfiguration {
+  private mapDefinitionToRuntime(definition: BasicChartDefinition): ChartConfiguration {
     let labels: string[] = [];
     if (definition.labelRange) {
       if (!definition.labelRange.invalidXc && !definition.labelRange.invalidSheetName) {

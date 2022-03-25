@@ -140,7 +140,7 @@ describe("figures", () => {
   });
 
   test("Click on Delete button will delete the chart", async () => {
-    expect(model.getters.getChartDefinition("someuuid")).toMatchObject({
+    expect(model.getters.getBasicChartDefinition("someuuid")).toMatchObject({
       dataSets: [
         {
           dataRange: {
@@ -184,7 +184,7 @@ describe("figures", () => {
     const deleteButton = fixture.querySelectorAll(".o-menu-item")[1];
     expect(deleteButton.textContent).toBe("Delete");
     await simulateClick(".o-menu div[data-name='delete']");
-    expect(model.getters.getChartRuntime("someuuid")).toBeUndefined();
+    expect(model.getters.getBasicChartRuntime("someuuid")).toBeUndefined();
   });
 
   test("Click on Edit button will prefill sidepanel", async () => {
@@ -259,14 +259,14 @@ describe("figures", () => {
     const model = parent.model;
     const sheetId = model.getters.getActiveSheetId();
     const figure = model.getters.getFigure(sheetId, chartId);
-    expect(parent.model.getters.getChartDefinition(chartId)?.labelRange).not.toBeUndefined();
+    expect(parent.model.getters.getBasicChartDefinition(chartId)?.labelRange).not.toBeUndefined();
     parent.env.openSidePanel("ChartPanel", { figure });
     await nextTick();
     await simulateClick(".o-data-labels input");
     setInputValueAndTrigger(".o-data-labels input", "", "change");
     await nextTick();
     await simulateClick(".o-data-labels .o-selection-ok");
-    expect(parent.model.getters.getChartDefinition(chartId)?.labelRange).toBeUndefined();
+    expect(parent.model.getters.getBasicChartDefinition(chartId)?.labelRange).toBeUndefined();
   });
 
   test("empty dataset and invalid label range display both errors", async () => {
@@ -328,7 +328,7 @@ describe("figures", () => {
     await simulateClick(".o-figure");
     await simulateClick(".o-chart-menu");
     await simulateClick(".o-menu div[data-name='delete']");
-    expect(model.getters.getChartRuntime("someuuid")).toBeUndefined();
+    expect(model.getters.getBasicChartRuntime("someuuid")).toBeUndefined();
     await nextTick();
     expect(fixture.querySelector(".o-sidePanel .o-sidePanelBody .o-chart")).toBeFalsy();
   });
@@ -444,13 +444,13 @@ describe("figures", () => {
     await nextTick();
     await simulateClick(".o-data-series .o-selection-ok");
     const sheetId = model.getters.getActiveSheetId();
-    expect(model.getters.getChartDefinitionUI(sheetId, chartId).dataSets).toEqual([
+    expect(model.getters.getBasicChartDefinitionUI(sheetId, chartId).dataSets).toEqual([
       "B1:B4",
       "C1:C4",
     ]);
     const remove = document.querySelectorAll(".o-data-series .o-remove-selection")[1];
     await simulateClick(remove);
-    expect(model.getters.getChartDefinitionUI(sheetId, chartId).dataSets).toEqual(["B1:B4"]);
+    expect(model.getters.getBasicChartDefinitionUI(sheetId, chartId).dataSets).toEqual(["B1:B4"]);
   });
 });
 describe("charts with multiple sheets", () => {
@@ -508,7 +508,7 @@ describe("charts with multiple sheets", () => {
   test("delete sheet containing chart data does not crash", async () => {
     expect(model.getters.getSheetName(model.getters.getActiveSheetId())).toBe("Sheet1");
     model.dispatch("DELETE_SHEET", { sheetId: model.getters.getActiveSheetId() });
-    const runtimeChart = model.getters.getChartRuntime("1");
+    const runtimeChart = model.getters.getBasicChartRuntime("1");
     expect(runtimeChart).toBeDefined();
     await nextTick();
     expect(fixture.querySelector(".o-chart-container")).not.toBeNull();
