@@ -1,3 +1,4 @@
+import { LinkEditor } from "../../components/link";
 import { BACKGROUND_CHART_COLOR } from "../../constants";
 import { numberToLetters, zoneToXc } from "../../helpers/index";
 import { interactiveSortSelection } from "../../helpers/sort";
@@ -649,7 +650,18 @@ export const OPEN_CUSTOM_CURRENCY_SIDEPANEL_ACTION = (env: SpreadsheetChildEnv) 
 };
 
 export const INSERT_LINK = (env: SpreadsheetChildEnv) => {
-  env.openLinkEditor();
+  const model = env.model;
+  let { col, row } = model.getters.getPosition();
+  ({ col, row } = model.getters.getMainCellPosition(model.getters.getActiveSheetId(), col, row));
+  env.model.dispatch("OPEN_CELL_POPOVER", {
+    col,
+    row,
+    Component: LinkEditor,
+    cellCorner: "BottomLeft",
+    props: {
+      cellPosition: { col, row },
+    },
+  });
 };
 
 //------------------------------------------------------------------------------

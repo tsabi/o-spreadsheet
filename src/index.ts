@@ -32,6 +32,7 @@ import {
   autofillModifiersRegistry,
   autofillRulesRegistry,
   cellMenuRegistry,
+  cellPopoverRegistry,
   cellRegistry,
   colMenuRegistry,
   createFullMenuItem,
@@ -107,6 +108,7 @@ export const registries = {
   otRegistry,
   inverseCommandRegistry,
   cellRegistry,
+  cellPopoverRegistry,
 };
 export const cellTypes = {
   LinkCell,

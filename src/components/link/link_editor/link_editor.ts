@@ -1,5 +1,5 @@
 import { Component, onMounted, useRef, useState } from "@odoo/owl";
-import { markdownLink } from "../../../helpers/index";
+import { markdownLink } from "../../../helpers";
 import { linkMenuRegistry } from "../../../registries/menus/link_menu_registry";
 import { DOMCoordinates, Link, Position, SpreadsheetChildEnv } from "../../../types";
 import { css } from "../../helpers/css";
@@ -9,6 +9,8 @@ import { Menu } from "../../menu/menu";
 const MENU_OFFSET_X = 320;
 const MENU_OFFSET_Y = 100;
 const PADDING = 12;
+const LINK_EDITOR_WIDTH = 340;
+const LINK_EDITOR_HEIGHT = 180;
 
 css/* scss */ `
   .o-link-editor {
@@ -84,7 +86,7 @@ css/* scss */ `
 
 interface LinkEditorProps {
   cellPosition: Position;
-  onLinkEditorClosed: () => void;
+  onClosed: () => void;
 }
 
 interface State {
@@ -95,6 +97,7 @@ interface State {
 
 export class LinkEditor extends Component<LinkEditorProps, SpreadsheetChildEnv> {
   static template = "o-spreadsheet.LinkEditor";
+  static componentSize = { width: LINK_EDITOR_WIDTH, height: LINK_EDITOR_HEIGHT };
   static components = { Menu };
   menuItems = linkMenuRegistry.getAll();
   private state: State = useState(this.defaultState);
@@ -161,11 +164,11 @@ export class LinkEditor extends Component<LinkEditorProps, SpreadsheetChildEnv> 
       sheetId: this.env.model.getters.getActiveSheetId(),
       content: markdownLink(label, this.state.link.url),
     });
-    this.props.onLinkEditorClosed();
+    this.props.onClosed();
   }
 
   cancel() {
-    this.props.onLinkEditorClosed();
+    this.props.onClosed();
   }
 
   onKeyDown(ev: KeyboardEvent) {

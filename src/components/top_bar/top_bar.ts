@@ -9,6 +9,7 @@ import { BACKGROUND_HEADER_COLOR, DEFAULT_FONT_SIZE } from "../../constants";
 import { fontSizes } from "../../fonts";
 import { isEqual } from "../../helpers/index";
 import { setFormatter, setStyle, topbarComponentRegistry } from "../../registries/index";
+import { getMenuChildren, getMenuName } from "../../registries/menus/helpers";
 import { topbarMenuRegistry } from "../../registries/menus/topbar_menu_registry";
 import { FullMenuItem } from "../../registries/menu_items_registry";
 import { _lt } from "../../translation";
@@ -337,9 +338,9 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
     const { left, top, height } = (ev.target as HTMLElement).getBoundingClientRect();
     this.state.menuState.isOpen = true;
     this.state.menuState.position = { x: left, y: top + height };
-    this.state.menuState.menuItems = topbarMenuRegistry
-      .getChildren(menu, this.env)
-      .filter((item) => !item.isVisible || item.isVisible(this.env));
+    this.state.menuState.menuItems = getMenuChildren(menu, this.env).filter(
+      (item) => !item.isVisible || item.isVisible(this.env)
+    );
     this.isSelectingMenu = true;
     this.openedEl = ev.target as HTMLElement;
   }
@@ -387,7 +388,7 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
   }
 
   getMenuName(menu: FullMenuItem) {
-    return topbarMenuRegistry.getName(menu, this.env);
+    return getMenuName(menu, this.env);
   }
 
   toggleMerge() {

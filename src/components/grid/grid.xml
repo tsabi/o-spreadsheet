@@ -48,35 +48,20 @@
           active="isCellHovered(client.position.col, client.position.row)"
         />
       </t>
-      <Popover
-        t-if="errorTooltip.isOpen"
-        position="errorTooltip.position"
-        flipHorizontalOffset="errorTooltip.cellWidth"
-        childWidth="ERROR_TOOLTIP_WIDTH"
-        childHeight="ERROR_TOOLTIP_HEIGHT">
-        <ErrorToolTip text="errorTooltip.text"/>
-      </Popover>
-      <Popover
-        t-if="shouldDisplayLink"
-        position="popoverPosition.position"
-        flipHorizontalOffset="-popoverPosition.cellWidth"
-        flipVerticalOffset="-popoverPosition.cellHeight"
-        childWidth="LINK_TOOLTIP_WIDTH"
-        childHeight="LINK_TOOLTIP_HEIGHT">
-        <LinkDisplay cellPosition="activeCellPosition"/>
-      </Popover>
-      <Popover
-        t-if="props.linkEditorIsOpen and !env.isDashboard()"
-        position="popoverPosition.position"
-        flipHorizontalOffset="-popoverPosition.cellWidth"
-        flipVerticalOffset="-popoverPosition.cellHeight"
-        childWidth="LINK_EDITOR_WIDTH"
-        childHeight="LINK_EDITOR_HEIGHT">
-        <LinkEditor
-          cellPosition="activeCellPosition"
-          onLinkEditorClosed="props.onLinkEditorClosed"
-        />
-      </Popover>
+      <t t-foreach="cellPopovers" t-as="cellComponent" t-key="cellComponent.key">
+        <Popover
+          position="cellComponent.popoverProps.position"
+          childWidth="cellComponent.popoverProps.childWidth"
+          childHeight="cellComponent.popoverProps.childHeight"
+          flipHorizontalOffset="cellComponent.popoverProps.flipHorizontalOffset"
+          flipVerticalOffset="cellComponent.popoverProps.flipVerticalOffset"
+          marginTop="cellComponent.popoverProps.marginTop">
+          <t
+            t-component="cellComponent.ChildComponent"
+            t-props="{...cellComponent.childProps, onClosed : () => onClosePopover()}"
+          />
+        </Popover>
+      </t>
       <t t-if="env.model.getters.getEditionMode() === 'inactive' and !env.isDashboard()">
         <Autofill
           position="getAutofillPosition()"

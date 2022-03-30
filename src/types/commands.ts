@@ -1,5 +1,6 @@
 import { ComposerSelection } from "../plugins/ui/edition";
 import { ReplaceOptions, SearchOptions } from "../plugins/ui/find_and_replace";
+import { CellPopoverParameters } from "./cell_popovers";
 import { UpDown } from "./conditional_formatting";
 import {
   BorderCommand,
@@ -776,6 +777,16 @@ export interface ActivatePreviousSheetCommand {
   type: "ACTIVATE_PREVIOUS_SHEET";
 }
 
+export interface OpenCellPopoverCommand<P>
+  extends PositionDependentCommand,
+    CellPopoverParameters<P> {
+  type: "OPEN_CELL_POPOVER";
+}
+
+export interface CloseCellPopoverCommand {
+  type: "CLOSE_CELL_POPOVER";
+}
+
 export type CoreCommand =
   // /** History */
   // | SelectiveUndoCommand
@@ -890,6 +901,8 @@ export type LocalCommand =
   | MoveViewportDownCommand
   | MoveViewportUpCommand
   | EvaluateAllSheetsCommand
+  | OpenCellPopoverCommand<any>
+  | CloseCellPopoverCommand
   | ActivateNextSheetCommand
   | ActivatePreviousSheetCommand;
 

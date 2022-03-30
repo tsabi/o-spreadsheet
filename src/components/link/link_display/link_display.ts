@@ -1,9 +1,14 @@
 import { Component } from "@odoo/owl";
 import { LINK_COLOR } from "../../../constants";
 import { toXC } from "../../../helpers";
-import { LinkCell, Position, SpreadsheetChildEnv } from "../../../types";
+import { Getters, LinkCell, Position, SpreadsheetChildEnv } from "../../../types";
+import { CellPopoverParameters } from "../../../types/cell_popovers";
 import { css } from "../../helpers/css";
 import { Menu } from "../../menu/menu";
+import { LinkEditor } from "../link_editor/link_editor";
+
+const LINK_TOOLTIP_HEIGHT = 43;
+const LINK_TOOLTIP_WIDTH = 220;
 
 css/* scss */ `
   .o-link-tool {
@@ -44,14 +49,14 @@ css/* scss */ `
   }
 `;
 
-export class LinkDisplay extends Component<
-  {
-    cellPosition: Position;
-  },
-  SpreadsheetChildEnv
-> {
+interface LinkDisplayProps {
+  cellPosition: Position;
+}
+
+export class LinkDisplay extends Component<LinkDisplayProps, SpreadsheetChildEnv> {
   static components = { Menu };
   static template = "o-spreadsheet.LinkDisplay";
+  static componentSize = { width: LINK_TOOLTIP_WIDTH, height: LINK_TOOLTIP_HEIGHT };
 
   get cell(): LinkCell {
     const { col, row } = this.props.cellPosition;
@@ -70,25 +75,44 @@ export class LinkDisplay extends Component<
   }
 
   edit() {
-    this.env.openLinkEditor();
+    const { col, row } = this.props.cellPosition;
+    this.env.model.dispatch("OPEN_CELL_POPOVER", {
+      col,
+      row,
+      Component: LinkEditor,
+      cellCorner: "BottomLeft",
+      props: { cellPosition: { col, row } },
+    });
   }
 
   unlink() {
     const sheetId = this.env.model.getters.getActiveSheetId();
-    const { col, row } = this.env.model.getters.getPosition();
-    const { col: mainCol, row: mainRow } = this.env.model.getters.getMainCellPosition(
-      sheetId,
-      col,
-      row
-    );
+    const { col, row } = this.props.cellPosition;
     const style = this.cell.style;
     const textColor = style?.textColor === LINK_COLOR ? undefined : style?.textColor;
     this.env.model.dispatch("UPDATE_CELL", {
-      col: mainCol,
-      row: mainRow,
+      col,
+      row,
       sheetId,
       content: this.cell.link.label,
       style: { ...style, textColor, underline: undefined },
     });
   }
+}
+
+export function linkCellComponent(
+  position: Position,
+  getters: Getters
+): CellPopoverParameters<LinkDisplayProps> | undefined {
+  const cell = getters.getCell(getters.getActiveSheetId(), position.col, position.row);
+  const shouldDisplayLink =
+    cell?.isLink() &&
+    getters.isVisibleInViewport(position.col, position.row, getters.getActiveSnappedViewport());
+  if (!shouldDisplayLink) return;
+
+  return {
+    Component: LinkDisplay,
+    cellCorner: "BottomLeft",
+    props: { cellPosition: position },
+  };
 }
