@@ -46,6 +46,7 @@ import {
   autofillModifiersRegistry,
   autofillRulesRegistry,
   cellMenuRegistry,
+  cellPopoverRegistry,
   cellRegistry,
   chartComponentRegistry,
   chartRegistry,
@@ -131,6 +132,7 @@ export const registries = {
   otRegistry,
   inverseCommandRegistry,
   cellRegistry,
+  cellPopoverRegistry,
 };
 export const cellTypes = {
   LinkCell,

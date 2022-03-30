@@ -28,6 +28,15 @@ export async function simulateClick(
   await nextTick();
 }
 
+export async function hoverCell(model: Model, xc: string, delay: number) {
+  const zone = toZone(xc);
+  const viewport = model.getters.getActiveViewport();
+  const [x, y, ,] = model.getters.getRect(zone, viewport);
+  triggerMouseEvent(".o-grid-overlay", "mousemove", x - HEADER_WIDTH, y - HEADER_HEIGHT);
+  jest.advanceTimersByTime(delay);
+  await nextTick();
+}
+
 export async function clickCell(
   model: Model,
   xc: string,

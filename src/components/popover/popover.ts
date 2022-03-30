@@ -8,7 +8,7 @@ import {
 import { DOMCoordinates, GridDimension, SpreadsheetChildEnv } from "../../types";
 import { useSpreadsheetPosition } from "../helpers/position_hook";
 
-interface Props {
+export interface PopoverProps {
   /**
    * Coordinates are expressed relative to the "body" element.
    */
@@ -28,7 +28,7 @@ interface Props {
   flipVerticalOffset: number;
 }
 
-export class Popover extends Component<Props, SpreadsheetChildEnv> {
+export class Popover extends Component<PopoverProps, SpreadsheetChildEnv> {
   static template = "o-spreadsheet-Popover";
   static defaultProps = {
     flipHorizontalOffset: 0,
