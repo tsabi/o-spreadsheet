@@ -7,6 +7,7 @@ import { css } from "../../helpers/css";
 import { useAbsolutePosition } from "../../helpers/position_hook";
 import { Menu, MenuState } from "../../menu/menu";
 import { BasicChart } from "../chart/basic_chart";
+import { GaugeChart } from "../chart_gauge/chart_gauge";
 import { ScorecardChart } from "../chart_scorecard/chart_scorecard";
 
 // -----------------------------------------------------------------------------
@@ -35,7 +36,7 @@ css/* scss */ `
   }
 `;
 
-type FigureChartType = "scorecard" | "basicChart" | undefined;
+type FigureChartType = "scorecard" | "basicChart" | "gauge" | undefined;
 
 interface Props {
   figure: Figure;
@@ -49,7 +50,7 @@ interface State {
 
 export class ChartFigure extends Component<Props, SpreadsheetChildEnv> {
   static template = "o-spreadsheet.ChartFigure";
-  static components = { Menu, BasicChart, ScorecardChart };
+  static components = { Menu, BasicChart, ScorecardChart, GaugeChart };
   private menuState: MenuState = useState({ isOpen: false, position: null, menuItems: [] });
 
   private chartContainerRef = useRef("chartContainer");
@@ -114,6 +115,8 @@ export class ChartFigure extends Component<Props, SpreadsheetChildEnv> {
         return "basicChart";
       case "scorecard":
         return "scorecard";
+      case "gauge":
+        return "gauge";
     }
     return undefined;
   }

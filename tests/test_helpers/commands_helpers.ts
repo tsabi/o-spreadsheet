@@ -8,6 +8,7 @@ import {
   ChartUIDefinitionUpdate,
   CreateSheetCommand,
   DispatchResult,
+  GaugeChartUIDefinition,
   ScorecardChartUIDefinition,
   SortDirection,
   UID,
@@ -130,6 +131,43 @@ export function createScorecardChart(
       keyValue: data.keyValue || "",
       baselineDescr: data.baselineDescr || "",
       baselineMode: data.baselineMode || "absolute",
+    },
+  });
+}
+
+export function createGaugeChart(
+  model: Model,
+  data: Partial<GaugeChartUIDefinition>,
+  chartId?: UID,
+  sheetId?: UID
+) {
+  const id = chartId || model.uuidGenerator.uuidv4();
+  sheetId = sheetId || model.getters.getActiveSheetId();
+
+  return model.dispatch("CREATE_CHART", {
+    id,
+    sheetId,
+    definition: {
+      type: "gauge",
+      title: data.title || "",
+      dataRange: data.dataRange || "",
+      sectionRule: data.sectionRule || {
+        rangeMin: "0",
+        rangeMax: "100",
+        colors: {
+          lowerColor: "#6aa84f",
+          middleColor: "#f1c232",
+          upperColor: "#cc0000",
+        },
+        lowerInflectionPoint: {
+          type: "number",
+          value: "33",
+        },
+        upperInflectionPoint: {
+          type: "number",
+          value: "66",
+        },
+      },
     },
   });
 }

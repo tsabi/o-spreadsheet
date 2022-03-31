@@ -1,0 +1,5 @@
+<templates>
+  <t t-name="o-spreadsheet.GaugeChart" owl="1">
+    <canvas class="o-figure-canvas" style="background-color: #ffffff" t-ref="graphContainer"/>
+  </t>
+</templates>
