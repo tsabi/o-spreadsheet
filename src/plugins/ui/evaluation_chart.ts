@@ -1,32 +1,40 @@
-import { ChartConfiguration, ChartLegendOptions, ChartTooltipItem } from "chart.js";
+import { ChartLegendOptions, ChartTooltipItem } from "chart.js";
 import { ChartTerms } from "../../components/translations_terms";
 import { MAX_CHAR_LABEL } from "../../constants";
 import { ChartColors } from "../../helpers/chart";
 import { isInside, overlap, recomputeZones, zoneToXc } from "../../helpers/index";
 import { range } from "../../helpers/misc";
 import { Mode } from "../../model";
-import { Cell } from "../../types";
+import { Cell, CellValue } from "../../types";
 import {
+  BasicChartConfiguration,
+  BasicChartData,
+  BasicChartDataSet,
   BasicChartDefinition,
-  ChartData,
-  ChartDataSet,
+  ChartConfiguration,
   DataSet,
+  GaugeChartConfiguration,
+  GaugeChartDefinition,
   ScorecardChartDefinition,
   ScorecardChartRuntime,
 } from "../../types/chart";
 import { Command } from "../../types/commands";
 import { UID, Zone } from "../../types/misc";
 import { UIPlugin } from "../ui_plugin";
-import { CellValue } from "./../../types/cells";
 import { ChartDefinition } from "./../../types/chart";
 
 export class EvaluationChartPlugin extends UIPlugin {
-  static getters = ["getBasicChartRuntime", "getScorecardChartRuntime"] as const;
+  static getters = [
+    "getBasicChartRuntime",
+    "getScorecardChartRuntime",
+    "getGaugeChartRuntime",
+  ] as const;
   static modes: Mode[] = ["normal"];
   // contains the configuration of the chart with it's values like they should be displayed,
   // as well as all the options needed for the chart library to work correctly
-  readonly chartRuntime: { [figureId: string]: ChartConfiguration } = {};
+  readonly chartRuntime: { [figureId: string]: BasicChartConfiguration } = {};
   readonly scorecardChartRuntime: { [figureId: string]: ScorecardChartRuntime } = {}; //TODO :)
+  readonly gaugeChartRuntime: { [figureId: string]: GaugeChartConfiguration } = {}; //TODO :)
 
   private outOfDate: Set<UID> = new Set<UID>();
 
@@ -57,11 +65,14 @@ export class EvaluationChartPlugin extends UIPlugin {
         this.removeChartEvaluation(cmd.id);
         let chartDefinition: ChartDefinition | undefined;
         if ((chartDefinition = this.getters.getBasicChartDefinition(cmd.id))) {
-          this.chartRuntime[cmd.id] = this.mapDefinitionToRuntime(chartDefinition);
+          this.chartRuntime[cmd.id] = this.mapBasicDefinitionToRuntime(chartDefinition);
         }
         if ((chartDefinition = this.getters.getScorecardChartDefinition(cmd.id))) {
           this.scorecardChartRuntime[cmd.id] =
             this.mapScorecardDefinitionToRuntime(chartDefinition);
+        }
+        if ((chartDefinition = this.getters.getGaugeChartDefinition(cmd.id))) {
+          this.gaugeChartRuntime[cmd.id] = this.mapGaugeDefinitionToRuntime(chartDefinition);
         }
         break;
       case "DELETE_FIGURE":
@@ -90,6 +101,9 @@ export class EvaluationChartPlugin extends UIPlugin {
             }
             if (this.scorecardChartRuntime[chartId]) {
               delete this.scorecardChartRuntime[chartId];
+            }
+            if (this.gaugeChartRuntime[chartId]) {
+              delete this.gaugeChartRuntime[chartId];
             }
           }
         }
@@ -130,11 +144,11 @@ export class EvaluationChartPlugin extends UIPlugin {
   // Getters
   // ---------------------------------------------------------------------------
 
-  getBasicChartRuntime(figureId: string): ChartConfiguration | undefined {
+  getBasicChartRuntime(figureId: string): BasicChartConfiguration | undefined {
     if (this.outOfDate.has(figureId) || !(figureId in this.chartRuntime)) {
       const chartDefinition = this.getters.getBasicChartDefinition(figureId);
       if (chartDefinition === undefined) return;
-      this.chartRuntime[figureId] = this.mapDefinitionToRuntime(chartDefinition);
+      this.chartRuntime[figureId] = this.mapBasicDefinitionToRuntime(chartDefinition);
       this.outOfDate.delete(figureId);
     }
     return this.chartRuntime[figureId];
@@ -151,12 +165,26 @@ export class EvaluationChartPlugin extends UIPlugin {
     return this.scorecardChartRuntime[figureId];
   }
 
+  getGaugeChartRuntime(figureId: string): GaugeChartConfiguration | undefined {
+    if (this.outOfDate.has(figureId) || !(figureId in this.gaugeChartRuntime)) {
+      const chartDefinition = this.getters.getGaugeChartDefinition(figureId);
+      if (!chartDefinition) return;
+
+      this.gaugeChartRuntime[figureId] = this.mapGaugeDefinitionToRuntime(chartDefinition);
+      this.outOfDate.delete(figureId);
+    }
+    return this.gaugeChartRuntime[figureId];
+  }
+
   private removeChartEvaluation(chartId: string) {
     if (this.chartRuntime[chartId]) {
       delete this.chartRuntime[chartId];
     }
     if (this.scorecardChartRuntime[chartId]) {
       delete this.scorecardChartRuntime[chartId];
+    }
+    if (this.gaugeChartRuntime[chartId]) {
+      delete this.gaugeChartRuntime[chartId];
     }
   }
 
@@ -171,19 +199,12 @@ export class EvaluationChartPlugin extends UIPlugin {
   }
 
   private getDefaultConfiguration(
-    definition: BasicChartDefinition,
+    definition: BasicChartDefinition | GaugeChartDefinition,
     labels: string[]
   ): ChartConfiguration {
-    const legend: ChartLegendOptions = {};
-    if (!definition.labelRange && definition.dataSets.length === 1) {
-      legend.display = false;
-    } else {
-      legend.position = definition.legendPosition;
-    }
-    const config: ChartConfiguration = {
+    const config = {
       type: definition.type,
       options: {
-        legend,
         // https://www.chartjs.org/docs/latest/general/responsive.html
         responsive: true, // will resize when its container is resized
         maintainAspectRatio: false, // doesn't maintain the aspect ration (width/height =2 by default) so the user has the choice of the exact layout
@@ -217,6 +238,21 @@ export class EvaluationChartPlugin extends UIPlugin {
         datasets: [],
       },
     };
+    return config;
+  }
+
+  private getBasicConfiguration(
+    definition: BasicChartDefinition,
+    labels: string[]
+  ): BasicChartConfiguration {
+    const config = this.getDefaultConfiguration(definition, labels);
+    const legend: ChartLegendOptions = {};
+    if (!definition.labelRange && definition.dataSets.length === 1) {
+      legend.display = false;
+    } else {
+      legend.position = definition.legendPosition;
+    }
+    config.options!.legend = legend;
 
     if (definition.type !== "pie") {
       config.options!.scales = {
@@ -248,7 +284,7 @@ export class EvaluationChartPlugin extends UIPlugin {
     } else {
       config.options!.tooltips = {
         callbacks: {
-          title: function (tooltipItems: ChartTooltipItem[], data: ChartData) {
+          title: function (tooltipItems: ChartTooltipItem[], data: BasicChartData) {
             return data.datasets![tooltipItems[0]!.datasetIndex!].label!;
           },
         },
@@ -257,9 +293,39 @@ export class EvaluationChartPlugin extends UIPlugin {
     return config;
   }
 
-  /** Get the ids of all the charts defined in this plugin (basicCharts + scorecards) */
+  private getGaugeConfiguration(definition: GaugeChartDefinition): GaugeChartConfiguration {
+    const config: GaugeChartConfiguration = this.getDefaultConfiguration(definition, []);
+    config.options!.needle = {
+      radiusPercentage: 2,
+      widthPercentage: 3.2,
+      lengthPercentage: 80,
+      color: "rgba(0, 0, 0, 1)",
+    };
+    config.options!.valueLabel = {
+      display: true,
+      formatter: null,
+      color: "rgba(255, 255, 255, 1)",
+      backgroundColor: "rgba(0, 0, 0, 1)",
+      fontSize: 30,
+      borderRadius: 5,
+      padding: {
+        top: 5,
+        right: 5,
+        bottom: 5,
+        left: 5,
+      },
+      bottomMarginPercentage: 5,
+    };
+    return config;
+  }
+
+  /** Get the ids of all the charts defined in this plugin (basicCharts + scorecards + gauges) */
   private getAllChartIds() {
-    return [...Object.keys(this.chartRuntime), ...Object.keys(this.scorecardChartRuntime)];
+    return [
+      ...Object.keys(this.chartRuntime),
+      ...Object.keys(this.scorecardChartRuntime),
+      ...Object.keys(this.gaugeChartRuntime),
+    ];
   }
 
   private areZonesUsedInChart(sheetId: UID, zones: Zone[], chartId: UID): boolean {
@@ -315,6 +381,71 @@ export class EvaluationChartPlugin extends UIPlugin {
     }
   }
 
+  private mapGaugeDefinitionToRuntime(definition: GaugeChartDefinition) {
+    const runtime = this.getGaugeConfiguration(definition);
+    const colors = definition.sectionRule.colors;
+    let data: number[] = [];
+    let backgroundColor: string[] = [];
+
+    const rangeMinNumberValue = Number(definition.sectionRule.rangeMin);
+    const rangeMaxNumberValue = Number(definition.sectionRule.rangeMax);
+
+    const lowerPoint = definition.sectionRule.lowerInflectionPoint;
+    const upperPoint = definition.sectionRule.upperInflectionPoint;
+    const lowerPointNumberValue =
+      lowerPoint.type === "number" ? Number(lowerPoint.value) : Number(lowerPoint.value) / 100;
+    const upperPointNumberValue =
+      upperPoint.type === "number" ? Number(upperPoint.value) : Number(upperPoint.value) / 100;
+
+    if (lowerPointNumberValue !== undefined && rangeMinNumberValue < lowerPointNumberValue) {
+      data.push(Math.min(lowerPointNumberValue, rangeMaxNumberValue));
+      backgroundColor.push(colors.lowerColor);
+    }
+
+    if (upperPointNumberValue !== undefined && rangeMinNumberValue < upperPointNumberValue) {
+      data.push(Math.min(upperPointNumberValue, rangeMaxNumberValue));
+      backgroundColor.push(colors.middleColor);
+    }
+
+    data.push(rangeMaxNumberValue);
+    backgroundColor.push(colors.upperColor);
+
+    let cellValue: CellValue | undefined = undefined;
+    let cellFormatter: ((value: number) => string) | null = null;
+    const dataRange = definition.dataRange;
+    if (dataRange !== undefined) {
+      cellValue = this.getters.getRangeValues(dataRange)[0];
+      cellFormatter = () => this.getters.getRangeFormattedValues(dataRange)[0];
+    }
+
+    const deltaBeyondRange = (rangeMaxNumberValue - rangeMinNumberValue) / 30;
+    runtime.data!.datasets!.push({
+      data,
+      minValue: Number(definition.sectionRule.rangeMin),
+      // here "value" is used to calculate the angle of the needle in the graph.
+      // To prevent the needle from making 360° turns, we scale the value between
+      // a min and a max. This min and this max are slightly smaller and slightly
+      // larger than minRange and maxRange to mark the fact that the needle is out
+      // of the limits
+      value:
+        typeof cellValue === "number"
+          ? this.scale(
+              cellValue,
+              rangeMinNumberValue - deltaBeyondRange,
+              rangeMaxNumberValue + deltaBeyondRange
+            )
+          : undefined,
+      backgroundColor,
+    });
+    runtime.options!.valueLabel!.formatter = cellFormatter;
+
+    return runtime;
+  }
+
+  private scale(value: number, min: number, max: number) {
+    return Math.min(max, Math.max(min, value));
+  }
+
   private mapScorecardDefinitionToRuntime(
     definition: ScorecardChartDefinition
   ): ScorecardChartRuntime {
@@ -338,7 +469,7 @@ export class EvaluationChartPlugin extends UIPlugin {
     };
   }
 
-  private mapDefinitionToRuntime(definition: BasicChartDefinition): ChartConfiguration {
+  private mapBasicDefinitionToRuntime(definition: BasicChartDefinition): BasicChartConfiguration {
     let labels: string[] = [];
     if (definition.labelRange) {
       if (!definition.labelRange.invalidXc && !definition.labelRange.invalidSheetName) {
@@ -354,7 +485,7 @@ export class EvaluationChartPlugin extends UIPlugin {
         labels = range(0, ranges.length).map((r) => r.toString());
       }
     }
-    const runtime = this.getDefaultConfiguration(definition, labels);
+    const runtime = this.getBasicConfiguration(definition, labels);
 
     const colors = new ChartColors();
     const pieColors: string[] = [];
@@ -381,7 +512,7 @@ export class EvaluationChartPlugin extends UIPlugin {
         label = label = `${ChartTerms.Series} ${parseInt(dsIndex) + 1}`;
       }
       const color = definition.type !== "pie" ? colors.next() : "#FFFFFF"; // white border for pie chart
-      const dataset: ChartDataSet = {
+      const dataset: BasicChartDataSet = {
         label,
         data: ds.dataRange ? this.getData(ds, definition.sheetId) : [],
         lineTension: 0, // 0 -> render straight lines, which is much faster
@@ -394,10 +525,10 @@ export class EvaluationChartPlugin extends UIPlugin {
       }
       runtime.data!.datasets!.push(dataset);
     }
-    return { ...runtime, data: this.filterEmptyDataPoints(runtime.data as ChartData) };
+    return { ...runtime, data: this.filterEmptyDataPoints(runtime.data as BasicChartData) };
   }
 
-  private filterEmptyDataPoints(chartData: ChartData): ChartData {
+  private filterEmptyDataPoints(chartData: BasicChartData): BasicChartData {
     const labels = chartData.labels;
     const datasets = chartData.datasets;
     const numberOfDataPoints = Math.max(

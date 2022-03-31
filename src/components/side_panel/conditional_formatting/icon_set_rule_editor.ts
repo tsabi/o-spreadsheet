@@ -1,6 +1,6 @@
 import { xml } from "@odoo/owl";
 import { REFRESH } from "../../icons";
-import { CfTerms, GenericTerms, IconSetRule } from "../../translations_terms";
+import { GenericTerms, IconSetRule } from "../../translations_terms";
 
 const ICON_SETS_TEMPLATE = xml/* xml */ `
   <div>
@@ -55,16 +55,16 @@ const INFLECTION_POINTS_TEMPLATE_ROW = xml/* xml */ `
     <td>
       <select class="o-input" name="valueType" t-model="inflectionPointValue.type">
       <option value="number">
-        <t t-esc="env._t('${CfTerms.FixedNumber}')"/>
+        <t t-esc="env._t('${GenericTerms.FixedNumber}')"/>
       </option>
       <option value="percentage">
-        <t t-esc="env._t('${CfTerms.Percentage}')"/>
+        <t t-esc="env._t('${GenericTerms.Percentage}')"/>
       </option>
       <option value="percentile">
-        <t t-esc="env._t('${CfTerms.Percentile}')"/>
+        <t t-esc="env._t('${GenericTerms.Percentile}')"/>
       </option>
       <option value="formula">
-        <t t-esc="env._t('${CfTerms.Formula}')"/>
+        <t t-esc="env._t('${GenericTerms.Formula}')"/>
       </option>
       </select>
     </td>
@@ -82,7 +82,7 @@ const INFLECTION_POINTS_TEMPLATE = xml/* xml */ `
       <t t-esc="env._t('${GenericTerms.Value}')"/>
       </th>
       <th class="o-cf-iconset-type">
-      <t t-esc="env._t('${IconSetRule.Type}')"/>
+      <t t-esc="env._t('${GenericTerms.Type}')"/>
       </th>
     </tr>
     <t t-call="${INFLECTION_POINTS_TEMPLATE_ROW}">
@@ -106,7 +106,7 @@ const INFLECTION_POINTS_TEMPLATE = xml/* xml */ `
         </div>
         <IconPicker t-if="state.openedMenu === 'iconSet-lowerIcon'" onIconPicked="(icon) => setIcon('lower', icon)"/>
       </td>
-      <td><t t-esc="env._t('${IconSetRule.Else}')"/></td>
+      <td><t t-esc="env._t('${GenericTerms.Else}')"/></td>
       <td></td>
       <td></td>
       <td></td>

@@ -1,6 +1,6 @@
 import { xml } from "@odoo/owl";
 import * as icons from "../../icons";
-import { CfTerms, ColorScale } from "../../translations_terms";
+import { CfTerms, ColorScale, GenericTerms } from "../../translations_terms";
 
 const PREVIEW_TEMPLATE = xml/* xml */ `
   <div class="o-cf-preview-gradient" t-attf-style="{{getPreviewGradient()}}">
@@ -14,19 +14,19 @@ const THRESHOLD_TEMPLATE = xml/* xml */ `
         <t t-set="type" t-value="threshold and threshold.type"/>
         <select class="o-input" name="valueType" t-on-change="onMidpointChange" t-on-click="closeMenus">
           <option value="none" t-esc="env._t('${ColorScale.None}')" t-att-selected="threshold === undefined"/>
-          <option value="number" t-esc="env._t('${CfTerms.FixedNumber}')" t-att-selected="type === 'number'"/>
-          <option value="percentage" t-esc="env._t('${CfTerms.Percentage}')" t-att-selected="type === 'percentage'"/>
-          <option value="percentile" t-esc="env._t('${CfTerms.Percentile}')" t-att-selected="type === 'percentile'"/>
-          <option value="formula" t-esc="env._t('${CfTerms.Formula}')" t-att-selected="type === 'formula'"/>
+          <option value="number" t-esc="env._t('${GenericTerms.FixedNumber}')" t-att-selected="type === 'number'"/>
+          <option value="percentage" t-esc="env._t('${GenericTerms.Percentage}')" t-att-selected="type === 'percentage'"/>
+          <option value="percentile" t-esc="env._t('${GenericTerms.Percentile}')" t-att-selected="type === 'percentile'"/>
+          <option value="formula" t-esc="env._t('${GenericTerms.Formula}')" t-att-selected="type === 'formula'"/>
         </select>
       </t>
       <t t-else="">
         <select class="o-input" name="valueType" t-model="threshold.type" t-on-click="closeMenus">
           <option value="value" t-esc="env._t('${ColorScale.CellValues}')"/>
-          <option value="number" t-esc="env._t('${CfTerms.FixedNumber}')"/>
-          <option value="percentage" t-esc="env._t('${CfTerms.Percentage}')"/>
-          <option value="percentile" t-esc="env._t('${CfTerms.Percentile}')"/>
-          <option value="formula" t-esc="env._t('${CfTerms.Formula}')"/>
+          <option value="number" t-esc="env._t('${GenericTerms.FixedNumber}')"/>
+          <option value="percentage" t-esc="env._t('${GenericTerms.Percentage}')"/>
+          <option value="percentile" t-esc="env._t('${GenericTerms.Percentile}')"/>
+          <option value="formula" t-esc="env._t('${GenericTerms.Formula}')"/>
         </select>
       </t>
       <input type="text" class="o-input o-threshold-value o-required"

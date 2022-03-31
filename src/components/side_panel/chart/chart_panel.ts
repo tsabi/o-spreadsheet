@@ -3,6 +3,7 @@ import { BACKGROUND_HEADER_COLOR } from "../../../constants";
 import { Figure, SpreadsheetChildEnv } from "../../../types/index";
 import { css } from "../../helpers/css";
 import { BasicChartPanel } from "./basic_chart_panel";
+import { GaugeChartPanel } from "./gauge_chart_panel";
 import { ScorecardChartPanel } from "./scorecard_chart_panel";
 
 const TEMPLATE = xml/* xml */ `
@@ -10,13 +11,17 @@ const TEMPLATE = xml/* xml */ `
     <BasicChartPanel
       figure="props.figure"
       onCloseSidePanel="props.onCloseSidePanel"/>
-    </t>
-    <t t-if="chartType === 'scorecard'">
+  </t>
+  <t t-if="chartType === 'scorecard'">
     <ScorecardChartPanel
       figure="props.figure"
       onCloseSidePanel="props.onCloseSidePanel"/>
-    </t>
-
+  </t>
+  <t t-if="chartType === 'gauge'">
+    <GaugeChartPanel
+      figure="props.figure"
+      onCloseSidePanel="props.onCloseSidePanel"/>
+  </t>
 `;
 
 css/* scss */ `
@@ -58,7 +63,7 @@ interface Props {
 
 export class ChartPanel extends Component<Props, SpreadsheetChildEnv> {
   static template = TEMPLATE;
-  static components = { BasicChartPanel, ScorecardChartPanel };
+  static components = { BasicChartPanel, ScorecardChartPanel, GaugeChartPanel };
 
   get chartType() {
     return this.env.model.getters.getChartType(this.props.figure.id);

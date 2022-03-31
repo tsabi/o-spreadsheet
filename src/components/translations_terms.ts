@@ -35,10 +35,6 @@ export const CfTerms = {
   NewRule: _lt("Add another rule"),
   ReorderRules: _lt("Reorder rules"),
   ExitReorderMode: _lt("Stop reordering rules"),
-  FixedNumber: _lt("Number"),
-  Percentage: _lt("Percentage"),
-  Percentile: _lt("Percentile"),
-  Formula: _lt("Formula"),
   ApplyToRange: _lt("Apply to range"),
 };
 export const ColorScale = {
@@ -52,10 +48,8 @@ export const ColorScale = {
 
 export const IconSetRule = {
   WhenValueIs: _lt("When value is"),
-  Else: _lt("Else"),
   ReverseIcons: _lt("Reverse icons"),
   Icons: _lt("Icons"),
-  Type: _lt("Type"),
 };
 
 export const CellIsOperators = {
@@ -81,6 +75,7 @@ export const ChartTerms = {
   Bar: _lt("Bar"),
   Pie: _lt("Pie"),
   Scorecard: _lt("Scorecard"),
+  Gauge: _lt("Gauge"),
   KeyValue: _lt("Key Value"),
   BaselineValue: _lt("Baseline Value"),
   BaselineCompToKey: _lt("Baseline comparison to key value"),
@@ -91,6 +86,10 @@ export const ChartTerms = {
   Title: _lt("Title"),
   Series: _lt("Series"),
   DataSeries: _lt("Data Series"),
+  DataRange: _lt("Data range"),
+  Range: _lt("Range"),
+  Thresholds: _lt("Thresholds"),
+  WhenValueIsBelow: _lt("When value is below"),
   MyDataHasTitle: _lt("Data series include title"),
   DataCategories: _lt("Categories / Labels"),
   UpdateChart: _lt("Update chart"),
@@ -110,14 +109,34 @@ export const ChartTerms = {
   Exponential: _lt("Exponential"),
   Logarithmic: _lt("Logarithmic"),
   Errors: {
+    Unexpected: _lt("The chart definition is invalid for an unknown reason"),
+    // BASIC CHART ERRORS (LINE | BAR | PIE)
     [CommandResult.EmptyDataSet]: _lt("A dataset needs to be defined"),
     [CommandResult.InvalidDataSet]: _lt("The dataset is invalid"),
     [CommandResult.InvalidLabelRange]: _lt("Labels are invalid"),
+    // SCORECARD CHART ERRORS
     [CommandResult.EmptyScorecardKeyValue]: _lt("A key value must be defined"),
     [CommandResult.InvalidScorecardKeyValue]: _lt("The key value is invalid"),
     [CommandResult.InvalidScorecardBaseline]: _lt("The baseline value is invalid"),
-    [CommandResult.InvalidDataSet]: _lt("The key value is invalid"),
-    Unexpected: _lt("The chart definition is invalid for an unknown reason"),
+    // GAUGE CHART ERRORS
+    [CommandResult.EmptyGaugeDataRange]: _lt("A data range must be defined"),
+    [CommandResult.InvalidGaugeDataRange]: _lt("The data range is invalid"),
+    [CommandResult.EmptyGaugeRangeMin]: _lt("A minimum range limit value is needed"),
+    [CommandResult.GaugeRangeMinNaN]: _lt("The minimum range limit value must be a number"),
+    [CommandResult.EmptyGaugeRangeMax]: _lt("A maximum range limit value is needed"),
+    [CommandResult.GaugeRangeMaxNaN]: _lt("The maximum range limit value must be a number"),
+    [CommandResult.GaugeRangeMinBiggerThanRangeMax]: _lt(
+      "Minimum range limit must be smaller than maximum range limit"
+    ),
+    [CommandResult.GaugeLowerInflectionPointNaN]: _lt(
+      "The lower inflection point value must be a number"
+    ),
+    [CommandResult.GaugeUpperInflectionPointNaN]: _lt(
+      "The upper inflection point value must be a number"
+    ),
+    [CommandResult.GaugeLowerBiggerThanUpper]: _lt(
+      "Lower inflection point must be smaller then upper inflection point"
+    ),
   },
 };
 
@@ -182,6 +201,12 @@ export const GenericTerms = {
   Confirm: _lt("Confirm"),
   Value: _lt("Value"),
   AndValue: _lt("and value"),
+  Type: _lt("Type"),
+  Else: _lt("Else"),
+  FixedNumber: _lt("Number"),
+  Percentage: _lt("Percentage"),
+  Percentile: _lt("Percentile"),
+  Formula: _lt("Formula"),
 };
 
 export const GenericWords = {

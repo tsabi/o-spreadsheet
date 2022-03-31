@@ -8,6 +8,7 @@ import { useAbsolutePosition } from "../helpers/position_hook";
 import { LIST } from "../icons";
 import { Menu, MenuState } from "../menu";
 import { BasicChart } from "./basic_chart";
+import { GaugeChart } from "./gauge_chart";
 import { ScorecardChart } from "./scorecard_chart";
 
 const TEMPLATE = xml/* xml */ `
@@ -18,6 +19,9 @@ const TEMPLATE = xml/* xml */ `
     </t>
     <t t-if="figureChartType === 'basicChart'">
       <BasicChart figure="props.figure"/>
+    </t>
+    <t t-if="figureChartType === 'gauge'">
+      <GaugeChart figure="props.figure"/>
     </t>
   <Menu t-if="menuState.isOpen"
     position="menuState.position"
@@ -51,7 +55,7 @@ css/* scss */ `
   }
 `;
 
-type FigureChartType = "scorecard" | "basicChart" | undefined;
+type FigureChartType = "scorecard" | "basicChart" | "gauge" | undefined;
 
 interface Props {
   figure: Figure;
@@ -65,7 +69,7 @@ interface State {
 
 export class ChartFigure extends Component<Props, SpreadsheetChildEnv> {
   static template = TEMPLATE;
-  static components = { Menu, BasicChart, ScorecardChart };
+  static components = { Menu, BasicChart, ScorecardChart, GaugeChart };
   private menuState: MenuState = useState({ isOpen: false, position: null, menuItems: [] });
 
   private chartContainerRef = useRef("chartContainer");
@@ -130,6 +134,8 @@ export class ChartFigure extends Component<Props, SpreadsheetChildEnv> {
         return "basicChart";
       case "scorecard":
         return "scorecard";
+      case "gauge":
+        return "gauge";
     }
     return undefined;
   }

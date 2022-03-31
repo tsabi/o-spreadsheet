@@ -8,6 +8,7 @@ const TEMPLATE = xml/* xml */ `
         <option value="line" t-esc="env._t('${ChartTerms.Line}')"/>
         <option value="pie" t-esc="env._t('${ChartTerms.Pie}')"/>
         <option value="scorecard" t-esc="env._t('${ChartTerms.Scorecard}')"/>
+        <option value="gauge" t-esc="env._t('${ChartTerms.Gauge}')"/>
     </select>
 `;
 
