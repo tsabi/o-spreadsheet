@@ -1,6 +1,12 @@
 import {
+  DEFAULT_GAUGE_LOWER_COLOR,
+  DEFAULT_GAUGE_MIDDLE_COLOR,
+  DEFAULT_GAUGE_UPPER_COLOR,
+} from "../constants";
+import {
   BasicChartDefinition,
   ChartDefinition,
+  GaugeChartDefinition,
   Range,
   ScorecardChartDefinition,
   UID,
@@ -58,6 +64,9 @@ export function getRangesInChartDefinition(definition: ChartDefinition): Range[]
   if ("keyValue" in definition && definition.keyValue) {
     ranges.push(definition.keyValue);
   }
+  if ("dataRange" in definition && definition.dataRange) {
+    ranges.push(definition.dataRange);
+  }
   return ranges;
 }
 
@@ -82,5 +91,31 @@ export function getDefaultScorecardChartDefinition(sheetId: UID): ScorecardChart
     title: "",
     sheetId,
     baselineMode: "absolute",
+  };
+}
+
+export function getDefaultGaugeChartDefinition(sheetId: UID): GaugeChartDefinition {
+  return {
+    type: "gauge",
+    dataRange: undefined,
+    title: "",
+    sheetId,
+    sectionRule: {
+      colors: {
+        lowerColor: DEFAULT_GAUGE_LOWER_COLOR,
+        middleColor: DEFAULT_GAUGE_MIDDLE_COLOR,
+        upperColor: DEFAULT_GAUGE_UPPER_COLOR,
+      },
+      rangeMin: "0",
+      rangeMax: "100",
+      lowerInflectionPoint: {
+        type: "percentage",
+        value: "33",
+      },
+      upperInflectionPoint: {
+        type: "percentage",
+        value: "66",
+      },
+    },
   };
 }

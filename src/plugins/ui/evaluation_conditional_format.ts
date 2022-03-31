@@ -190,11 +190,7 @@ export class EvaluationConditionalFormatPlugin extends UIPlugin {
   private applyIcon(range: string, rule: IconSetRule): void {
     const lowerInflectionPoint: number | null = this.parsePoint(range, rule.lowerInflectionPoint);
     const upperInflectionPoint: number | null = this.parsePoint(range, rule.upperInflectionPoint);
-    if (
-      lowerInflectionPoint === null ||
-      upperInflectionPoint === null ||
-      lowerInflectionPoint > upperInflectionPoint
-    ) {
+    if (lowerInflectionPoint === null || upperInflectionPoint === null) {
       return;
     }
     const zone: Zone = toZone(range);

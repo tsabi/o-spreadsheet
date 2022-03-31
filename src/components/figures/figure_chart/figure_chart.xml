@@ -10,6 +10,9 @@
       <t t-if="figureChartType === 'basicChart'">
         <BasicChart figure="props.figure"/>
       </t>
+      <t t-if="figureChartType === 'gauge'">
+        <GaugeChart figure="props.figure"/>
+      </t>
       <Menu
         t-if="menuState.isOpen"
         position="menuState.position"
