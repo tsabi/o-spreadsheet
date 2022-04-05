@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`datasource tests create a scorecard chart 1`] = `
+Object {
+  "baseline": undefined,
+  "baselineDescr": "Description",
+  "baselineMode": "absolute",
+  "formattedKeyValue": "",
+  "keyValue": undefined,
+  "sheetId": "Sheet1",
+  "title": "Title",
+  "type": "scorecard",
+}
+`;
+
+exports[`datasource tests create empty scorecard chart 1`] = `
+Object {
+  "baseline": undefined,
+  "baselineDescr": "",
+  "baselineMode": "absolute",
+  "formattedKeyValue": "",
+  "keyValue": undefined,
+  "sheetId": "Sheet1",
+  "title": "test",
+  "type": "scorecard",
+}
+`;
