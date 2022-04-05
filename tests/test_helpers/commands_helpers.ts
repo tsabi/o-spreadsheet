@@ -4,10 +4,11 @@ import { Model } from "../../src/model";
 import {
   AnchorZone,
   BasicChartUIDefinition,
-  BasicChartUIDefinitionUpdate,
   BorderCommand,
+  ChartUIDefinitionUpdate,
   CreateSheetCommand,
   DispatchResult,
+  ScorecardChartUIDefinition,
   SortDirection,
   UID,
   UpDown,
@@ -110,13 +111,36 @@ export function createChart(
   });
 }
 
+export function createScorecardChart(
+  model: Model,
+  data: Partial<ScorecardChartUIDefinition>,
+  chartId?: UID,
+  sheetId?: UID
+) {
+  const id = chartId || model.uuidGenerator.uuidv4();
+  sheetId = sheetId || model.getters.getActiveSheetId();
+
+  return model.dispatch("CREATE_CHART", {
+    id,
+    sheetId,
+    definition: {
+      type: "scorecard",
+      title: data.title || "test",
+      baseline: data.baseline || "",
+      keyValue: data.keyValue || "",
+      baselineDescr: data.baselineDescr || "",
+      baselineMode: data.baselineMode || "absolute",
+    },
+  });
+}
+
 /**
  * Update a chart
  */
 export function updateChart(
   model: Model,
   chartId: UID,
-  definition: BasicChartUIDefinitionUpdate,
+  definition: ChartUIDefinitionUpdate,
   sheetId: UID = model.getters.getActiveSheetId()
 ): DispatchResult {
   return model.dispatch("UPDATE_CHART", {

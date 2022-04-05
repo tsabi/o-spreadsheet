@@ -7,6 +7,7 @@ import { css } from "../../helpers/css";
 import { useAbsolutePosition } from "../../helpers/position_hook";
 import { Menu, MenuState } from "../../menu/menu";
 import { BasicChart } from "../chart/basic_chart";
+import { ScorecardChart } from "../chart_scorecard/chart_scorecard";
 
 // -----------------------------------------------------------------------------
 // STYLE
@@ -34,6 +35,8 @@ css/* scss */ `
   }
 `;
 
+type FigureChartType = "scorecard" | "basicChart" | undefined;
+
 interface Props {
   figure: Figure;
   sidePanelIsOpen: boolean;
@@ -46,7 +49,7 @@ interface State {
 
 export class ChartFigure extends Component<Props, SpreadsheetChildEnv> {
   static template = "o-spreadsheet.ChartFigure";
-  static components = { Menu, BasicChart };
+  static components = { Menu, BasicChart, ScorecardChart };
   private menuState: MenuState = useState({ isOpen: false, position: null, menuItems: [] });
 
   private chartContainerRef = useRef("chartContainer");
@@ -101,5 +104,17 @@ export class ChartFigure extends Component<Props, SpreadsheetChildEnv> {
       x: this.position.x + x - MENU_WIDTH,
       y: this.position.y + y,
     };
+  }
+
+  get figureChartType(): FigureChartType {
+    switch (this.env.model.getters.getChartType(this.props.figure.id)) {
+      case "bar":
+      case "line":
+      case "pie":
+        return "basicChart";
+      case "scorecard":
+        return "scorecard";
+    }
+    return undefined;
   }
 }
