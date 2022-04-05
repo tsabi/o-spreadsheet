@@ -1,3 +1,12 @@
+import {
+  BasicChartDefinition,
+  ChartDefinition,
+  Range,
+  ScorecardChartDefinition,
+  UID,
+} from "../types";
+import { isDefined } from "./misc";
+
 const GraphColors = [
   // the same colors as those used in odoo reporting
   "rgb(31,119,180)",
@@ -28,4 +37,50 @@ export class ChartColors {
   next(): string {
     return GraphColors[this.graphColorIndex++ % GraphColors.length];
   }
+}
+
+/** Returns all the ranges contained in a chart definition */
+export function getRangesInChartDefinition(definition: ChartDefinition): Range[] {
+  const ranges: Range[] = [];
+  if ("dataSets" in definition) {
+    definition.dataSets.map((ds) => ds.dataRange).map((range) => ranges.push(range));
+    definition.dataSets
+      .map((ds) => ds.labelCell)
+      .filter(isDefined)
+      .map((range) => ranges.push(range));
+  }
+  if ("labelRange" in definition && definition.labelRange) {
+    ranges.push(definition.labelRange);
+  }
+  if ("baseline" in definition && definition.baseline) {
+    ranges.push(definition.baseline);
+  }
+  if ("keyValue" in definition && definition.keyValue) {
+    ranges.push(definition.keyValue);
+  }
+  return ranges;
+}
+
+export function getDefaultBasicChartDefinition(sheetId: UID): BasicChartDefinition {
+  return {
+    type: "line",
+    dataSets: [],
+    labelRange: undefined,
+    title: "",
+    background: "#FFFFFF",
+    sheetId,
+    verticalAxisPosition: "left",
+    legendPosition: "top",
+    stackedBar: false,
+  };
+}
+
+export function getDefaultScorecardChartDefinition(sheetId: UID): ScorecardChartDefinition {
+  return {
+    type: "scorecard",
+    keyValue: undefined,
+    title: "",
+    sheetId,
+    baselineMode: "absolute",
+  };
 }

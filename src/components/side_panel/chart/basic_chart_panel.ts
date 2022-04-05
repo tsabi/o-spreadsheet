@@ -1,5 +1,4 @@
 import { Component, onWillUpdateProps, useState, xml } from "@odoo/owl";
-import { BACKGROUND_HEADER_COLOR } from "../../constants";
 import {
   BasicChartUIDefinition,
   BasicChartUIDefinitionUpdate,
@@ -7,23 +6,19 @@ import {
   DispatchResult,
   Figure,
   SpreadsheetChildEnv,
-} from "../../types/index";
-import { ColorPicker } from "../color_picker";
-import { css } from "../helpers/css";
-import * as icons from "../icons";
-import { SelectionInput } from "../selection_input";
-import { ChartTerms } from "../translations_terms";
+} from "../../../types/index";
+import { ColorPicker } from "../../color_picker";
+import * as icons from "../../icons";
+import { SelectionInput } from "../../selection_input";
+import { ChartTerms } from "../../translations_terms";
+import { ChartTypeSelect } from "./chart_type_selection";
 
 const CONFIGURATION_TEMPLATE = xml/* xml */ `
 <div>
   <div class="o-section">
     <div class="o-section-title" t-esc="env._t('${ChartTerms.ChartType}')"/>
-    <select t-model="state.chart.type" class="o-input o-type-selector" t-on-change="(ev) => this.updateSelect('type', ev)">
-      <option value="bar" t-esc="env._t('${ChartTerms.Bar}')"/>
-      <option value="line" t-esc="env._t('${ChartTerms.Line}')"/>
-      <option value="pie" t-esc="env._t('${ChartTerms.Pie}')"/>
-    </select>
-    <t t-if="state.chart.type === 'bar'">
+    <ChartTypeSelect figureId="this.props.figure.id"/>
+    <t t-if="chartType === 'bar'">
       <div class="o_checkbox">
         <input type="checkbox" name="stackedBar" t-model="state.chart.stackedBar" t-on-change="updateStacked"/>
         <t t-esc="env._t('${ChartTerms.StackedBar}')"/>
@@ -115,38 +110,6 @@ const TEMPLATE = xml/* xml */ `
   </div>
 `;
 
-css/* scss */ `
-  .o-chart {
-    .o-panel {
-      display: flex;
-      .o-panel-element {
-        flex: 1 0 auto;
-        padding: 8px 0px;
-        text-align: center;
-        cursor: pointer;
-        border-right: 1px solid darkgray;
-        &.inactive {
-          background-color: ${BACKGROUND_HEADER_COLOR};
-          border-bottom: 1px solid darkgray;
-        }
-        .fa {
-          margin-right: 4px;
-        }
-      }
-      .o-panel-element:last-child {
-        border-right: none;
-      }
-    }
-
-    .o-with-color-picker {
-      position: relative;
-    }
-    .o-with-color-picker > span {
-      border-bottom: 4px solid;
-    }
-  }
-`;
-
 interface Props {
   figure: Figure;
   onCloseSidePanel: () => void;
@@ -160,9 +123,9 @@ interface ChartPanelState {
   fillColorTool: boolean;
 }
 
-export class ChartPanel extends Component<Props, SpreadsheetChildEnv> {
+export class BasicChartPanel extends Component<Props, SpreadsheetChildEnv> {
   static template = TEMPLATE;
-  static components = { SelectionInput, ColorPicker };
+  static components = { SelectionInput, ColorPicker, ChartTypeSelect };
 
   private state: ChartPanelState = useState(this.initialState(this.props.figure));
 
@@ -180,9 +143,13 @@ export class ChartPanel extends Component<Props, SpreadsheetChildEnv> {
         this.state.chart = this.env.model.getters.getBasicChartDefinitionUI(
           this.env.model.getters.getActiveSheetId(),
           nextProps.figure.id
-        );
+        )!;
       }
     });
+  }
+
+  get chartType() {
+    return this.env.model.getters.getChartType(this.props.figure.id);
   }
 
   get errorMessages(): string[] {
@@ -271,7 +238,7 @@ export class ChartPanel extends Component<Props, SpreadsheetChildEnv> {
       chart: this.env.model.getters.getBasicChartDefinitionUI(
         this.env.model.getters.getActiveSheetId(),
         figure.id
-      ),
+      )!,
       panel: "configuration",
       fillColorTool: false,
     };

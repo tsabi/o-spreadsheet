@@ -8,11 +8,17 @@ import { useAbsolutePosition } from "../helpers/position_hook";
 import { LIST } from "../icons";
 import { Menu, MenuState } from "../menu";
 import { BasicChart } from "./basic_chart";
+import { ScorecardChart } from "./scorecard_chart";
 
 const TEMPLATE = xml/* xml */ `
 <div class="o-chart-container" t-ref="chartContainer">
   <div class="o-chart-menu" t-on-click="showMenu">${LIST}</div>
-    <BasicChart figure="props.figure"/>
+    <t t-if="figureChartType === 'scorecard'">
+      <ScorecardChart figure="props.figure"/>
+    </t>
+    <t t-if="figureChartType === 'basicChart'">
+      <BasicChart figure="props.figure"/>
+    </t>
   <Menu t-if="menuState.isOpen"
     position="menuState.position"
     menuItems="menuState.menuItems"
@@ -45,6 +51,8 @@ css/* scss */ `
   }
 `;
 
+type FigureChartType = "scorecard" | "basicChart" | undefined;
+
 interface Props {
   figure: Figure;
   sidePanelIsOpen: boolean;
@@ -57,7 +65,7 @@ interface State {
 
 export class ChartFigure extends Component<Props, SpreadsheetChildEnv> {
   static template = TEMPLATE;
-  static components = { Menu, BasicChart };
+  static components = { Menu, BasicChart, ScorecardChart };
   private menuState: MenuState = useState({ isOpen: false, position: null, menuItems: [] });
 
   private chartContainerRef = useRef("chartContainer");
@@ -112,5 +120,17 @@ export class ChartFigure extends Component<Props, SpreadsheetChildEnv> {
       x: this.position.x + x - MENU_WIDTH,
       y: this.position.y + y,
     };
+  }
+
+  get figureChartType(): FigureChartType {
+    switch (this.env.model.getters.getChartType(this.props.figure.id)) {
+      case "bar":
+      case "line":
+      case "pie":
+        return "basicChart";
+      case "scorecard":
+        return "scorecard";
+    }
+    return undefined;
   }
 }

@@ -2,21 +2,32 @@ import { ChartConfiguration, ChartLegendOptions, ChartTooltipItem } from "chart.
 import { ChartTerms } from "../../components/translations_terms";
 import { MAX_CHAR_LABEL } from "../../constants";
 import { ChartColors } from "../../helpers/chart";
-import { isDefined, isInside, overlap, recomputeZones, zoneToXc } from "../../helpers/index";
+import { isInside, overlap, recomputeZones, zoneToXc } from "../../helpers/index";
 import { range } from "../../helpers/misc";
 import { Mode } from "../../model";
 import { Cell } from "../../types";
-import { BasicChartDefinition, ChartData, ChartDataSet, DataSet } from "../../types/chart";
+import {
+  BasicChartDefinition,
+  ChartData,
+  ChartDataSet,
+  DataSet,
+  ScorecardChartDefinition,
+  ScorecardChartRuntime,
+} from "../../types/chart";
 import { Command } from "../../types/commands";
 import { UID, Zone } from "../../types/misc";
 import { UIPlugin } from "../ui_plugin";
+import { CellValue } from "./../../types/cells";
+import { ChartDefinition } from "./../../types/chart";
 
 export class EvaluationChartPlugin extends UIPlugin {
-  static getters = ["getBasicChartRuntime"] as const;
+  static getters = ["getBasicChartRuntime", "getScorecardChartRuntime"] as const;
   static modes: Mode[] = ["normal"];
   // contains the configuration of the chart with it's values like they should be displayed,
   // as well as all the options needed for the chart library to work correctly
   readonly chartRuntime: { [figureId: string]: ChartConfiguration } = {};
+  readonly scorecardChartRuntime: { [figureId: string]: ScorecardChartRuntime } = {}; //TODO :)
+
   private outOfDate: Set<UID> = new Set<UID>();
 
   beforeHandle(cmd: Command) {
@@ -30,7 +41,7 @@ export class EvaluationChartPlugin extends UIPlugin {
           left: cmd.dimension === "ROW" ? 0 : el,
           right: cmd.dimension === "ROW" ? length - 1 : el,
         }));
-        for (const chartId of Object.keys(this.chartRuntime)) {
+        for (const chartId of this.getAllChartIds()) {
           if (this.areZonesUsedInChart(cmd.sheetId, zones, chartId)) {
             this.outOfDate.add(chartId);
           }
@@ -43,13 +54,18 @@ export class EvaluationChartPlugin extends UIPlugin {
     switch (cmd.type) {
       case "UPDATE_CHART":
       case "CREATE_CHART":
-        const chartDefinition = this.getters.getBasicChartDefinition(cmd.id);
-        if (chartDefinition) {
+        this.removeChartEvaluation(cmd.id);
+        let chartDefinition: ChartDefinition | undefined;
+        if ((chartDefinition = this.getters.getBasicChartDefinition(cmd.id))) {
           this.chartRuntime[cmd.id] = this.mapDefinitionToRuntime(chartDefinition);
+        }
+        if ((chartDefinition = this.getters.getScorecardChartDefinition(cmd.id))) {
+          this.scorecardChartRuntime[cmd.id] =
+            this.mapScorecardDefinitionToRuntime(chartDefinition);
         }
         break;
       case "DELETE_FIGURE":
-        delete this.chartRuntime[cmd.id];
+        this.removeChartEvaluation(cmd.id);
         break;
       case "REFRESH_CHART":
         this.evaluateUsedSheets([cmd.id]);
@@ -60,16 +76,21 @@ export class EvaluationChartPlugin extends UIPlugin {
         this.evaluateUsedSheets(chartsIds);
         break;
       case "UPDATE_CELL":
-        for (let chartId of Object.keys(this.chartRuntime)) {
+        for (let chartId of this.getAllChartIds()) {
           if (this.isCellUsedInChart(cmd.sheetId, chartId, cmd.col, cmd.row)) {
             this.outOfDate.add(chartId);
           }
         }
         break;
       case "DELETE_SHEET":
-        for (let chartId of Object.keys(this.chartRuntime)) {
-          if (!this.getters.getBasicChartDefinition(chartId)) {
-            delete this.chartRuntime[chartId];
+        for (let chartId of this.getAllChartIds()) {
+          if (!this.getters.isChartDefined(chartId)) {
+            if (this.chartRuntime[chartId]) {
+              delete this.chartRuntime[chartId];
+            }
+            if (this.scorecardChartRuntime[chartId]) {
+              delete this.scorecardChartRuntime[chartId];
+            }
           }
         }
         break;
@@ -83,7 +104,7 @@ export class EvaluationChartPlugin extends UIPlugin {
           left: cmd.dimension === "ROW" ? 0 : cmd.base + offset,
           right: cmd.dimension === "ROW" ? numberOfElem - 1 : cmd.base + cmd.quantity + offset,
         };
-        for (const chartId of Object.keys(this.chartRuntime)) {
+        for (const chartId of this.getAllChartIds()) {
           if (this.areZonesUsedInChart(cmd.sheetId, [zone], chartId)) {
             this.outOfDate.add(chartId);
           }
@@ -91,14 +112,14 @@ export class EvaluationChartPlugin extends UIPlugin {
         break;
       case "UNDO":
       case "REDO":
-        for (let chartId of Object.keys(this.chartRuntime)) {
+        for (let chartId of this.getAllChartIds()) {
           this.outOfDate.add(chartId);
         }
         break;
       case "EVALUATE_CELLS":
         // if there was an async evaluation of cell, there is no way to know which was updated so all charts must be updated
         //TODO Need to check that someday
-        for (let id in this.chartRuntime) {
+        for (let id of this.getAllChartIds()) {
           this.outOfDate.add(id);
         }
         break;
@@ -117,6 +138,26 @@ export class EvaluationChartPlugin extends UIPlugin {
       this.outOfDate.delete(figureId);
     }
     return this.chartRuntime[figureId];
+  }
+
+  getScorecardChartRuntime(figureId: string): ScorecardChartRuntime | undefined {
+    if (this.outOfDate.has(figureId) || !(figureId in this.scorecardChartRuntime)) {
+      const chartDefinition = this.getters.getScorecardChartDefinition(figureId);
+      if (!chartDefinition) return;
+
+      this.scorecardChartRuntime[figureId] = this.mapScorecardDefinitionToRuntime(chartDefinition);
+      this.outOfDate.delete(figureId);
+    }
+    return this.scorecardChartRuntime[figureId];
+  }
+
+  private removeChartEvaluation(chartId: string) {
+    if (this.chartRuntime[chartId]) {
+      delete this.chartRuntime[chartId];
+    }
+    if (this.scorecardChartRuntime[chartId]) {
+      delete this.scorecardChartRuntime[chartId];
+    }
   }
 
   private truncateLabel(label: string | undefined): string {
@@ -216,15 +257,17 @@ export class EvaluationChartPlugin extends UIPlugin {
     return config;
   }
 
+  /** Get the ids of all the charts defined in this plugin (basicCharts + scorecards) */
+  private getAllChartIds() {
+    return [...Object.keys(this.chartRuntime), ...Object.keys(this.scorecardChartRuntime)];
+  }
+
   private areZonesUsedInChart(sheetId: UID, zones: Zone[], chartId: UID): boolean {
-    const chartDefinition = this.getters.getBasicChartDefinition(chartId);
-    if (!chartDefinition || sheetId !== chartDefinition?.sheetId) {
+    const chartSheetId = this.getters.getChartSheetId(chartId);
+    if (!chartSheetId || sheetId !== chartSheetId) {
       return false;
     }
-    const ranges = [
-      ...chartDefinition.dataSets.map((ds) => ds.dataRange),
-      chartDefinition.labelRange,
-    ].filter(isDefined);
+    const ranges = this.getters.getChartRanges(chartId);
     for (let zone of zones) {
       for (let range of ranges) {
         if (range.sheetId === sheetId && overlap(range.zone, zone)) {
@@ -236,14 +279,7 @@ export class EvaluationChartPlugin extends UIPlugin {
   }
 
   private isCellUsedInChart(sheetId: UID, chartId: UID, col: number, row: number): boolean {
-    const chartDefinition = this.getters.getBasicChartDefinition(chartId);
-    if (chartDefinition === undefined) {
-      return false;
-    }
-    const ranges = [
-      ...chartDefinition.dataSets.map((ds) => ds.dataRange),
-      chartDefinition.labelRange,
-    ].filter(isDefined);
+    const ranges = this.getters.getChartRanges(chartId);
 
     for (let range of ranges) {
       if (range.sheetId === sheetId && isInside(col, row, range.zone)) {
@@ -253,13 +289,11 @@ export class EvaluationChartPlugin extends UIPlugin {
     return false;
   }
 
-  private getSheetIdsUsedInChart(chartDefinition: BasicChartDefinition): Set<UID> {
+  private getSheetIdsUsedInChart(chartId: UID): Set<UID> {
     const sheetIds: Set<UID> = new Set();
-    for (let ds of chartDefinition.dataSets) {
-      sheetIds.add(ds.dataRange.sheetId);
-    }
-    if (chartDefinition.labelRange) {
-      sheetIds.add(chartDefinition.labelRange.sheetId);
+    const chartRanges = this.getters.getChartRanges(chartId);
+    for (let range of chartRanges) {
+      sheetIds.add(range.sheetId);
     }
     return sheetIds;
   }
@@ -267,9 +301,9 @@ export class EvaluationChartPlugin extends UIPlugin {
   private evaluateUsedSheets(chartsIds: UID[]) {
     const usedSheetsId: Set<UID> = new Set();
     for (let chartId of chartsIds) {
-      const chartDefinition = this.getters.getBasicChartDefinition(chartId);
-      const sheetsIds =
-        chartDefinition !== undefined ? this.getSheetIdsUsedInChart(chartDefinition) : [];
+      const sheetsIds = this.getters.isChartDefined(chartId)
+        ? this.getSheetIdsUsedInChart(chartId)
+        : [];
       sheetsIds.forEach((sheetId) => {
         if (sheetId !== this.getters.getActiveSheetId()) {
           usedSheetsId.add(sheetId);
@@ -279,6 +313,29 @@ export class EvaluationChartPlugin extends UIPlugin {
     for (let sheetId of usedSheetsId) {
       this.dispatch("EVALUATE_CELLS", { sheetId });
     }
+  }
+
+  private mapScorecardDefinitionToRuntime(
+    definition: ScorecardChartDefinition
+  ): ScorecardChartRuntime {
+    let keyValue: CellValue | undefined = undefined,
+      formattedKeyValue = "";
+    if (definition.keyValue) {
+      const keyValueCell = this.getters.getCellsInZone(
+        definition.sheetId,
+        definition.keyValue.zone
+      )[0];
+      keyValue = keyValueCell?.evaluated.value;
+      formattedKeyValue = keyValueCell?.formattedValue || "";
+    }
+    return {
+      ...definition,
+      keyValue,
+      formattedKeyValue,
+      baseline: definition.baseline
+        ? this.getters.getRangeValues(definition.baseline)[0]
+        : undefined,
+    };
   }
 
   private mapDefinitionToRuntime(definition: BasicChartDefinition): ChartConfiguration {
