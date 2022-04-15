@@ -88,9 +88,9 @@ const enum Status {
 }
 
 export class Model extends EventBus<any> implements CommandDispatcher {
-  private corePlugins: CorePlugin[] = [];
+  private corePlugins: CorePlugin<any, Command, any>[] = [];
 
-  private uiPlugins: UIPlugin[] = [];
+  private uiPlugins: UIPlugin<any, Command, any>[] = [];
 
   private history: LocalHistory;
 
@@ -205,7 +205,7 @@ export class Model extends EventBus<any> implements CommandDispatcher {
     markRaw(this);
   }
 
-  get handlers(): CommandHandler<Command>[] {
+  get handlers(): CommandHandler<Command, any>[] {
     return [this.range, ...this.corePlugins, ...this.uiPlugins, this.history];
   }
 
@@ -416,12 +416,15 @@ export class Model extends EventBus<any> implements CommandDispatcher {
    * Dispatch the given command to the given handlers.
    * It will call `beforeHandle` and `handle`
    */
-  private dispatchToHandlers(handlers: CommandHandler<Command>[], command: Command) {
+  private dispatchToHandlers(handlers: CommandHandler<Command, any>[], command: Command) {
+    const beforeHandleResult = new Map<CommandHandler<Command, any>, any>();
+
     for (const handler of handlers) {
-      handler.beforeHandle(command);
+      const result = handler.beforeHandle(command);
+      beforeHandleResult.set(handler, result);
     }
     for (const handler of handlers) {
-      handler.handle(command);
+      handler.handle(command, beforeHandleResult.get(handler));
     }
   }
 

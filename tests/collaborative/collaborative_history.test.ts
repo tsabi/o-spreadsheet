@@ -709,23 +709,35 @@ describe("Collaborative local history", () => {
     pluginDavid.handle = jest.fn((cmd) => {});
     pluginElisa.handle = jest.fn((cmd) => {});
     undo(david);
-    expect(pluginDavid.handle).toHaveBeenCalledWith({
-      type: "UNDO",
-      commands: [{ ...command, col: 1 }],
-    });
-    expect(pluginElisa.handle).toHaveBeenCalledWith({
-      type: "UNDO",
-      commands: [{ ...command, col: 1 }],
-    });
+    expect(pluginDavid.handle).toHaveBeenCalledWith(
+      {
+        type: "UNDO",
+        commands: [{ ...command, col: 1 }],
+      },
+      undefined
+    );
+    expect(pluginElisa.handle).toHaveBeenCalledWith(
+      {
+        type: "UNDO",
+        commands: [{ ...command, col: 1 }],
+      },
+      undefined
+    );
     redo(david);
-    expect(pluginDavid.handle).toHaveBeenCalledWith({
-      type: "REDO",
-      commands: [{ ...command, col: 1 }],
-    });
-    expect(pluginElisa.handle).toHaveBeenCalledWith({
-      type: "REDO",
-      commands: [{ ...command, col: 1 }],
-    });
+    expect(pluginDavid.handle).toHaveBeenCalledWith(
+      {
+        type: "REDO",
+        commands: [{ ...command, col: 1 }],
+      },
+      undefined
+    );
+    expect(pluginElisa.handle).toHaveBeenCalledWith(
+      {
+        type: "REDO",
+        commands: [{ ...command, col: 1 }],
+      },
+      undefined
+    );
   });
   test("dispatch command after concurrent action with another user", () => {
     addColumns(bob, "before", "A", 1);

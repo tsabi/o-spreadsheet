@@ -322,15 +322,21 @@ describe("Model history", () => {
     };
     model.dispatch(command.type, command);
     undo(model);
-    expect(plugin.handle).toHaveBeenCalledWith({
-      type: "UNDO",
-      commands: [command],
-    });
+    expect(plugin.handle).toHaveBeenCalledWith(
+      {
+        type: "UNDO",
+        commands: [command],
+      },
+      undefined
+    );
     redo(model);
-    expect(plugin.handle).toHaveBeenCalledWith({
-      type: "REDO",
-      commands: [command],
-    });
+    expect(plugin.handle).toHaveBeenCalledWith(
+      {
+        type: "REDO",
+        commands: [command],
+      },
+      undefined
+    );
     uiPluginRegistry.remove("test-plugin");
   });
 });

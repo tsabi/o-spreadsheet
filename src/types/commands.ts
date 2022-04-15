@@ -965,10 +965,10 @@ export const enum CommandResult {
   InvalidConditionalFormatId,
 }
 
-export interface CommandHandler<T> {
+export interface CommandHandler<T, BeforeHandleResult> {
   allowDispatch(command: T): CommandResult | CommandResult[];
-  beforeHandle(command: T): void;
-  handle(command: T): void;
+  beforeHandle(command: T): BeforeHandleResult | undefined;
+  handle(command: T, beforeHAndleResult?: BeforeHandleResult): void;
   finalize(): void;
 }
 

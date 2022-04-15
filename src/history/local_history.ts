@@ -17,7 +17,7 @@ import {
  * It maintains the local undo and redo stack to allow to undo/redo only local
  * changes
  */
-export class LocalHistory extends EventBus implements CommandHandler<Command> {
+export class LocalHistory extends EventBus implements CommandHandler<Command, undefined> {
   /**
    * Ids of the revisions which can be undone
    */
@@ -66,7 +66,9 @@ export class LocalHistory extends EventBus implements CommandHandler<Command> {
     return CommandResult.Success;
   }
 
-  beforeHandle(cmd: Command) {}
+  beforeHandle(command: Command): undefined {
+    return;
+  }
 
   handle(cmd: Command) {
     switch (cmd.type) {

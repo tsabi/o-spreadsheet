@@ -12,7 +12,7 @@ export interface UIPluginConstructor {
     dispatch: CommandDispatcher["dispatch"],
     config: ModelConfig,
     selection: SelectionStreamProcessor
-  ): UIPlugin;
+  ): UIPlugin<any, Command, any>;
   layers: LAYERS[];
   getters: readonly string[];
   modes: Mode[];
@@ -22,7 +22,11 @@ export interface UIPluginConstructor {
  * UI plugins handle any transient data required to display a spreadsheet.
  * They can draw on the grid canvas.
  */
-export class UIPlugin<State = any, C = Command> extends BasePlugin<State, C> {
+export class UIPlugin<State = any, C = Command, BeforeHandleResult = never> extends BasePlugin<
+  State,
+  C,
+  BeforeHandleResult
+> {
   static layers: LAYERS[] = [];
 
   protected getters: Getters;

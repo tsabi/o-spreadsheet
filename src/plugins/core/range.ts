@@ -25,7 +25,7 @@ import {
   Zone,
 } from "../../types/index";
 
-export class RangeAdapter implements CommandHandler<CoreCommand> {
+export class RangeAdapter implements CommandHandler<CoreCommand, undefined> {
   private getters: Getters;
   private providers: Array<RangeProvider["adaptRanges"]> = [];
   constructor(getters: Getters) {
@@ -40,7 +40,9 @@ export class RangeAdapter implements CommandHandler<CoreCommand> {
   allowDispatch(command: Command): CommandResult {
     return CommandResult.Success;
   }
-  beforeHandle(command: Command) {}
+  beforeHandle(command: Command): undefined {
+    return;
+  }
 
   handle(cmd: Command) {
     switch (cmd.type) {
