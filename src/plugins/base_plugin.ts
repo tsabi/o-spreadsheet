@@ -20,7 +20,7 @@ import {
  * and UI plugins handling transient data.
  */
 
-export class BasePlugin<State = any, C = any> implements CommandHandler<C> {
+export class BasePlugin<State = any, C = any, B = never> implements CommandHandler<C, B> {
   static getters: readonly string[] = [];
   static modes: Mode[] = ["headless", "normal"];
 
@@ -61,13 +61,15 @@ export class BasePlugin<State = any, C = any> implements CommandHandler<C> {
    * command is handled in another plugin. This should only be used if it is not
    * possible to do the work in the handle method.
    */
-  beforeHandle(command: C): void {}
+  beforeHandle(command: C): B | undefined {
+    return;
+  }
 
   /**
    * This is the standard place to handle any command. Most of the plugin
    * command handling work should take place here.
    */
-  handle(command: C): void {}
+  handle(command: C, beforeHAndleResult?: B): void {}
 
   /**
    * Sometimes, it is useful to perform some work after a command (and all its

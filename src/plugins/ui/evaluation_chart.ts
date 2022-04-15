@@ -19,7 +19,7 @@ export class EvaluationChartPlugin extends UIPlugin {
   readonly chartRuntime: { [figureId: string]: ChartConfiguration } = {};
   private outOfDate: Set<UID> = new Set<UID>();
 
-  beforeHandle(cmd: Command) {
+  beforeHandle(cmd: Command): undefined {
     switch (cmd.type) {
       case "REMOVE_COLUMNS_ROWS":
         const sheet = this.getters.getSheet(cmd.sheetId);
@@ -37,6 +37,7 @@ export class EvaluationChartPlugin extends UIPlugin {
         }
         break;
     }
+    return;
   }
 
   handle(cmd: Command) {

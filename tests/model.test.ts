@@ -173,7 +173,7 @@ describe("Model", () => {
     model.dispatch("COPY", { target: [toZone("A1")] });
     expect(result).toBeSuccessfullyDispatched();
     expect(getCellText(model, "A2")).toBe("copy&paste me");
-    corePluginRegistry.remove("myUIPlugin");
+    uiPluginRegistry.remove("myUIPlugin");
   });
 
   test("Can open a model in readonly mode", () => {
@@ -194,5 +194,53 @@ describe("Model", () => {
   test("Can add custom elements in the config of model", () => {
     const model = new Model({}, { custom: "42" } as unknown as ModelConfig);
     expect(model["config"]["custom"]).toBe("42");
+  });
+
+  test("Value returned in beforeHandle is present in handle in core plugin", () => {
+    type Obj = { value: string };
+    const testResultObject: Obj = { value: "hey" };
+    let beforeHandleResult: Obj;
+    class MyCorePlugin extends CorePlugin<undefined, CoreCommand, Obj> {
+      beforeHandle(cmd: Command): Obj | undefined {
+        if (cmd.type === "COPY") {
+          return testResultObject;
+        }
+        return;
+      }
+
+      handle(cmd: Command, result: Obj | undefined) {
+        if (cmd.type === "COPY") {
+          beforeHandleResult = result!;
+        }
+      }
+    }
+    corePluginRegistry.add("myCorePlugin", MyCorePlugin);
+    const model = new Model();
+    model.dispatch("COPY", { target: [toZone("A1")] });
+    expect(beforeHandleResult!).toEqual(testResultObject);
+    corePluginRegistry.remove("myCorePlugin");
+  });
+
+  test("Value returned in beforeHandle is present in handle in UI plugin", () => {
+    let beforeHandleResult: string = "";
+    class MyUIPlugin extends UIPlugin<undefined, Command, string> {
+      beforeHandle(cmd: Command): string | undefined {
+        if (cmd.type === "COPY") {
+          return "beforeHandleResult";
+        }
+        return;
+      }
+
+      handle(cmd: Command, result: string) {
+        if (cmd.type === "COPY") {
+          beforeHandleResult = result!;
+        }
+      }
+    }
+    uiPluginRegistry.add("myUIPlugin", MyUIPlugin);
+    const model = new Model();
+    model.dispatch("COPY", { target: [toZone("A1")] });
+    expect(beforeHandleResult).toEqual("beforeHandleResult");
+    uiPluginRegistry.remove("myUIPlugin");
   });
 });

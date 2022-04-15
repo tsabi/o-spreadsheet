@@ -3,7 +3,6 @@ import { Mode, ModelConfig } from "../model";
 import { StateObserver } from "../state_observer";
 import {
   ApplyRangeChange,
-  CoreCommand,
   CoreCommandDispatcher,
   ExcelWorkbookData,
   RangeProvider,
@@ -11,6 +10,7 @@ import {
   WorkbookData,
 } from "../types";
 import { CoreGetters } from "../types/getters";
+import { CoreCommand } from "./../types/commands";
 import { BasePlugin } from "./base_plugin";
 import { RangeAdapter } from "./core/range";
 
@@ -22,7 +22,7 @@ export interface CorePluginConstructor {
     dispatch: CoreCommandDispatcher["dispatch"],
     config: ModelConfig,
     uuidGenerator: UuidGenerator
-  ): CorePlugin;
+  ): CorePlugin<any, CoreCommand, any>;
   getters: readonly string[];
   modes: Mode[];
 }
@@ -33,8 +33,8 @@ export interface CorePluginConstructor {
  * persisted state.
  * They should not be concerned about UI parts or transient state.
  */
-export class CorePlugin<State = any, C = CoreCommand>
-  extends BasePlugin<State, C>
+export class CorePlugin<State = any, C = CoreCommand, BeforeHandleResult = undefined>
+  extends BasePlugin<State, C, BeforeHandleResult>
   implements RangeProvider
 {
   protected getters: CoreGetters;
