@@ -142,6 +142,7 @@ export interface Header {
   name: string;
   size: number;
   isHidden?: boolean;
+  isManuallySized?: boolean;
 }
 
 export interface Row extends Header {

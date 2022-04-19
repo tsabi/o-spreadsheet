@@ -677,6 +677,7 @@ export class RowResizer extends AbstractResizer {
       sheetId: this.env.model.getters.getActiveSheetId(),
       elements: rows.has(index) ? [...rows] : [index],
       size,
+      isManual: true,
     });
   }
 

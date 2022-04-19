@@ -9,6 +9,7 @@ import {
   CreateSheetCommand,
   DispatchResult,
   SortDirection,
+  Style,
   UID,
   UpDown,
 } from "../../src/types";
@@ -174,6 +175,7 @@ export function resizeColumns(
     elements: columns.map(lettersToNumber),
     sheetId,
     size,
+    isManual: true,
   });
 }
 
@@ -218,13 +220,15 @@ export function resizeRows(
   model: Model,
   rows: number[],
   size: number,
-  sheetId: UID = model.getters.getActiveSheetId()
+  sheetId: UID = model.getters.getActiveSheetId(),
+  isManual = true
 ): DispatchResult {
   return model.dispatch("RESIZE_COLUMNS_ROWS", {
     dimension: "ROW",
     elements: rows,
     sheetId,
     size,
+    isManual,
   });
 }
 
@@ -564,5 +568,18 @@ export function moveSheet(
   return model.dispatch("MOVE_SHEET", {
     sheetId,
     direction,
+  });
+}
+
+export function setStyle(
+  model: Model,
+  targetXc: string,
+  style: Style,
+  sheetId: UID = model.getters.getActiveSheetId()
+) {
+  return model.dispatch("SET_FORMATTING", {
+    sheetId: sheetId,
+    target: target(targetXc),
+    style: style,
   });
 }

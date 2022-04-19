@@ -66,12 +66,14 @@ export function createRows(savedRows: { [key: number]: HeaderData }, rowNumber: 
     const size = savedRows[i] ? savedRows[i].size || DEFAULT_CELL_HEIGHT : DEFAULT_CELL_HEIGHT;
     const hidden = savedRows[i]?.isHidden || false;
     const end = hidden ? current : current + size;
+    const isManuallySized = savedRows[i]?.size !== undefined;
     const row: Row = {
       start: current,
       end: end,
       size: size,
       name: String(i + 1),
       cells: {},
+      isManuallySized,
     };
     if (hidden) {
       row.isHidden = hidden;
@@ -106,7 +108,7 @@ export function exportRows(
   const exportedRows: { [key: number]: HeaderData } = {};
   for (let i in rows) {
     const row = rows[i];
-    if (row.size !== DEFAULT_CELL_HEIGHT || exportDefaults) {
+    if ((row.size !== DEFAULT_CELL_HEIGHT && row.isManuallySized) || exportDefaults) {
       exportedRows[i] = { size: row.size };
     }
     if (row.isHidden) {

@@ -210,6 +210,7 @@ export interface ResizeColumnsRowsCommand extends SheetDependentCommand, GridDep
   type: "RESIZE_COLUMNS_ROWS";
   elements: number[];
   size: number;
+  isManual?: boolean;
 }
 
 export interface HideColumnsRowsCommand extends SheetDependentCommand, GridDependentCommand {

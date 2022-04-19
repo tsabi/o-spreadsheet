@@ -5,6 +5,7 @@ import { ChartPlugin } from "./core/chart";
 import { ConditionalFormatPlugin } from "./core/conditional_format";
 import { FigurePlugin } from "./core/figures";
 import { MergePlugin } from "./core/merge";
+import { RowResizerPlugin } from "./core/row_resizer";
 import { SheetPlugin } from "./core/sheet";
 import { CorePluginConstructor } from "./core_plugin";
 import { AutofillPlugin } from "./ui/autofill";
@@ -30,6 +31,7 @@ export const corePluginRegistry = new Registry<CorePluginConstructor>()
   .add("sheet", SheetPlugin)
   .add("cell", CellPlugin)
   .add("merge", MergePlugin)
+  .add("rowResizer", RowResizerPlugin)
   .add("borders", BordersPlugin)
   .add("conditional formatting", ConditionalFormatPlugin)
   .add("figures", FigurePlugin)

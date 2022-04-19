@@ -9,6 +9,7 @@ import { ConditionalFormatPlugin } from "../src/plugins/core/conditional_format"
 import { FigurePlugin } from "../src/plugins/core/figures";
 import { MergePlugin } from "../src/plugins/core/merge";
 import { RangeAdapter } from "../src/plugins/core/range";
+import { RowResizerPlugin } from "../src/plugins/core/row_resizer";
 import { SheetPlugin } from "../src/plugins/core/sheet";
 import { corePluginRegistry, uiPluginRegistry } from "../src/plugins/index";
 import { AutomaticSumPlugin } from "../src/plugins/ui/automatic_sum";
@@ -34,20 +35,21 @@ function getNbrPlugin(mode: Mode): number {
 describe("Model", () => {
   test("can create model in headless mode", () => {
     const model = new Model({}, { mode: "headless" });
-    expect(model["handlers"]).toHaveLength(13);
+    expect(model["handlers"]).toHaveLength(14);
     expect(model["handlers"][0]).toBeInstanceOf(RangeAdapter);
     expect(model["handlers"][1]).toBeInstanceOf(SheetPlugin);
     expect(model["handlers"][2]).toBeInstanceOf(CellPlugin);
     expect(model["handlers"][3]).toBeInstanceOf(MergePlugin);
-    expect(model["handlers"][4]).toBeInstanceOf(BordersPlugin);
-    expect(model["handlers"][5]).toBeInstanceOf(ConditionalFormatPlugin);
-    expect(model["handlers"][6]).toBeInstanceOf(FigurePlugin);
-    expect(model["handlers"][7]).toBeInstanceOf(ChartPlugin);
-    expect(model["handlers"][8]).toBeInstanceOf(SheetUIPlugin);
-    expect(model["handlers"][9]).toBeInstanceOf(FindAndReplacePlugin);
-    expect(model["handlers"][10]).toBeInstanceOf(SortPlugin);
-    expect(model["handlers"][11]).toBeInstanceOf(AutomaticSumPlugin);
-    expect(model["handlers"][12]).toBeInstanceOf(LocalHistory);
+    expect(model["handlers"][4]).toBeInstanceOf(RowResizerPlugin);
+    expect(model["handlers"][5]).toBeInstanceOf(BordersPlugin);
+    expect(model["handlers"][6]).toBeInstanceOf(ConditionalFormatPlugin);
+    expect(model["handlers"][7]).toBeInstanceOf(FigurePlugin);
+    expect(model["handlers"][8]).toBeInstanceOf(ChartPlugin);
+    expect(model["handlers"][9]).toBeInstanceOf(SheetUIPlugin);
+    expect(model["handlers"][10]).toBeInstanceOf(FindAndReplacePlugin);
+    expect(model["handlers"][11]).toBeInstanceOf(SortPlugin);
+    expect(model["handlers"][12]).toBeInstanceOf(AutomaticSumPlugin);
+    expect(model["handlers"][13]).toBeInstanceOf(LocalHistory);
   });
 
   test("All plugin compatible with normal mode are loaded on normal mode", () => {

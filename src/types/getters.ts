@@ -7,6 +7,7 @@ import { ConditionalFormatPlugin } from "../plugins/core/conditional_format";
 import { FigurePlugin } from "../plugins/core/figures";
 import { MergePlugin } from "../plugins/core/merge";
 import { RangeAdapter } from "../plugins/core/range";
+import { RowResizerPlugin } from "../plugins/core/row_resizer";
 import { SheetPlugin } from "../plugins/core/sheet";
 import { AutofillPlugin } from "../plugins/ui/autofill";
 import { AutomaticSumPlugin } from "../plugins/ui/automatic_sum";
@@ -62,6 +63,7 @@ type GetterNames<Plugin extends { getters: readonly string[] }> = Plugin["getter
 type SheetGetters = Pick<SheetPlugin, GetterNames<typeof SheetPlugin>>;
 type CellGetters = Pick<CellPlugin, GetterNames<typeof CellPlugin>>;
 type MergeGetters = Pick<MergePlugin, GetterNames<typeof MergePlugin>>;
+type RowResizerGetters = Pick<RowResizerPlugin, GetterNames<typeof RowResizerPlugin>>;
 type BordersGetters = Pick<BordersPlugin, GetterNames<typeof BordersPlugin>>;
 type ChartGetters = Pick<ChartPlugin, GetterNames<typeof ChartPlugin>>;
 type FigureGetters = Pick<FigurePlugin, GetterNames<typeof FigurePlugin>>;
@@ -79,6 +81,7 @@ export type CoreGetters = { isReadonly: () => boolean } & LocalHistoryGetters &
   SheetGetters &
   CellGetters &
   MergeGetters &
+  RowResizerGetters &
   BordersGetters &
   ChartGetters &
   ConditionalFormatGetters &

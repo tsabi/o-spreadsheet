@@ -61,6 +61,7 @@ export class SheetPlugin extends CorePlugin<SheetState> implements SheetState {
     "getCellsInZone",
     "getCellPosition",
     "getColCells",
+    "getRowCells",
     "getColsZone",
     "getRowsZone",
     "getNumberCols",
@@ -143,7 +144,7 @@ export class SheetPlugin extends CorePlugin<SheetState> implements SheetState {
       case "RESIZE_COLUMNS_ROWS":
         const dimension = cmd.dimension === "COL" ? "cols" : "rows";
         for (let elt of cmd.elements) {
-          this.setHeaderSize(this.getSheet(cmd.sheetId), dimension, elt, cmd.size);
+          this.setHeaderSize(this.getSheet(cmd.sheetId), dimension, elt, cmd.size, cmd.isManual);
         }
         break;
       case "MOVE_SHEET":
@@ -357,6 +358,16 @@ export class SheetPlugin extends CorePlugin<SheetState> implements SheetState {
       .filter(isDefined);
   }
 
+  /**
+   * Returns all the cells of a row
+   */
+  getRowCells(sheetId: UID, row: number): Cell[] {
+    return Object.values(this.getSheet(sheetId).rows[row].cells)
+      .filter(isDefined)
+      .map((cellId) => this.getters.getCellById(cellId))
+      .filter(isDefined);
+  }
+
   getColsZone(sheetId: UID, start: number, end: number): Zone {
     return {
       top: 0,
@@ -422,12 +433,19 @@ export class SheetPlugin extends CorePlugin<SheetState> implements SheetState {
       .every((cell) => !cell || cell.isEmpty());
   }
 
-  private setHeaderSize(sheet: Sheet, dimension: "cols" | "rows", index: number, size: number) {
+  private setHeaderSize(
+    sheet: Sheet,
+    dimension: "cols" | "rows",
+    index: number,
+    size: number,
+    isManualSized = false
+  ) {
     let start: number, end: number;
     const elements = sheet[dimension];
     const base = elements[index];
     const delta = size - base.size;
     this.history.update("sheets", sheet.id, dimension, index, "size", size);
+    this.history.update("sheets", sheet.id, dimension, index, "isManuallySized", isManualSized);
     if (!base.isHidden)
       this.history.update("sheets", sheet.id, dimension, index, "end", base.end + delta);
     start = base.end;

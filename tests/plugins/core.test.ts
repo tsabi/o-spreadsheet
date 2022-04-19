@@ -408,8 +408,15 @@ describe("core", () => {
       name: "1",
       size: 24,
       start: 0,
+      isManuallySized: true,
     });
-    expect(model.getters.getCol(sheet2Id, 0)).toEqual({ end: 42, name: "A", size: 42, start: 0 });
+    expect(model.getters.getCol(sheet2Id, 0)).toEqual({
+      end: 42,
+      name: "A",
+      size: 42,
+      start: 0,
+      isManuallySized: true,
+    });
   });
 
   test("can get row/col number of inactive sheet", () => {
