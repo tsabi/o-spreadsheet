@@ -53,7 +53,7 @@ interface ColorSet {
   upperColor: string;
 }
 
-export interface SectionThreshold {
+interface SectionThreshold {
   type: "number" | "percentage";
   value: string;
 }
@@ -244,7 +244,7 @@ interface GaugeChartOptions extends ChartOptions {
     color: string; // The color of the needle
   };
   valueLabel?: {
-    formatter: null | ((value: number) => string);
+    formatter: (() => string) | null;
     display: boolean;
     color: string;
     backgroundColor: string;

@@ -1,5 +1,5 @@
 import { Component, onWillUpdateProps, useState, xml } from "@odoo/owl";
-import { colorNumberString } from "../../../helpers/index";
+import { colorNumberString, deepCopy } from "../../../helpers/index";
 import {
   CommandResult,
   DispatchResult,
@@ -21,7 +21,7 @@ const CONFIGURATION_TEMPLATE = xml/* xml */ `
     <div class="o-section-title" t-esc="env._t('${ChartTerms.ChartType}')"/>
     <ChartTypeSelect figureId="this.props.figure.id"/>
   </div>
-  <div class="o-section o-data-range">
+  <div class="o-section o-data-series">
     <div class="o-section-title" t-esc="env._t('${ChartTerms.DataRange}')"/>
     <SelectionInput t-key="getKey('dataRange')"
                     ranges="[state.chart.dataRange]"
@@ -59,10 +59,9 @@ const COLOR_SECTION_TEMPLATE_ROW = xml/* xml */ `
       <t t-esc="env._t('${ChartTerms.WhenValueIsBelow}')"/>
     </td>
     <td>
-      <input type="text" class="o-input"
+      <input type="text" class="o-input o-input-{{inflectionPointName}}"
         t-att-class="{ 'o-invalid': isInvalid }"
         t-model="inflectionPoint.value"
-        t-on-change="updateSectionRule"
       />
     </td>
     <td>
@@ -141,11 +140,11 @@ const DESIGN_TEMPLATE = xml/* xml */ `
   <div class="o-section">
     <div class="o-section-title"><t t-esc="env._t('${ChartTerms.Range}')"/></div>
     <div class="o-subsection-left">
-      <input type="text" t-model="state.chart.sectionRule.rangeMin" t-on-change="updateSectionRule" class="o-input"
+      <input type="text" t-model="state.chart.sectionRule.rangeMin" class="o-input o-data-range-min"
              t-att-class="{ 'o-invalid': isRangeMinInvalid() }"/>
     </div>
     <div class="o-subsection-right">
-      <input type="text" t-model="state.chart.sectionRule.rangeMax" t-on-change="updateSectionRule" class="o-input"
+      <input type="text" t-model="state.chart.sectionRule.rangeMax" class="o-input o-data-range-max"
              t-att-class="{ 'o-invalid': isRangeMaxInvalid() }"/>
     </div>
   </div>
@@ -155,6 +154,18 @@ const DESIGN_TEMPLATE = xml/* xml */ `
       <t t-set="sectionRule" t-value="state.chart.sectionRule"/>
     </t>
   </div>
+
+  <div class="o-sidePanelButtons">
+    <button
+      t-on-click="cancelSectionRule"
+      class="o-sidePanelButton o-section-rule-cancel"
+      t-esc="env._t('${GenericTerms.Cancel}')"></button>
+    <button
+      t-on-click="saveSectionRule"
+      class="o-sidePanelButton o-section-rule-save"
+      t-esc="env._t('${GenericTerms.Save}')"></button>
+  </div>
+
   <div class="o-section o-sidepanel-error" t-if="designErrorMessages">
     <div t-foreach="designErrorMessages" t-as="error" t-key="error">
       <t t-esc="error"/>
@@ -166,12 +177,12 @@ const DESIGN_TEMPLATE = xml/* xml */ `
 const TEMPLATE = xml/* xml */ `
   <div class="o-chart">
     <div class="o-panel">
-      <div class="o-panel-element"
+      <div class="o-panel-element o-panel-configuration"
           t-att-class="state.panel !== 'configuration' ? 'inactive' : ''"
           t-on-click="() => this.activate('configuration')">
         <i class="fa fa-sliders"/>Configuration
       </div>
-      <div class="o-panel-element"
+      <div class="o-panel-element o-panel-design"
           t-att-class="state.panel !== 'design' ? 'inactive' : ''"
           t-on-click="() => this.activate('design')">
         <i class="fa fa-paint-brush"/>Design
@@ -251,6 +262,7 @@ export class GaugeChartPanel extends Component<Props, SpreadsheetChildEnv> {
   colorNumberString = colorNumberString;
 
   private state: PanelState = useState(this.initialState(this.props.figure));
+  private sheetId = this.env.model.getters.getActiveSheetId();
 
   setup() {
     onWillUpdateProps((nextProps: Props) => {
@@ -262,10 +274,8 @@ export class GaugeChartPanel extends Component<Props, SpreadsheetChildEnv> {
         this.state.panel = "configuration";
         this.state.dataRangeDispatchResult = undefined;
         this.state.sectionRuleDispatchResult = undefined;
-        this.state.chart = this.env.model.getters.getGaugeChartDefinitionUI(
-          this.env.model.getters.getActiveSheetId(),
-          nextProps.figure.id
-        )!;
+        this.sheetId = this.env.model.getters.getActiveSheetId();
+        this.state.chart = this.getGaugeChartDefinitionUI(this.sheetId, nextProps.figure.id)!;
       }
     });
   }
@@ -276,11 +286,10 @@ export class GaugeChartPanel extends Component<Props, SpreadsheetChildEnv> {
 
   private initialState(figure: Figure): PanelState {
     return {
-      chart: this.env.model.getters.getGaugeChartDefinitionUI(
-        this.env.model.getters.getActiveSheetId(),
-        figure.id
-      )!,
+      chart: this.getGaugeChartDefinitionUI(this.env.model.getters.getActiveSheetId(), figure.id)!,
       panel: "configuration",
+      dataRangeDispatchResult: undefined,
+      sectionRuleDispatchResult: undefined,
     };
   }
 
@@ -362,7 +371,6 @@ export class GaugeChartPanel extends Component<Props, SpreadsheetChildEnv> {
   updateSectionColor(target: string, color: string) {
     if (this.state.chart.sectionRule) {
       this.state.chart.sectionRule.colors[target] = color;
-      this.updateChart({ sectionRule: this.state.chart.sectionRule });
     }
     this.closeMenus();
   }
@@ -407,19 +415,31 @@ export class GaugeChartPanel extends Component<Props, SpreadsheetChildEnv> {
 
   updateInflectionPointType(attr: string, ev) {
     this.state.chart.sectionRule[attr].type = ev.target.value;
-    this.state.sectionRuleDispatchResult = this.updateChart({
-      sectionRule: this.state.chart.sectionRule,
-    });
   }
 
   // ---------------------------------------------------------------------------
   // GLOBAL
   // ---------------------------------------------------------------------------
 
-  updateSectionRule() {
+  cancelSectionRule() {
+    this.state.sectionRuleDispatchResult = undefined;
+    this.state.chart.sectionRule = this.getGaugeChartDefinitionUI(
+      this.sheetId,
+      this.props.figure.id
+    )!.sectionRule;
+  }
+
+  saveSectionRule() {
     this.state.sectionRuleDispatchResult = this.updateChart({
       sectionRule: this.state.chart.sectionRule,
     });
+  }
+
+  private getGaugeChartDefinitionUI(
+    sheetId: string,
+    figureId: string
+  ): GaugeChartUIDefinition | undefined {
+    return deepCopy(this.env.model.getters.getGaugeChartDefinitionUI(sheetId, figureId));
   }
 
   private updateChart(definition: GaugeChartUIDefinitionUpdate): DispatchResult {

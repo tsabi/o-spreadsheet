@@ -302,7 +302,7 @@ export class EvaluationChartPlugin extends UIPlugin {
       color: "rgba(0, 0, 0, 1)",
     };
     config.options!.valueLabel = {
-      display: true,
+      display: false,
       formatter: null,
       color: "rgba(255, 255, 255, 1)",
       backgroundColor: "rgba(0, 0, 0, 1)",
@@ -401,7 +401,6 @@ export class EvaluationChartPlugin extends UIPlugin {
       data.push(Math.min(lowerPointNumberValue, rangeMaxNumberValue));
       backgroundColor.push(colors.lowerColor);
     }
-
     if (upperPointNumberValue !== undefined && rangeMinNumberValue < upperPointNumberValue) {
       data.push(Math.min(upperPointNumberValue, rangeMaxNumberValue));
       backgroundColor.push(colors.middleColor);
@@ -410,34 +409,39 @@ export class EvaluationChartPlugin extends UIPlugin {
     data.push(rangeMaxNumberValue);
     backgroundColor.push(colors.upperColor);
 
-    let cellValue: CellValue | undefined = undefined;
-    let cellFormatter: ((value: number) => string) | null = null;
     const dataRange = definition.dataRange;
+    const deltaBeyondRangeLimit = (rangeMaxNumberValue - rangeMinNumberValue) / 30;
+    let needleValue = rangeMinNumberValue - deltaBeyondRangeLimit; // make needle value always at the minimum
+    let cellValue: CellValue | undefined = undefined;
+    let cellFormatter: (() => string) | null = null;
+    let displayValue = false;
+
     if (dataRange !== undefined) {
       cellValue = this.getters.getRangeValues(dataRange)[0];
-      cellFormatter = () => this.getters.getRangeFormattedValues(dataRange)[0];
+      if (typeof cellValue === "number") {
+        // in gauge graph "datasets.value" is used to calculate the angle of the
+        // needle in the graph. To prevent the needle from making 360° turns, we
+        // scale the value between a min and a max. This min and this max are slightly
+        // smaller and slightly larger than minRange and maxRange to mark the fact
+        // that the needle is out of the limits
+        needleValue = this.scale(
+          cellValue,
+          rangeMinNumberValue - deltaBeyondRangeLimit,
+          rangeMaxNumberValue + deltaBeyondRangeLimit
+        );
+        cellFormatter = () => this.getters.getRangeFormattedValues(dataRange)[0];
+        displayValue = true;
+      }
     }
 
-    const deltaBeyondRange = (rangeMaxNumberValue - rangeMinNumberValue) / 30;
+    runtime.options!.valueLabel!.display = displayValue;
+    runtime.options!.valueLabel!.formatter = cellFormatter;
     runtime.data!.datasets!.push({
       data,
       minValue: Number(definition.sectionRule.rangeMin),
-      // here "value" is used to calculate the angle of the needle in the graph.
-      // To prevent the needle from making 360° turns, we scale the value between
-      // a min and a max. This min and this max are slightly smaller and slightly
-      // larger than minRange and maxRange to mark the fact that the needle is out
-      // of the limits
-      value:
-        typeof cellValue === "number"
-          ? this.scale(
-              cellValue,
-              rangeMinNumberValue - deltaBeyondRange,
-              rangeMaxNumberValue + deltaBeyondRange
-            )
-          : undefined,
+      value: needleValue,
       backgroundColor,
     });
-    runtime.options!.valueLabel!.formatter = cellFormatter;
 
     return runtime;
   }
