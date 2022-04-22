@@ -73,7 +73,7 @@ export class RangeAdapter implements CommandHandler<CoreCommand> {
               newRange = this.createAdaptedRange(
                 newRange,
                 dimension,
-                "MOVE",
+                "REMOVE",
                 -(range.zone[start] - min)
               );
             } else if (min < range.zone[start]) {
@@ -184,7 +184,7 @@ export class RangeAdapter implements CommandHandler<CoreCommand> {
   private createAdaptedRange(
     range: Range,
     dimension: "columns" | "rows",
-    operation: "MOVE" | "RESIZE",
+    operation: "MOVE" | "RESIZE" | "REMOVE",
     by: number
   ) {
     return {

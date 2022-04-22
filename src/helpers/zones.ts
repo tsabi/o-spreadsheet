@@ -446,7 +446,7 @@ export function positions(zone: Zone): [number, number][] {
 export function createAdaptedZone(
   zone: Zone,
   dimension: "columns" | "rows",
-  operation: "MOVE" | "RESIZE",
+  operation: "MOVE" | "RESIZE" | "REMOVE",
   by: number
 ): Zone {
   const start: "left" | "top" = dimension === "columns" ? "left" : "top";
