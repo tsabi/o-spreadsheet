@@ -1,6 +1,11 @@
 import { Model, normalize } from "../../src";
 import { INCORRECT_RANGE_STRING } from "../../src/constants";
-import { createSheetWithName } from "../test_helpers/commands_helpers";
+import {
+  createSheetWithName,
+  deleteColumns,
+  setCellContent,
+} from "../test_helpers/commands_helpers";
+import { getCellContent } from "../test_helpers/getters_helpers";
 
 function moveFormula(model: Model, formula: string, offsetX: number, offsetY: number): string {
   const sheetId = model.getters.getActiveSheetId();
@@ -44,6 +49,20 @@ describe("createAdaptedRanges", () => {
     expect(moveFormula(model, "=B2", -1, -1)).toEqual("=A1");
     expect(moveFormula(model, "=B2", 0, -4)).toEqual(`=${INCORRECT_RANGE_STRING}`);
     expect(moveFormula(model, "=B2", -4, 0)).toEqual(`=${INCORRECT_RANGE_STRING}`);
+  });
+
+  test("delete multiple columns, including one in formula", () => {
+    const model = new Model({
+      sheets: [
+        {
+          colNumber: 10,
+          rowNumber: 10,
+        },
+      ],
+    });
+    setCellContent(model, "A1", "=C1");
+    deleteColumns(model, ["B", "C"]);
+    expect(getCellContent(model, "A1")).toEqual("#ERROR");
   });
 
   test("can handle offsets outside the sheet", () => {
