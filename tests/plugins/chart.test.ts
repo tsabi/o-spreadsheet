@@ -1,6 +1,6 @@
 import { Model } from "../../src";
 import { ChartTerms } from "../../src/components/translations_terms";
-import { toZone } from "../../src/helpers/zones";
+import { toUnboundZone, toZone } from "../../src/helpers/zones";
 import { BorderCommand, ChartUIDefinition, CommandResult } from "../../src/types";
 import {
   activateSheet,
@@ -258,6 +258,24 @@ describe("datasource tests", function () {
       type: "line",
     });
     expect(model.getters.getChartRuntime("1")).toMatchSnapshot();
+  });
+  test("create chart with full rows/columns datasets", () => {
+    createChart(
+      model,
+      {
+        dataSets: ["8:9", "A:B"],
+        type: "line",
+      },
+      "1"
+    );
+    expect(
+      model.getters.getChartDefinition("1")?.dataSets.map((s) => s.dataRange.unboundedZone)
+    ).toMatchObject([
+      toUnboundZone("8:8"),
+      toUnboundZone("9:9"),
+      toUnboundZone("A:A"),
+      toUnboundZone("B:B"),
+    ]);
   });
 
   test("create chart with row datasets without series title", () => {

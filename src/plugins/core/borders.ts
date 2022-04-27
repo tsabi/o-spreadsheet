@@ -1,5 +1,5 @@
 import { DEFAULT_BORDER_DESC } from "../../constants";
-import { range, stringify, toCartesian, toXC, toZone } from "../../helpers/index";
+import { range, stringify, toCartesian, toXC } from "../../helpers/index";
 import {
   AddColumnsRowsCommand,
   Border,
@@ -36,7 +36,8 @@ export class BordersPlugin extends CorePlugin<BordersPluginState> implements Bor
     switch (cmd.type) {
       case "ADD_MERGE":
         for (const xc of cmd.target) {
-          this.addBordersToMerge(cmd.sheetId, toZone(xc));
+          const zone = this.getters.getRangeFromSheetXC(cmd.sheetId, xc).zone;
+          this.addBordersToMerge(cmd.sheetId, zone);
         }
         break;
       case "DUPLICATE_SHEET":
@@ -61,14 +62,14 @@ export class BordersPlugin extends CorePlugin<BordersPluginState> implements Bor
       case "SET_FORMATTING":
         if (cmd.border) {
           const sheet = this.getters.getSheet(cmd.sheetId);
-          const target = cmd.target.map((zone) =>
-            this.getters.expandZone(cmd.sheetId, toZone(zone))
-          );
-          this.setBorders(sheet, target, cmd.border);
+          const targets = this.getters
+            .getZonesFromSheetXCs(cmd.sheetId, cmd.target)
+            .map((zone) => this.getters.expandZone(cmd.sheetId, zone));
+          this.setBorders(sheet, targets, cmd.border);
         }
         break;
       case "CLEAR_FORMATTING":
-        this.clearBorders(cmd.sheetId, cmd.target.map(toZone));
+        this.clearBorders(cmd.sheetId, this.getters.getZonesFromSheetXCs(cmd.sheetId, cmd.target));
         break;
       case "REMOVE_COLUMNS_ROWS":
         for (let el of cmd.elements) {
@@ -490,7 +491,10 @@ export class BordersPlugin extends CorePlugin<BordersPluginState> implements Bor
     for (let sheetData of data.sheets) {
       if (sheetData.merges) {
         for (let merge of sheetData.merges) {
-          this.addBordersToMerge(sheetData.id, toZone(merge));
+          this.addBordersToMerge(
+            sheetData.id,
+            this.getters.getRangeFromSheetXC(sheetData.id, merge).zone
+          );
         }
       }
     }

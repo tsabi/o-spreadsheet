@@ -5,7 +5,6 @@ import {
   overlap,
   positions,
   toXC,
-  toZone,
   union,
   zoneToDimension,
   zoneToXc,
@@ -96,13 +95,13 @@ export class MergePlugin extends CorePlugin<MergeState> implements MergeState {
         }
         break;
       case "ADD_MERGE":
-        for (const xc of cmd.target) {
-          this.addMerge(this.getters.getSheet(cmd.sheetId)!, toZone(xc));
+        for (const zone of this.getters.getZonesFromSheetXCs(cmd.sheetId, cmd.target)) {
+          this.addMerge(this.getters.getSheet(cmd.sheetId)!, zone);
         }
         break;
       case "REMOVE_MERGE":
-        for (const xc of cmd.target) {
-          this.removeMerge(cmd.sheetId, toZone(xc));
+        for (const zone of this.getters.getZonesFromSheetXCs(cmd.sheetId, cmd.target)) {
+          this.removeMerge(cmd.sheetId, zone);
         }
         break;
     }
@@ -279,15 +278,15 @@ export class MergePlugin extends CorePlugin<MergeState> implements MergeState {
   }
 
   private checkDestructiveMerge({ sheetId, target: targetXc }: AddMergeCommand): CommandResult {
-    const target = targetXc.map(toZone);
+    const target = this.getters.getZonesFromSheetXCs(sheetId, targetXc);
     const sheet = this.getters.tryGetSheet(sheetId);
     if (!sheet) return CommandResult.Success;
     const isDestructive = target.some((zone) => this.isMergeDestructive(sheet, zone));
     return isDestructive ? CommandResult.MergeIsDestructive : CommandResult.Success;
   }
 
-  private checkOverlap({ target: targetXc }: AddMergeCommand): CommandResult {
-    const target = targetXc.map(toZone);
+  private checkOverlap({ sheetId, target: targetXc }: AddMergeCommand): CommandResult {
+    const target = this.getters.getZonesFromSheetXCs(sheetId, targetXc);
     for (const zone of target) {
       for (const zone2 of target) {
         if (zone !== zone2 && overlap(zone, zone2)) {
@@ -443,7 +442,7 @@ export class MergePlugin extends CorePlugin<MergeState> implements MergeState {
   private importMerges(sheetId: string, merges: string[]) {
     const sheet = this.getters.getSheet(sheetId)!;
     for (let merge of merges) {
-      this.addMerge(sheet, toZone(merge));
+      this.addMerge(sheet, this.getters.getRangeFromSheetXC(sheet.id, merge).zone);
     }
   }
   export(data: WorkbookData) {

@@ -1,4 +1,4 @@
-import { isEqual, toZone } from "../../helpers/index";
+import { isEqual } from "../../helpers/index";
 import { Mode } from "../../model";
 import { GridRenderingContext, Highlight, LAYERS, Zone } from "../../types/index";
 import { UIPlugin } from "../ui_plugin";
@@ -35,7 +35,10 @@ export class HighlightPlugin extends UIPlugin {
       const [xc, sheet] = r1c1.split("!").reverse();
       const sheetId = sheet ? this.getters.getSheetIdByName(sheet) : activeSheetId;
       if (sheetId) {
-        const zone: Zone = this.getters.expandZone(activeSheetId, toZone(xc));
+        const zone: Zone = this.getters.expandZone(
+          activeSheetId,
+          this.getters.getRangeFromSheetXC(sheetId, xc).zone
+        );
         preparedHighlights.push({ zone, color, sheet: sheetId });
       }
     }

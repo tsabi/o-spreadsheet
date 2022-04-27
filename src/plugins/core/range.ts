@@ -1,13 +1,11 @@
 import { INCORRECT_RANGE_STRING } from "../../constants";
 import {
-  concat,
   createAdaptedZone,
   getComposerSheetName,
   groupConsecutive,
   isZoneValid,
   numberToLetters,
   rangeReference,
-  toZoneWithoutBoundaryChanges,
 } from "../../helpers/index";
 import {
   ApplyRangeChange,
@@ -17,9 +15,9 @@ import {
   CommandHandler,
   CommandResult,
   CoreCommand,
+  getRangeFromXc,
   Getters,
   Range,
-  RangePart,
   RangeProvider,
   UID,
   Zone,
@@ -32,7 +30,13 @@ export class RangeAdapter implements CommandHandler<CoreCommand> {
     this.getters = getters;
   }
 
-  static getters = ["getRangeString", "getRangeFromSheetXC", "createAdaptedRanges"] as const;
+  static getters = [
+    "getRangeString",
+    "getRangeFromSheetXC",
+    "createAdaptedRanges",
+    "getRangesFromSheetXCs",
+    "getZonesFromSheetXCs",
+  ] as const;
 
   // ---------------------------------------------------------------------------
   // Command Handling
@@ -136,12 +140,10 @@ export class RangeAdapter implements CommandHandler<CoreCommand> {
           if (range.sheetId !== cmd.sheetId) {
             return { changeType: "NONE" };
           }
-          range = {
-            ...range,
-            zone: { ...range.zone },
-            invalidSheetName: this.getters.getSheetName(cmd.sheetId),
-            sheetId: "",
-          };
+          const invalidSheetName = this.getters.getSheetName(cmd.sheetId);
+          const sheetId = "";
+          range = range.clone({ sheetId, invalidSheetName });
+
           return { changeType: "REMOVE", range };
         }, cmd.sheetId);
 
@@ -153,9 +155,9 @@ export class RangeAdapter implements CommandHandler<CoreCommand> {
             return { changeType: "CHANGE", range };
           }
           if (cmd.name && range.invalidSheetName === cmd.name) {
-            const newRange = { ...range, zone: { ...range.zone } };
-            newRange.invalidSheetName = undefined;
-            newRange.sheetId = cmd.sheetId;
+            const invalidSheetName = undefined;
+            const sheetId = cmd.sheetId;
+            const newRange = range.clone({ sheetId, invalidSheetName });
             return { changeType: "CHANGE", range: newRange };
           }
           return { changeType: "NONE" };
@@ -189,10 +191,9 @@ export class RangeAdapter implements CommandHandler<CoreCommand> {
     operation: "MOVE" | "RESIZE",
     by: number
   ) {
-    return {
-      ...range,
-      zone: createAdaptedZone(range.zone, dimension, operation, by),
-    };
+    const zone = createAdaptedZone(range.unboundedZone, dimension, operation, by);
+    const adaptedRange = range.clone({ zone });
+    return adaptedRange;
   }
 
   private executeOnAllRanges(adaptRange: ApplyRangeChange, sheetId?: UID) {
@@ -214,34 +215,6 @@ export class RangeAdapter implements CommandHandler<CoreCommand> {
     this.providers.push(provider);
   }
 
-  /**
-   * Check that a zone is valid regarding the order of top-bottom and left-right.
-   * Left should be smaller than right, top should be smaller than bottom.
-   * If it's not the case, simply invert them, and invert the linked parts
-   * (in place!)
-   */
-  private orderZone(zone: Zone, parts: RangePart[]) {
-    if (zone.right < zone.left) {
-      let right = zone.right;
-      zone.right = zone.left;
-      zone.left = right;
-
-      let rightFixed = parts[1].colFixed;
-      parts[1].colFixed = parts[0].colFixed;
-      parts[0].colFixed = rightFixed;
-    }
-
-    if (zone.bottom < zone.top) {
-      let bottom = zone.bottom;
-      zone.bottom = zone.top;
-      zone.top = bottom;
-
-      let bottomFixed = parts[1].rowFixed;
-      parts[1].rowFixed = parts[0].rowFixed;
-      parts[0].rowFixed = bottomFixed;
-    }
-  }
-
   // ---------------------------------------------------------------------------
   // Getters
   // ---------------------------------------------------------------------------
@@ -251,19 +224,42 @@ export class RangeAdapter implements CommandHandler<CoreCommand> {
       if (!isZoneValid(range.zone)) {
         return range;
       }
-      range = {
-        ...range,
-        sheetId: range.prefixSheet ? range.sheetId : sheetId,
-        zone: {
-          left: range.zone.left + (range.parts[0].colFixed ? 0 : offsetX),
-          right: range.zone.right + ((range.parts[1] || range.parts[0]).colFixed ? 0 : offsetX),
-          top: range.zone.top + (range.parts[0].rowFixed ? 0 : offsetY),
-          bottom: range.zone.bottom + ((range.parts[1] || range.parts[0]).rowFixed ? 0 : offsetY),
-        },
+      const copySheetId = range.prefixSheet ? range.sheetId : sheetId;
+      const unboundZone = {
+        ...range.unboundedZone,
+        // Don't shift left if the range is a full row without header
+        left:
+          range.isFullRow && !range.unboundedZone.hasHeader
+            ? range.unboundedZone.left
+            : range.unboundedZone.left + (range.parts[0].colFixed ? 0 : offsetX),
+        // Don't shift right if the range is a full row
+        right: range.isFullRow
+          ? range.unboundedZone.right
+          : range.unboundedZone.right! +
+            ((range.parts[1] || range.parts[0]).colFixed ? 0 : offsetX),
+        // Don't shift up if the range is a column row without header
+        top:
+          range.isFullCol && !range.unboundedZone.hasHeader
+            ? range.unboundedZone.top
+            : range.unboundedZone.top + (range.parts[0].rowFixed ? 0 : offsetY),
+        // Don't shift down if the range is a full column
+        bottom: range.isFullCol
+          ? range.unboundedZone.bottom
+          : range.unboundedZone.bottom! +
+            ((range.parts[1] || range.parts[0]).rowFixed ? 0 : offsetY),
       };
-      this.orderZone(range.zone, range.parts);
+      range = range.clone({ sheetId: copySheetId, zone: unboundZone });
+      range.orderZone();
       return range;
     });
+  }
+
+  getZonesFromSheetXCs(defaultSheetId: UID, xcs: string[]): Zone[] {
+    return xcs.map((xc) => this.getRangeFromSheetXC(defaultSheetId, xc).zone);
+  }
+
+  getRangesFromSheetXCs(defaultSheetId: UID, xcs: string[]): Range[] {
+    return xcs.map((xc) => this.getRangeFromSheetXC(defaultSheetId, xc));
   }
 
   /**
@@ -272,44 +268,14 @@ export class RangeAdapter implements CommandHandler<CoreCommand> {
    * @param sheetXC the string description of a range, in the form SheetName!XC:XC
    */
   getRangeFromSheetXC(defaultSheetId: UID, sheetXC: string): Range {
-    let xc = sheetXC;
-    let sheetName: string = "";
-    let sheetId: UID | undefined;
-    let invalidSheetName: string | undefined;
-    let prefixSheet: boolean = false;
     if (!rangeReference.test(sheetXC)) {
       return this.buildInvalidRange(sheetXC);
     }
-    if (sheetXC.includes("!")) {
-      [xc, sheetName] = sheetXC.split("!").reverse();
-      if (sheetName) {
-        sheetId = this.getters.getSheetIdByName(sheetName);
-        prefixSheet = true;
-        if (!sheetId) {
-          invalidSheetName = sheetName;
-        }
-      } else {
-        invalidSheetName = sheetName;
-      }
-    }
-    const zone = toZoneWithoutBoundaryChanges(xc);
 
-    let rangeParts: RangePart[] = xc.split(":").map((p) => {
-      return {
-        colFixed: p.startsWith("$"),
-        rowFixed: p.includes("$", 1),
-      };
-    });
+    const range = getRangeFromXc(sheetXC, defaultSheetId, this.getters);
+    range.orderZone();
 
-    this.orderZone(zone, rangeParts);
-
-    return {
-      sheetId: sheetId || defaultSheetId,
-      zone: zone,
-      parts: rangeParts,
-      invalidSheetName,
-      prefixSheet,
-    };
+    return range;
   }
 
   /**
@@ -347,11 +313,7 @@ export class RangeAdapter implements CommandHandler<CoreCommand> {
       return INCORRECT_RANGE_STRING;
     }
 
-    let ref: string[] = Array(9).fill("");
-    ref[0] = range.parts && range.parts[0].colFixed ? "$" : "";
-    ref[1] = numberToLetters(range.zone.left);
-    ref[2] = range.parts && range.parts[0].rowFixed ? "$" : "";
-    ref[3] = String(range.zone.top + 1);
+    let rangeString = this.getRangePartString(range, 0);
     if (range.parts && range.parts.length === 2) {
       // this if converts A2:A2 into A2 except if any part of the original range had fixed row or column (with $)
       if (
@@ -362,28 +324,57 @@ export class RangeAdapter implements CommandHandler<CoreCommand> {
         range.parts[1].rowFixed ||
         range.parts[1].colFixed
       ) {
-        ref[4] = ":";
-        ref[5] = range.parts[1].colFixed ? "$" : "";
-        ref[6] = numberToLetters(range.zone.right);
-        ref[7] = range.parts[1].rowFixed ? "$" : "";
-        ref[8] = String(range.zone.bottom + 1);
+        rangeString += ":";
+        rangeString += this.getRangePartString(range, 1);
       }
     }
 
-    return `${prefixSheet ? sheetName + "!" : ""}${concat(ref)}`;
+    return `${prefixSheet ? sheetName + "!" : ""}${rangeString}`;
   }
 
   // ---------------------------------------------------------------------------
   // Private
   // ---------------------------------------------------------------------------
 
+  /**
+   * Get a Xc string that represent a part of a range
+   */
+  private getRangePartString(range: Range, part: 0 | 1): string {
+    const colFixed = range.parts && range.parts[part].colFixed ? "$" : "";
+    const col = part === 0 ? numberToLetters(range.zone.left) : numberToLetters(range.zone.right);
+    const rowFixed = range.parts && range.parts[part].rowFixed ? "$" : "";
+    const row = part === 0 ? String(range.zone.top + 1) : String(range.zone.bottom + 1);
+
+    let str = "";
+    if (range.isFullCol) {
+      if (part === 0 && range.unboundedZone.hasHeader) {
+        str = colFixed + col + rowFixed + row;
+      } else {
+        str = colFixed + col;
+      }
+    } else if (range.isFullRow) {
+      if (part === 0 && range.unboundedZone.hasHeader) {
+        str = colFixed + col + rowFixed + row;
+      } else {
+        str = rowFixed + row;
+      }
+    } else {
+      str = colFixed + col + rowFixed + row;
+    }
+
+    return str;
+  }
+
   private buildInvalidRange(invalidXc: string): Range {
-    return {
-      parts: [],
-      prefixSheet: false,
-      zone: { left: -1, top: -1, right: -1, bottom: -1 },
-      sheetId: "",
-      invalidXc,
-    };
+    return new Range(
+      {
+        sheetId: "",
+        zone: { left: -1, top: -1, right: -1, bottom: -1 },
+        parts: [],
+        invalidXc: invalidXc,
+        prefixSheet: false,
+      },
+      this.getters.getSheetSize
+    );
   }
 }

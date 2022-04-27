@@ -166,6 +166,8 @@ export class Model extends EventBus<any> implements CommandDispatcher {
     this.range = new RangeAdapter(this.getters);
     this.getters.getRangeString = this.range.getRangeString.bind(this.range);
     this.getters.getRangeFromSheetXC = this.range.getRangeFromSheetXC.bind(this.range);
+    this.getters.getRangesFromSheetXCs = this.range.getRangesFromSheetXCs.bind(this.range);
+    this.getters.getZonesFromSheetXCs = this.range.getZonesFromSheetXCs.bind(this.range);
     this.getters.createAdaptedRanges = this.range.createAdaptedRanges.bind(this.range);
 
     this.uuidGenerator.setIsFastStrategy(true);

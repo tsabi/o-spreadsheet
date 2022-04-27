@@ -2,7 +2,7 @@ import { Component, onMounted, onPatched, onWillUnmount, useRef, useState } from
 import { SELECTION_BORDER_COLOR } from "../../../constants";
 import { EnrichedToken } from "../../../formulas/index";
 import { functionRegistry } from "../../../functions/index";
-import { isEqual, rangeReference, toZone } from "../../../helpers/index";
+import { isEqual, rangeReference } from "../../../helpers/index";
 import { ComposerSelection, SelectionIndicator } from "../../../plugins/ui/edition";
 import { FunctionDescription, Rect, SpreadsheetChildEnv } from "../../../types/index";
 import { css } from "../../helpers/css";
@@ -490,7 +490,13 @@ export class Composer extends Component<Props, SpreadsheetChildEnv> {
     const highlight = highlights.find(
       (highlight) =>
         highlight.sheet === refSheet &&
-        isEqual(this.env.model.getters.expandZone(refSheet, toZone(xc)), highlight.zone)
+        isEqual(
+          this.env.model.getters.expandZone(
+            refSheet,
+            this.env.model.getters.getRangeFromSheetXC(refSheet, xc).zone
+          ),
+          highlight.zone
+        )
     );
     return highlight && highlight.color ? highlight.color : undefined;
   }

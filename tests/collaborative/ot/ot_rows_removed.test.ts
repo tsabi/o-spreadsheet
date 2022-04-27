@@ -15,7 +15,7 @@ import {
   UpdateCellCommand,
   UpdateCellPositionCommand,
 } from "../../../src/types";
-import { createEqualCF, target } from "../../test_helpers/helpers";
+import { createEqualCF } from "../../test_helpers/helpers";
 
 describe("OT with REMOVE_COLUMNS_ROWS with dimension ROW", () => {
   const sheetId = "Sheet1";
@@ -154,6 +154,33 @@ describe("OT with REMOVE_COLUMNS_ROWS with dimension ROW", () => {
       });
     }
   );
+  describe.each([addConditionalFormat])("target commands with unbound zones", (cmd) => {
+    test(`remove rows before ${cmd.type}`, () => {
+      const command = { ...cmd, target: ["1:1"] };
+      const result = transform(command, removeRows);
+      expect(result).toEqual(command);
+    });
+    test(`remove rows after ${cmd.type}`, () => {
+      const command = { ...cmd, target: ["A12:14"] };
+      const result = transform(command, removeRows);
+      expect(result).toEqual({ ...command, target: ["A9:11"] });
+    });
+    test(`${cmd.type} in removed rows`, () => {
+      const command = { ...cmd, target: ["6:7"] };
+      const result = transform(command, removeRows);
+      expect(result).toEqual({ ...command, target: ["4:4"] });
+    });
+    test(`${cmd.type} with a target removed`, () => {
+      const command = { ...cmd, target: ["C3:4"] };
+      const result = transform(command, removeRows);
+      expect(result).toBeUndefined();
+    });
+    test(`${cmd.type} with a target removed, but another valid`, () => {
+      const command = { ...cmd, target: ["3:4", "1:1"] };
+      const result = transform(command, removeRows);
+      expect(result).toEqual({ ...command, target: ["1:1"] });
+    });
+  });
 
   describe("OT with RemoveRows - ADD_COLUMNS_ROWS with dimension ROW", () => {
     const toTransform: Omit<AddColumnsRowsCommand, "base"> = {
@@ -276,32 +303,32 @@ describe("OT with REMOVE_COLUMNS_ROWS with dimension ROW", () => {
   };
   describe.each([addMerge, removeMerge])("Remove Columns - Merge", (cmd) => {
     test(`remove rows before Merge`, () => {
-      const command = { ...cmd, target: target("A1:C1") };
+      const command = { ...cmd, target: ["A1:C1"] };
       const result = transform(command, removeRows);
       expect(result).toEqual(command);
     });
     test(`remove rows after Merge`, () => {
-      const command = { ...cmd, target: target("A12:B14") };
+      const command = { ...cmd, target: ["A12:B14"] };
       const result = transform(command, removeRows);
-      expect(result).toEqual({ ...command, target: target("A9:B11") });
+      expect(result).toEqual({ ...command, target: ["A9:B11"] });
     });
     test(`remove rows before and after Merge`, () => {
-      const command = { ...cmd, target: target("A5:B5") };
+      const command = { ...cmd, target: ["A5:B5"] };
       const result = transform(command, removeRows);
-      expect(result).toEqual({ ...command, target: target("A3:B3") });
+      expect(result).toEqual({ ...command, target: ["A3:B3"] });
     });
     test(`Merge in removed rows`, () => {
-      const command = { ...cmd, target: target("A6:B7") };
+      const command = { ...cmd, target: ["A6:B7"] };
       const result = transform(command, removeRows);
-      expect(result).toEqual({ ...command, target: target("A4:B4") });
+      expect(result).toEqual({ ...command, target: ["A4:B4"] });
     });
     test(`Merge and rows removed in different sheets`, () => {
-      const command = { ...cmd, target: target("A1:C6"), sheetId: "42" };
+      const command = { ...cmd, target: ["A1:C6"], sheetId: "42" };
       const result = transform(command, removeRows);
       expect(result).toEqual(command);
     });
     test(`Merge with a target removed`, () => {
-      const command = { ...cmd, target: target("A3:B4") };
+      const command = { ...cmd, target: ["A3:B4"] };
       const result = transform(command, removeRows);
       expect(result).toBeUndefined();
     });

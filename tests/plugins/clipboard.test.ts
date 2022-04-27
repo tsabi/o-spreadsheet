@@ -1212,6 +1212,18 @@ describe("clipboard", () => {
     expect(getCellText(model, "B2")).toBe(expected);
   });
 
+  test.each([
+    ["=SUM(1:2)", "=SUM(2:3)"],
+    ["=$C1:1", "=$C2:2"],
+    ["=SUM($A:D$2)", "=SUM($A$2:E)"],
+  ])("can copy and paste formula with full cols/rows", (value, expected) => {
+    const model = new Model();
+    setCellContent(model, "A1", value);
+    model.dispatch("COPY", { target: ["A1"] });
+    model.dispatch("PASTE", { target: ["B2"] });
+    expect(getCellText(model, "B2")).toBe(expected);
+  });
+
   test("can copy format from empty cell to another cell to clear format", () => {
     const model = new Model();
 

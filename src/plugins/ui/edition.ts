@@ -16,6 +16,7 @@ import {
 import { loopThroughReferenceType } from "../../helpers/reference_type";
 import { Mode } from "../../model";
 import { _lt } from "../../translation";
+import { Range, RangePart, UID, Zone } from "../../types";
 import { SelectionEvent } from "../../types/event_stream";
 import {
   AddColumnsRowsCommand,
@@ -23,7 +24,6 @@ import {
   CommandResult,
   RemoveColumnsRowsCommand,
 } from "../../types/index";
-import { Range, RangePart, UID, Zone } from "../../types/misc";
 import { UIPlugin } from "../ui_plugin";
 
 export type EditionMode =
@@ -161,8 +161,13 @@ export class EditionPlugin extends UIPlugin {
             const sheetName = sheet || this.getters.getSheetName(this.sheetId);
             const activeSheetId = this.getters.getActiveSheetId();
             return (
-              isEqual(this.getters.expandZone(activeSheetId, toZone(xc)), toZone(cmd.zone)) &&
-              this.getters.getSheetName(activeSheetId) === sheetName
+              isEqual(
+                this.getters.expandZone(
+                  activeSheetId,
+                  this.getters.getRangeFromSheetXC(activeSheetId, xc).zone
+                ),
+                this.getters.getRangeFromSheetXC(activeSheetId, cmd.zone).zone
+              ) && this.getters.getSheetName(activeSheetId) === sheetName
             );
           });
         this.previousRef = previousRefToken!.value;

@@ -1,4 +1,4 @@
-import { isDefined, isInside, toZone, zoneToXc } from "../../helpers/index";
+import { isDefined, isInside, toUnboundZone, toZone, zoneToXc } from "../../helpers/index";
 import { otRegistry } from "../../registries/ot_registry";
 import {
   AddColumnsRowsCommand,
@@ -13,7 +13,7 @@ import {
   RemoveColumnsRowsCommand,
   SheetDependentCommand,
   TargetDependentCommand,
-  Zone,
+  UnboundedZone,
 } from "../../types";
 import { transformZone } from "./ot_helpers";
 import "./ot_specific";
@@ -111,9 +111,9 @@ function transformTarget(
   cmd: Extract<CoreCommand, TargetDependentCommand>,
   executed: CoreCommand
 ): Extract<CoreCommand, TargetDependentCommand> | TransformResult {
-  const target: Zone[] = [];
+  const target: UnboundedZone[] = [];
   for (const xc of cmd.target) {
-    const newZone = transformZone(toZone(xc), executed);
+    const newZone = transformZone(toUnboundZone(xc), executed);
     if (newZone) {
       target.push(newZone);
     }

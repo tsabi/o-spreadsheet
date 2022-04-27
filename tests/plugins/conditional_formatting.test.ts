@@ -35,7 +35,7 @@ describe("conditional format", () => {
     });
     model.dispatch("ADD_CONDITIONAL_FORMAT", {
       cf: createEqualCF("4", { fillColor: "#0000FF" }, "2"),
-      target: ["A1:A4"],
+      target: ["A:A"],
       sheetId: model.getters.getActiveSheetId(),
     });
     expect(model.getters.getConditionalFormats(model.getters.getActiveSheetId())).toEqual([
@@ -61,7 +61,7 @@ describe("conditional format", () => {
           },
         },
         id: "2",
-        ranges: ["A1:A4"],
+        ranges: ["A:A"],
       },
     ]);
     expect(model.getters.getConditionalStyle(...toCartesianArray("A1"))).toBeUndefined();

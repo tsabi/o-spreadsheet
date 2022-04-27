@@ -1,9 +1,9 @@
-import { range, toHex6, toZone, zoneToDimension } from "../../helpers";
+import { range, toHex6 } from "../../helpers";
 import { ChartColors } from "../../helpers/chart";
-import { ExcelChartDefinition, FigureData } from "../../types";
+import { ExcelChartDefinition, ExcelWorkbookData, FigureData } from "../../types";
 import { XMLAttributes, XMLString } from "../../types/xlsx";
 import { DRAWING_NS_A, DRAWING_NS_C, RELATIONSHIP_NSR } from "../constants";
-import { convertDotValueToEMU } from "../helpers/content_helpers";
+import { convertDotValueToEMU, getRangeSize } from "../helpers/content_helpers";
 import { escapeXml, formatAttributes, joinXmlNodes, parseXML } from "../helpers/xml_helpers";
 
 type ElementPosition = "t" | "b" | "l" | "r";
@@ -34,7 +34,11 @@ interface LineAttributes {
 const catAxId = 17781237;
 const valAxId = 88853993;
 
-export function createChart(chart: FigureData<ExcelChartDefinition>): XMLDocument {
+export function createChart(
+  chart: FigureData<ExcelChartDefinition>,
+  chartSheetIndex: string,
+  data: ExcelWorkbookData
+): XMLDocument {
   const namespaces: XMLAttributes = [
     ["xmlns:r", RELATIONSHIP_NSR],
     ["xmlns:a", DRAWING_NS_A],
@@ -66,7 +70,7 @@ export function createChart(chart: FigureData<ExcelChartDefinition>): XMLDocumen
       plot = addLineChart(chart.data);
       break;
     case "pie":
-      plot = addDoughnutChart(chart.data, { holeSize: 0 });
+      plot = addDoughnutChart(chart.data, chartSheetIndex, data, { holeSize: 0 });
       break;
   }
   let position: ElementPosition = "t";
@@ -285,25 +289,25 @@ function addLineChart(chart: ExcelChartDefinition): XMLString {
   `;
 }
 
-function addDoughnutChart(chart: ExcelChartDefinition, { holeSize } = { holeSize: 50 }) {
+function addDoughnutChart(
+  chart: ExcelChartDefinition,
+  chartSheetIndex: string,
+  data: ExcelWorkbookData,
+  { holeSize } = { holeSize: 50 }
+) {
   const colors = new ChartColors();
 
   const maxLength = Math.max(
-    ...chart.dataSets.map((ds) => {
-      const zone = toZone(ds.range);
-      const { height, width } = zoneToDimension(zone);
-      return height * width;
-    })
+    ...chart.dataSets.map((ds) => getRangeSize(ds.range, chartSheetIndex, data))
   );
   const doughnutColors: string[] = range(0, maxLength).map(() => toHex6(colors.next()));
 
   const dataSetsNodes: XMLString[] = [];
   for (const [dsIndex, dataset] of Object.entries(chart.dataSets).reverse()) {
     //dataset slice labels
-    const zone = toZone(dataset.range);
-    const { height, width } = zoneToDimension(zone);
+    const dsSize = getRangeSize(dataset.range, chartSheetIndex, data);
     const dataPoints: XMLString[] = [];
-    for (const index of range(0, height * width)) {
+    for (const index of range(0, dsSize)) {
       const pointShapeProperty = shapeProperty({
         backgroundColor: doughnutColors[index],
         line: { color: "FFFFFF", width: 1.5 },

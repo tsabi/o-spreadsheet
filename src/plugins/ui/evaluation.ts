@@ -1,7 +1,7 @@
 import { INCORRECT_RANGE_STRING } from "../../constants";
 import { compile } from "../../formulas/index";
 import { functionRegistry } from "../../functions/index";
-import { intersection, isZoneValid, toXC } from "../../helpers/index";
+import { intersection, isZoneValid, toXC, zoneToXc } from "../../helpers/index";
 import { Mode, ModelConfig } from "../../model";
 import { SelectionStreamProcessor } from "../../selection_stream/selection_stream_processor";
 import { StateObserver } from "../../state_observer";
@@ -162,6 +162,11 @@ export class EvaluationPlugin extends UIPlugin {
           const position = params[2].getters.getCellPosition(cellId);
           return toXC(position.col, position.row);
         };
+        params[2].__sheetSize = () => {
+          // compute the value lazily for performance reasons
+          console.log(sheetId);
+          return params[2].getters.getSheetSize(sheetId);
+        };
         cell.assignValue(cell.compiledFormula.execute(cell.dependencies, sheetId, ...params));
         if (Array.isArray(cell.evaluated.value)) {
           // if a value returns an array (like =A1:A3)
@@ -274,7 +279,8 @@ export class EvaluationPlugin extends UIPlugin {
       const range: Range = references[position];
 
       if (isMeta) {
-        return evalContext.getters.getRangeString(range, sheetId);
+        return zoneToXc(range.zone);
+        // return evalContext.getters.getRangeString(range, sheetId);
       }
 
       if (!isZoneValid(range.zone)) {

@@ -5,6 +5,7 @@ import { Token } from "../formulas";
 import { Cell, CellValue } from "./cells";
 import { CommandResult } from "./commands";
 import { Format } from "./format";
+import { Range } from "./range";
 
 export type UID = string;
 export interface Link {
@@ -15,6 +16,10 @@ export interface Link {
    * be opened in a new tab.
    */
   isExternal?: boolean;
+}
+
+export interface Cloneable {
+  clone: () => any;
 }
 
 export interface Zone {
@@ -32,6 +37,14 @@ export interface AnchorZone {
 export interface Selection {
   anchor: AnchorZone;
   zones: Zone[];
+}
+export interface UnboundedZone {
+  left: number;
+  right: number | undefined;
+  top: number;
+  bottom: number | undefined;
+  // Cannot be computed on the fly because we need to make the difference between 1:1 and A1:1
+  hasHeader?: boolean;
 }
 
 export interface ZoneDimension {
@@ -85,19 +98,6 @@ export interface Border {
   right?: BorderDescr;
 }
 
-export interface RangePart {
-  colFixed: boolean;
-  rowFixed: boolean;
-}
-
-export type Range = {
-  zone: Zone; // the zone the range actually spans
-  sheetId: UID; // the sheet on which the range is defined
-  invalidSheetName?: string; // the name of any sheet that is invalid
-  invalidXc?: string;
-  parts: RangePart[];
-  prefixSheet: boolean; // true if the user provided the range with the sheet name, so it has to be recomputed with the sheet name too
-};
 export type ReferenceDenormalizer = (
   position: number,
   references: Range[],

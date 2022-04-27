@@ -9,7 +9,7 @@ import {
   MIN_CF_ICON_MARGIN,
 } from "../constants";
 import { fontSizeMap } from "../fonts";
-import { ConsecutiveIndexes, Lazy, Link, Style, UID } from "../types";
+import { Cloneable, ConsecutiveIndexes, Lazy, Link, Style, UID } from "../types";
 import { parseDateTime } from "./dates";
 /**
  * Stringify an object, like JSON.stringify, except that the first level of keys
@@ -33,6 +33,10 @@ export function removeStringQuotes(str: string): string {
   return str;
 }
 
+function isCloneable(obj: any): obj is Cloneable {
+  return "clone" in obj && obj.clone instanceof Function;
+}
+
 /**
  * Deep copy arrays, plain objects and primitive values.
  * Throws an error for other types such as class instances.
@@ -44,6 +48,8 @@ export function deepCopy<T>(obj: T): T {
     case "object": {
       if (obj === null) {
         return obj;
+      } else if (isCloneable(obj)) {
+        return obj.clone();
       } else if (!(isPlainObject(obj) || obj instanceof Array)) {
         throw new Error("Unsupported type: only objects and arrays are supported");
       }

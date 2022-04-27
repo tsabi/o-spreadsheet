@@ -4,7 +4,6 @@ import {
   mergeOverlappingZones,
   overlap,
   positions,
-  toZone,
   zoneToXc,
 } from "../../helpers/index";
 import { Mode } from "../../model";
@@ -63,14 +62,26 @@ export class ClipboardPlugin extends UIPlugin {
   allowDispatch(cmd: Command): CommandResult {
     switch (cmd.type) {
       case "PASTE":
-        return this.isPasteAllowed(this.state, cmd.target.map(toZone), !!cmd.force);
+        const targets = this.getters.getZonesFromSheetXCs(
+          this.getters.getActiveSheetId(),
+          cmd.target
+        );
+        return this.isPasteAllowed(this.state, targets, !!cmd.force);
       case "INSERT_CELL": {
-        const { cut, paste } = this.getInsertCellsTargets(toZone(cmd.zone), cmd.shiftDimension);
+        const target = this.getters.getRangeFromSheetXC(
+          this.getters.getActiveSheetId(),
+          cmd.zone
+        ).zone;
+        const { cut, paste } = this.getInsertCellsTargets(target, cmd.shiftDimension);
         const state = this.getClipboardState(cut, "CUT");
         return this.isPasteAllowed(state, paste, false);
       }
       case "DELETE_CELL": {
-        const { cut, paste } = this.getDeleteCellsTargets(toZone(cmd.zone), cmd.shiftDimension);
+        const target = this.getters.getRangeFromSheetXC(
+          this.getters.getActiveSheetId(),
+          cmd.zone
+        ).zone;
+        const { cut, paste } = this.getDeleteCellsTargets(target, cmd.shiftDimension);
         const state = this.getClipboardState(cut, "CUT");
         return this.isPasteAllowed(state, paste, false);
       }
@@ -81,31 +92,51 @@ export class ClipboardPlugin extends UIPlugin {
   handle(cmd: Command) {
     switch (cmd.type) {
       case "COPY":
-      case "CUT":
-        this.state = this.getClipboardState(cmd.target.map(toZone), cmd.type);
+      case "CUT": {
+        const target = this.getters.getZonesFromSheetXCs(
+          this.getters.getActiveSheetId(),
+          cmd.target
+        );
+        this.state = this.getClipboardState(target, cmd.type);
         this.status = "visible";
         break;
-      case "PASTE":
+      }
+      case "PASTE": {
         if (!this.state) {
           break;
         }
+        const target = this.getters.getZonesFromSheetXCs(
+          this.getters.getActiveSheetId(),
+          cmd.target
+        );
         const pasteOption: ClipboardOptions | undefined =
           cmd.pasteOption || (this._isPaintingFormat ? "onlyFormat" : undefined);
         this._isPaintingFormat = false;
         const height = this.state.cells.length;
         const width = this.state.cells[0].length;
-        this.paste(this.state, cmd.target.map(toZone), pasteOption);
-        this.selectPastedZone(width, height, cmd.target.map(toZone));
+        this.paste(this.state, target, pasteOption);
+        this.selectPastedZone(width, height, target);
         this.status = "invisible";
         break;
+      }
       case "DELETE_CELL": {
-        const { cut, paste } = this.getDeleteCellsTargets(toZone(cmd.zone), cmd.shiftDimension);
+        const target = this.getters.getRangeFromSheetXC(
+          this.getters.getActiveSheetId(),
+          cmd.zone
+        ).zone;
+
+        const { cut, paste } = this.getDeleteCellsTargets(target, cmd.shiftDimension);
         const state = this.getClipboardState(cut, "CUT");
         this.paste(state, paste);
         break;
       }
       case "INSERT_CELL": {
-        const { cut, paste } = this.getInsertCellsTargets(toZone(cmd.zone), cmd.shiftDimension);
+        const target = this.getters.getRangeFromSheetXC(
+          this.getters.getActiveSheetId(),
+          cmd.zone
+        ).zone;
+
+        const { cut, paste } = this.getInsertCellsTargets(target, cmd.shiftDimension);
         const state = this.getClipboardState(cut, "CUT");
         this.paste(state, paste);
         break;
@@ -123,14 +154,24 @@ export class ClipboardPlugin extends UIPlugin {
         this.status = "invisible";
         break;
       }
-      case "PASTE_FROM_OS_CLIPBOARD":
-        this.pasteFromClipboard(cmd.target.map(toZone), cmd.text);
+      case "PASTE_FROM_OS_CLIPBOARD": {
+        const target = this.getters.getZonesFromSheetXCs(
+          this.getters.getActiveSheetId(),
+          cmd.target
+        );
+        this.pasteFromClipboard(target, cmd.text);
         break;
-      case "ACTIVATE_PAINT_FORMAT":
-        this.state = this.getClipboardState(cmd.target.map(toZone), "COPY");
+      }
+      case "ACTIVATE_PAINT_FORMAT": {
+        const target = this.getters.getZonesFromSheetXCs(
+          this.getters.getActiveSheetId(),
+          cmd.target
+        );
+        this.state = this.getClipboardState(target, "COPY");
         this._isPaintingFormat = true;
         this.status = "visible";
         break;
+      }
       default:
         if (isCoreCommand(cmd)) {
           this.status = "invisible";

@@ -9,12 +9,11 @@ import {
   getUnquotedSheetName,
   groupConsecutive,
   isDefined,
+  isXcValid,
   isZoneInside,
-  isZoneValid,
   numberToLetters,
   positions,
   toCartesian,
-  toZone,
 } from "../../helpers/index";
 import { _lt, _t } from "../../translation";
 import {
@@ -35,6 +34,7 @@ import {
   UpdateCellPositionCommand,
   WorkbookData,
   Zone,
+  ZoneDimension,
 } from "../../types/index";
 import { CorePlugin } from "../core_plugin";
 
@@ -71,6 +71,7 @@ export class SheetPlugin extends CorePlugin<SheetState> implements SheetState {
     "getGridLinesVisibility",
     "getNextSheetName",
     "isEmpty",
+    "getSheetSize",
   ] as const;
 
   readonly sheetIdsMapName: Record<string, UID | undefined> = {};
@@ -129,7 +130,7 @@ export class SheetPlugin extends CorePlugin<SheetState> implements SheetState {
         this.setGridLinesVisibility(cmd.sheetId, cmd.areGridLinesVisible);
         break;
       case "DELETE_CONTENT":
-        this.clearZones(cmd.sheetId, cmd.target.map(toZone));
+        this.clearZones(cmd.sheetId, this.getters.getZonesFromSheetXCs(cmd.sheetId, cmd.target));
         break;
       case "CREATE_SHEET":
         const sheet = this.createSheet(
@@ -408,6 +409,13 @@ export class SheetPlugin extends CorePlugin<SheetState> implements SheetState {
       i++;
     }
     return name;
+  }
+
+  getSheetSize(sheetId: UID): ZoneDimension {
+    return {
+      height: this.getSheet(sheetId).rows.length,
+      width: this.getSheet(sheetId).cols.length,
+    };
   }
 
   // ---------------------------------------------------------------------------
@@ -1039,16 +1047,16 @@ export class SheetPlugin extends CorePlugin<SheetState> implements SheetState {
    * not outside the sheet.
    */
   private checkZones(cmd: Command): CommandResult {
-    const zones: Zone[] = [];
+    const xcs: string[] = [];
     if ("zone" in cmd) {
-      zones.push(toZone(cmd.zone));
+      xcs.push(cmd.zone);
     }
     if ("target" in cmd && Array.isArray(cmd.target)) {
-      zones.push(...cmd.target.map(toZone));
+      xcs.push(...cmd.target);
     }
-    if (!zones.every(isZoneValid)) {
+    if (!xcs.every(isXcValid)) {
       return CommandResult.InvalidRange;
-    } else if (zones.length && "sheetId" in cmd) {
+    } else if (xcs.length && "sheetId" in cmd) {
       const sheet = this.getSheet(cmd.sheetId);
       const sheetZone = {
         top: 0,
@@ -1056,7 +1064,9 @@ export class SheetPlugin extends CorePlugin<SheetState> implements SheetState {
         bottom: sheet.rows.length - 1,
         right: sheet.cols.length - 1,
       };
-      return zones.every((zone) => isZoneInside(zone, sheetZone))
+      return xcs.every((zone) =>
+        isZoneInside(this.getters.getRangeFromSheetXC(cmd.sheetId, zone).zone, sheetZone)
+      )
         ? CommandResult.Success
         : CommandResult.TargetOutOfSheet;
     }

@@ -16,6 +16,7 @@ import {
   Figure,
   FigureData,
   UID,
+  UnboundedZone,
   UpdateChartCommand,
   WorkbookData,
   Zone,
@@ -267,10 +268,7 @@ export class ChartPlugin extends CorePlugin<ChartState> implements ChartState {
       }
     }
 
-    const dataRange = {
-      ...ds.dataRange,
-      zone: dataZone,
-    };
+    const dataRange = ds.dataRange.clone({ zone: dataZone });
 
     return {
       label: ds.labelCell
@@ -399,51 +397,77 @@ export class ChartPlugin extends CorePlugin<ChartState> implements ChartState {
     const dataSets: DataSet[] = [];
     for (const sheetXC of dataSetsString) {
       const dataRange = this.getters.getRangeFromSheetXC(sheetId, sheetXC);
-      const { zone, sheetId: dataSetSheetId, invalidSheetName } = dataRange;
+      const { unboundedZone: unboundZone, sheetId: dataSetSheetId, invalidSheetName } = dataRange;
       if (invalidSheetName) {
         continue;
       }
-      if (zone.left !== zone.right && zone.top !== zone.bottom) {
-        // It's a rectangle. We treat all columns (arbitrary) as different data series.
-        for (let column = zone.left; column <= zone.right; column++) {
-          const columnZone = {
-            left: column,
-            right: column,
-            top: zone.top,
-            bottom: zone.bottom,
-          };
-          dataSets.push(
-            this.createDataSet(
-              dataSetSheetId,
-              columnZone,
-              dataSetsHaveTitle
-                ? {
-                    top: columnZone.top,
-                    bottom: columnZone.top,
-                    left: columnZone.left,
-                    right: columnZone.left,
-                  }
-                : undefined
-            )
-          );
+      if (unboundZone.left !== unboundZone.right && unboundZone.top !== unboundZone.bottom) {
+        // It's a rectangle. We treat all columns (arbitrary) as different data series, exept in the case of
+        // full rows, where we will treat the rows as different data series.
+        if (unboundZone.right !== undefined) {
+          for (let column = unboundZone.left; column <= unboundZone.right; column++) {
+            const columnZone = {
+              left: column,
+              right: column,
+              top: unboundZone.top,
+              bottom: unboundZone.bottom,
+            };
+            dataSets.push(
+              this.createDataSet(
+                dataSetSheetId,
+                columnZone,
+                dataSetsHaveTitle
+                  ? {
+                      top: columnZone.top,
+                      bottom: columnZone.top,
+                      left: columnZone.left,
+                      right: columnZone.left,
+                    }
+                  : undefined
+              )
+            );
+          }
+        } else if (unboundZone.bottom !== undefined) {
+          for (let row = unboundZone.top; row <= unboundZone.bottom; row++) {
+            const rowZone = {
+              left: unboundZone.left,
+              right: unboundZone.right,
+              top: row,
+              bottom: row,
+            };
+            dataSets.push(
+              this.createDataSet(
+                dataSetSheetId,
+                rowZone,
+                dataSetsHaveTitle
+                  ? {
+                      top: rowZone.top,
+                      bottom: rowZone.top,
+                      left: rowZone.left,
+                      right: rowZone.left,
+                    }
+                  : undefined
+              )
+            );
+          }
         }
-      } else if (zone.left === zone.right && zone.top === zone.bottom) {
+      } else if (unboundZone.left === unboundZone.right && unboundZone.top === unboundZone.bottom) {
         // A single cell. If it's only the title, the dataset is not added.
         if (!dataSetsHaveTitle) {
-          dataSets.push(this.createDataSet(dataSetSheetId, zone, undefined));
+          dataSets.push(this.createDataSet(dataSetSheetId, unboundZone, undefined));
         }
       } else {
         /* 1 row or 1 column */
         dataSets.push(
           this.createDataSet(
             dataSetSheetId,
-            zone,
+            unboundZone,
             dataSetsHaveTitle
               ? {
-                  top: zone.top,
-                  bottom: zone.top,
-                  left: zone.left,
-                  right: zone.left,
+                  top: unboundZone.top,
+                  bottom: unboundZone.top,
+                  left: unboundZone.left,
+                  right: unboundZone.left,
                 }
               : undefined
           )
@@ -461,7 +485,11 @@ export class ChartPlugin extends CorePlugin<ChartState> implements ChartState {
     this.history.update("chartFigures", figure.id, data);
   }
 
-  private createDataSet(sheetId: UID, fullZone: Zone, titleZone: Zone | undefined): DataSet {
+  private createDataSet(
+    sheetId: UID,
+    fullZone: Zone | UnboundedZone,
+    titleZone: Zone | UnboundedZone | undefined
+  ): DataSet {
     if (fullZone.left !== fullZone.right && fullZone.top !== fullZone.bottom) {
       throw new Error(`Zone should be a single column or row: ${zoneToXc(fullZone)}`);
     }

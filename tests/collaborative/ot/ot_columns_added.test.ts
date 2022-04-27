@@ -15,7 +15,7 @@ import {
   UpdateCellCommand,
   UpdateCellPositionCommand,
 } from "../../../src/types";
-import { createEqualCF, target } from "../../test_helpers/helpers";
+import { createEqualCF } from "../../test_helpers/helpers";
 
 describe("OT with ADD_COLUMNS_ROWS with dimension COL", () => {
   const sheetId = "Sheet1";
@@ -163,22 +163,22 @@ describe("OT with ADD_COLUMNS_ROWS with dimension COL", () => {
   };
   describe.each([addMerge, removeMerge])("merge", (cmd) => {
     test(`add columns before merge`, () => {
-      const command = { ...cmd, target: target("A1:A3") };
+      const command = { ...cmd, target: ["A1:A3"] };
       const result = transform(command, addColumnsAfter);
       expect(result).toEqual(command);
     });
     test(`add columns after merge`, () => {
-      const command = { ...cmd, target: target("M1:O2") };
+      const command = { ...cmd, target: ["M1:O2"] };
       const result = transform(command, addColumnsAfter);
-      expect(result).toEqual({ ...command, target: target("O1:Q2") });
+      expect(result).toEqual({ ...command, target: ["O1:Q2"] });
     });
     test(`add columns in merge`, () => {
-      const command = { ...cmd, target: target("F1:G2") };
+      const command = { ...cmd, target: ["F1:G2"] };
       const result = transform(command, addColumnsAfter);
-      expect(result).toEqual({ ...command, target: target("F1:I2") });
+      expect(result).toEqual({ ...command, target: ["F1:I2"] });
     });
     test(`merge and columns added in different sheets`, () => {
-      const command = { ...cmd, target: target("A1:F3"), sheetId: "42" };
+      const command = { ...cmd, target: ["A1:F3"], sheetId: "42" };
       const result = transform(command, addColumnsAfter);
       expect(result).toEqual(command);
     });

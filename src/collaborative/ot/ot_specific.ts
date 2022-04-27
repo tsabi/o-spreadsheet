@@ -1,4 +1,4 @@
-import { isDefined, overlap, toZone, zoneToXc } from "../../helpers";
+import { isDefined, overlap, toUnboundZone, toZone, zoneToXc } from "../../helpers";
 import { otRegistry } from "../../registries";
 import {
   AddColumnsRowsCommand,
@@ -9,6 +9,7 @@ import {
   DeleteFigureCommand,
   RemoveColumnsRowsCommand,
   RemoveMergeCommand,
+  UnboundedZone,
   UpdateChartCommand,
   UpdateFigureCommand,
   Zone,
@@ -48,14 +49,14 @@ function updateChartRangesTransformation(
   executed: AddColumnsRowsCommand | RemoveColumnsRowsCommand
 ): UpdateChartCommand | CreateChartCommand {
   const definition = toTransform.definition;
-  let labelZone: Zone | undefined;
+  let labelZone: UnboundedZone | undefined;
   let dataSets: string[] | undefined;
   if (definition.labelRange) {
-    labelZone = transformZone(toZone(definition.labelRange), executed);
+    labelZone = transformZone(toUnboundZone(definition.labelRange), executed);
   }
   if (definition.dataSets) {
     dataSets = definition.dataSets
-      .map(toZone)
+      .map(toUnboundZone)
       .map((zone) => transformZone(zone, executed))
       .filter(isDefined)
       .map(zoneToXc);
