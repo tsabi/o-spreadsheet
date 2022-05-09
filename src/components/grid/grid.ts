@@ -589,11 +589,13 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
 
   getAutofillPosition() {
     const zone = this.env.model.getters.getSelectedZone();
-    const sheet = this.env.model.getters.getActiveSheet();
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    const cols = this.env.model.getters.getColsInfo(sheetId);
+    const rows = this.env.model.getters.getRowsInfo(sheetId);
     const { offsetX, offsetY } = this.env.model.getters.getActiveSnappedViewport();
     return {
-      left: sheet.cols[zone.right].end - AUTOFILL_EDGE_LENGTH / 2 + HEADER_WIDTH - offsetX,
-      top: sheet.rows[zone.bottom].end - AUTOFILL_EDGE_LENGTH / 2 + HEADER_HEIGHT - offsetY,
+      left: cols[zone.right].end - AUTOFILL_EDGE_LENGTH / 2 + HEADER_WIDTH - offsetX,
+      top: rows[zone.bottom].end - AUTOFILL_EDGE_LENGTH / 2 + HEADER_HEIGHT - offsetY,
     };
   }
 
@@ -720,7 +722,8 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
 
     let currentEv: MouseEvent;
 
-    const sheet = this.env.model.getters.getActiveSheet();
+    const cols = this.env.model.getters.getColsInfo(sheetId);
+    const rows = this.env.model.getters.getRowsInfo(sheetId);
 
     const onMouseMove = (ev: MouseEvent) => {
       currentEv = ev;
@@ -765,8 +768,8 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
         this.env.model.selection.setAnchorCorner(col, row);
       }
       if (isEdgeScrolling) {
-        const offsetX = sheet.cols[left + colEdgeScroll.direction].start;
-        const offsetY = sheet.rows[top + rowEdgeScroll.direction].start;
+        const offsetX = cols[left + colEdgeScroll.direction].start;
+        const offsetY = rows[top + rowEdgeScroll.direction].start;
         this.env.model.dispatch("SET_VIEWPORT_OFFSET", { offsetX, offsetY });
         timeOutId = setTimeout(() => {
           timeOutId = null;
@@ -823,14 +826,15 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       this.env.model.selection.resizeAnchorZone(direction, ev.ctrlKey ? "end" : "one");
       const newZone = this.env.model.getters.getSelectedZone();
       const viewport = this.env.model.getters.getActiveSnappedViewport();
-      const sheet = this.env.model.getters.getActiveSheet();
+      const sheetId = this.env.model.getters.getActiveSheetId();
+      const cols = this.env.model.getters.getColsInfo(sheetId);
+      const rows = this.env.model.getters.getRowsInfo(sheetId);
       let { col, row } = findCellInNewZone(oldZone, newZone);
-      col = Math.min(col, sheet.cols.length - 1);
-      row = Math.min(row, sheet.rows.length - 1);
+      col = Math.min(col, cols.length - 1);
+      row = Math.min(row, rows.length - 1);
       const { left, right, top, bottom, offsetX, offsetY } = viewport;
-      const newOffsetX =
-        col < left || col > right - 1 ? sheet.cols[left + delta[0]].start : offsetX;
-      const newOffsetY = row < top || row > bottom - 1 ? sheet.rows[top + delta[1]].start : offsetY;
+      const newOffsetX = col < left || col > right - 1 ? cols[left + delta[0]].start : offsetX;
+      const newOffsetY = row < top || row > bottom - 1 ? rows[top + delta[1]].start : offsetY;
       if (newOffsetX !== offsetX || newOffsetY !== offsetY) {
         this.env.model.dispatch("SET_VIEWPORT_OFFSET", {
           offsetX: newOffsetX,
