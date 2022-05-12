@@ -35,7 +35,7 @@ const functionNameRegex = /^[A-Z0-9\.]+$/;
 //------------------------------------------------------------------------------
 // Function registry
 //------------------------------------------------------------------------------
-class FunctionRegistry extends Registry<FunctionDescription> {
+export class FunctionRegistry extends Registry<FunctionDescription> {
   mapping: { [key: string]: Function } = {};
 
   add(name: string, addDescr: AddFunctionDescription) {
