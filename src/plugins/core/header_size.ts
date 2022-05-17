@@ -1,14 +1,15 @@
 import { DEFAULT_CELL_HEIGHT, DEFAULT_CELL_WIDTH } from "../../constants";
-import { deepCopy } from "../../helpers";
+import { deepCopy, getDefaultCellHeight } from "../../helpers";
 import {
   AddColumnsRowsCommand,
+  Cell,
   Command,
   ExcelWorkbookData,
   RemoveColumnsRowsCommand,
   ResizeColumnsRowsCommand,
   WorkbookData,
 } from "../../types";
-import { Dimension, HeaderDisplayInfo, SheetId } from "../../types/misc";
+import { Dimension, HeaderDisplayInfo, SheetId, UID } from "../../types/misc";
 import { CorePlugin } from "../core_plugin";
 
 export class HeaderSizePlugin extends CorePlugin {
@@ -23,6 +24,7 @@ export class HeaderSizePlugin extends CorePlugin {
 
   private readonly headerSizes: Record<SheetId, Record<Dimension, Array<HeaderDisplayInfo>>> = {};
   private userHeaderSizes: Record<SheetId, Record<Dimension, Array<number | undefined>>> = {};
+  private tallestCellInRows: Record<SheetId, Array<UID | undefined>> = {};
 
   handle(cmd: Command) {
     switch (cmd.type) {
@@ -73,6 +75,29 @@ export class HeaderSizePlugin extends CorePlugin {
         }
         this.updateHeadersOnResize(cmd);
         break;
+      case "UPDATE_CELL":
+        if (
+          this.headerSizes[cmd.sheetId]?.["ROW"]?.[cmd.row] &&
+          !this.userHeaderSizes[cmd.sheetId]?.["ROW"]?.[cmd.row]
+        ) {
+          this.adjustRowSizeWithCellFont(cmd.sheetId, cmd.col, cmd.row);
+        }
+        break;
+      case "ADD_MERGE":
+      case "REMOVE_MERGE":
+        for (let target of cmd.target) {
+          for (let row = target.top; row <= target.bottom; row++) {
+            const { height: rowHeight, cell: tallestCell } = this.getRowMaxHeight(cmd.sheetId, row);
+            this.history.update("tallestCellInRows", cmd.sheetId, row, tallestCell?.id);
+            if (rowHeight !== this.getRowSize(cmd.sheetId, row)) {
+              let newRows = deepCopy(this.headerSizes[cmd.sheetId]["ROW"]);
+              newRows[row].size = rowHeight;
+              newRows = this.computeStartEnd(cmd.sheetId, "ROW", newRows);
+              this.history.update("headerSizes", cmd.sheetId, "ROW", newRows);
+            }
+          }
+        }
+        break;
     }
     return;
   }
@@ -101,6 +126,39 @@ export class HeaderSizePlugin extends CorePlugin {
     return this.headerSizes[sheetId]["ROW"];
   }
 
+  /**
+   * Change the size of a row to match the cell with the biggest font size.
+   */
+  private adjustRowSizeWithCellFont(sheetId: UID, col: number, row: number) {
+    const currentCell = this.getters.getCell(sheetId, col, row);
+    const currentRowSize = this.getRowSize(sheetId, row);
+    const newCellHeight = this.getCellHeight(sheetId, col, row);
+
+    const tallestCell = this.tallestCellInRows[sheetId]?.[row];
+    let shouldRowBeUpdated =
+      !tallestCell ||
+      !this.getters.tryGetCellById(tallestCell) || // tallest cell was deleted
+      (currentCell?.id === tallestCell && newCellHeight < currentRowSize); // tallest cell is smaller than before;
+
+    let newRowHeight: number | undefined = undefined;
+    if (shouldRowBeUpdated) {
+      const { height: maxHeight, cell: tallestCell } = this.getRowMaxHeight(sheetId, row);
+      newRowHeight = maxHeight;
+      this.history.update("tallestCellInRows", sheetId, row, tallestCell?.id);
+    } else if (newCellHeight > currentRowSize) {
+      newRowHeight = newCellHeight;
+      const tallestCell = this.getters.getCell(sheetId, col, row);
+      this.history.update("tallestCellInRows", sheetId, row, tallestCell?.id);
+    }
+
+    if (newRowHeight !== undefined && newRowHeight !== currentRowSize) {
+      let newHeaders = deepCopy(this.headerSizes[sheetId]["ROW"]);
+      newHeaders[row].size = newRowHeight;
+      newHeaders = this.computeStartEnd(sheetId, "ROW", newHeaders);
+      this.history.update("headerSizes", sheetId, "ROW", newHeaders);
+    }
+  }
+
   private getHeaderSize(sheetId: SheetId, dimension: Dimension, index: number): number {
     return (
       this.userHeaderSizes[sheetId]?.[dimension]?.[index] ||
@@ -121,8 +179,14 @@ export class HeaderSizePlugin extends CorePlugin {
     sizes.COL = this.computeStartEnd(sheetId, "COL", sizes.COL);
 
     for (let i = 0; i < this.getters.getNumberRows(sheetId); i++) {
+      let rowSize = this.userHeaderSizes[sheetId]["ROW"][i];
+      if (!rowSize) {
+        const { cell: tallestCell, height } = this.getRowMaxHeight(sheetId, i);
+        rowSize = height;
+        this.history.update("tallestCellInRows", sheetId, i, tallestCell?.id);
+      }
       sizes.ROW.push({
-        size: this.getHeaderSize(sheetId, "ROW", i),
+        size: rowSize,
         start: 0,
         end: 0,
       });
@@ -144,6 +208,15 @@ export class HeaderSizePlugin extends CorePlugin {
   }: ResizeColumnsRowsCommand) {
     let newHeaders = deepCopy(this.headerSizes[sheetId][dimension]);
     for (let headerIndex of resizedHeaders) {
+      if (!size) {
+        if (dimension === "COL") {
+          size = this.getDefaultHeaderSize("COL");
+        } else {
+          const { cell: tallestCell, height } = this.getRowMaxHeight(sheetId, headerIndex);
+          size = height;
+          this.history.update("tallestCellInRows", sheetId, headerIndex, tallestCell?.id);
+        }
+      }
       if (!newHeaders[headerIndex]) {
         newHeaders[headerIndex] = { size, end: 0, start: 0 };
       } else {
@@ -162,15 +235,22 @@ export class HeaderSizePlugin extends CorePlugin {
     dimension,
   }: RemoveColumnsRowsCommand) {
     let headers: HeaderDisplayInfo[] = [];
+    const tallestCells: Array<UID | undefined> = [];
     for (let [index, header] of this.headerSizes[sheetId][dimension].entries()) {
       if (deletedHeaders.includes(index)) {
         continue;
       }
       headers.push({ ...header });
+      if (dimension === "ROW") {
+        tallestCells.push(this.tallestCellInRows[sheetId][index]);
+      }
     }
 
     headers = this.computeStartEnd(sheetId, dimension, headers);
     this.history.update("headerSizes", sheetId, dimension, headers);
+    if (dimension === "ROW") {
+      this.history.update("tallestCellInRows", sheetId, tallestCells);
+    }
   }
 
   /** On header addition command, add new headers and update start-end of all the headers  */
@@ -183,15 +263,22 @@ export class HeaderSizePlugin extends CorePlugin {
   }: AddColumnsRowsCommand) {
     // Add headers in the list
     let headers = deepCopy(this.headerSizes[sheetId][dimension]);
+    const tallestCells = [...this.tallestCellInRows[sheetId]];
     const startIndex = this.getAddHeaderStartIndex(position, base);
     const size = this.getHeaderSize(sheetId, dimension, base);
     for (let i = 0; i < quantity; i++) {
       headers.splice(startIndex, 0, { size, start: 0, end: 0 });
+      if (dimension === "ROW") {
+        tallestCells.splice(startIndex, 0, undefined);
+      }
     }
 
     headers = this.computeStartEnd(sheetId, dimension, headers);
 
     this.history.update("headerSizes", sheetId, dimension, headers);
+    if (dimension === "ROW") {
+      this.history.update("tallestCellInRows", sheetId, tallestCells);
+    }
   }
 
   /** Update the start-end of the given list of headers using the current sheet state  */
@@ -219,6 +306,44 @@ export class HeaderSizePlugin extends CorePlugin {
   /** Get index of first header added by an ADD_COLUMNS_ROWS command */
   private getAddHeaderStartIndex(position: "before" | "after", base: number): number {
     return position === "after" ? base + 1 : base;
+  }
+
+  /**
+   * Return the height the cell should have in the sheet, which is either DEFAULT_CELL_HEIGHT if the cell is in a multi-row
+   * merge, or the height of the cell computed based on its font size.
+   */
+  private getCellHeight(sheetId: SheetId, col: number, row: number) {
+    const merge = this.getters.getMerge(sheetId, col, row);
+    if (merge && merge.bottom !== merge.top) {
+      return DEFAULT_CELL_HEIGHT;
+    }
+    const cell = this.getters.getCell(sheetId, col, row);
+    return getDefaultCellHeight(cell);
+  }
+
+  /**
+   * Get the max height of a row based on its cells.
+   *
+   * The max height of the row correspond to the cell with the biggest font size that has a content,
+   * and that is not part of a multi-line merge.
+   */
+  private getRowMaxHeight(sheetId: SheetId, row: number): { cell?: Cell; height: number } {
+    const cells = this.getters.getRowCells(sheetId, row);
+    let maxHeight = 0,
+      tallestCell: Cell | undefined = undefined;
+    for (let i = 0; i < cells.length; i++) {
+      const { col, row } = this.getters.getCellPosition(cells[i].id);
+      const cellHeight = this.getCellHeight(sheetId, col, row);
+      if (cellHeight > maxHeight && cellHeight > DEFAULT_CELL_HEIGHT) {
+        maxHeight = cellHeight;
+        tallestCell = cells[i];
+      }
+    }
+
+    if (maxHeight <= DEFAULT_CELL_HEIGHT) {
+      return { height: DEFAULT_CELL_HEIGHT };
+    }
+    return { cell: tallestCell, height: maxHeight };
   }
 
   import(data: WorkbookData) {
