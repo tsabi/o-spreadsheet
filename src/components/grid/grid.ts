@@ -192,6 +192,10 @@ function useTouchMove(handler: (deltaX: number, deltaY: number) => void, canMove
 // -----------------------------------------------------------------------------
 css/* scss */ `
   .o-grid {
+    width: 83.33%;
+    height: 83.33%;
+    transform-origin: 0 0;
+    transform: scale(1.2, 1.2);
     position: relative;
     overflow: hidden;
     background-color: ${BACKGROUND_GRAY_COLOR};
@@ -209,12 +213,14 @@ css/* scss */ `
       overflow: auto;
       z-index: 2;
       &.vertical {
+        // transform: scale(0.5, 1);
         right: 0;
         bottom: ${SCROLLBAR_WIDTH}px;
         width: ${SCROLLBAR_WIDTH}px;
         overflow-x: hidden;
       }
       &.horizontal {
+        // transform: scale(1, 0.5);
         bottom: 0;
         height: ${SCROLLBAR_WIDTH}px;
         right: ${SCROLLBAR_WIDTH + 1}px;
@@ -618,11 +624,11 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     const { width, height } = this.env.model.getters.getViewportDimensionWithHeaders();
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
+    canvas.width = width * dpr * 1.2;
+    canvas.height = height * dpr * 1.2;
     canvas.setAttribute("style", `width:${width}px;height:${height}px;`);
     ctx.translate(-0.5, -0.5);
-    ctx.scale(dpr, dpr);
+    ctx.scale(dpr * 1.2, dpr * 1.2);
     this.env.model.drawGrid(renderingContext);
   }
 
