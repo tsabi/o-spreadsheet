@@ -1,5 +1,5 @@
 import { DEFAULT_CELL_HEIGHT, DEFAULT_CELL_WIDTH } from "../../constants";
-import { deepCopy } from "../../helpers";
+import { deepCopy, getAddHeaderStartIndex } from "../../helpers";
 import { Command, ExcelWorkbookData, WorkbookData } from "../../types";
 import { Dimension, SheetId } from "../../types/misc";
 import { CorePlugin } from "../core_plugin";
@@ -43,7 +43,7 @@ export class HeaderSizePlugin extends CorePlugin {
       case "ADD_COLUMNS_ROWS": {
         const userHeaderSizes = [...this.userHeaderSizes[cmd.sheetId][cmd.dimension]];
         const headerSizes = [...this.headerSizes[cmd.sheetId][cmd.dimension]];
-        const addIndex = this.getAddHeaderStartIndex(cmd.position, cmd.base);
+        const addIndex = getAddHeaderStartIndex(cmd.position, cmd.base);
         const baseUserSize = userHeaderSizes[cmd.base];
         const baseSize = headerSizes[cmd.base];
         for (let i = 0; i < cmd.quantity; i++) {
@@ -93,11 +93,6 @@ export class HeaderSizePlugin extends CorePlugin {
 
   private getDefaultHeaderSize(dimension: Dimension): number {
     return dimension === "COL" ? DEFAULT_CELL_WIDTH : DEFAULT_CELL_HEIGHT;
-  }
-
-  /** Get index of first header added by an ADD_COLUMNS_ROWS command */
-  private getAddHeaderStartIndex(position: "before" | "after", base: number): number {
-    return position === "after" ? base + 1 : base;
   }
 
   import(data: WorkbookData) {

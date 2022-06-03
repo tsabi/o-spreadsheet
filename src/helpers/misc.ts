@@ -347,3 +347,8 @@ export function findNextDefinedValue(arr: string[], index: number): string {
   }
   return value || "";
 }
+
+/** Get index of first header added by an ADD_COLUMNS_ROWS command */
+export function getAddHeaderStartIndex(position: "before" | "after", base: number): number {
+  return position === "after" ? base + 1 : base;
+}
