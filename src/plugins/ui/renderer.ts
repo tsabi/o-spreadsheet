@@ -7,10 +7,12 @@ import {
   DEFAULT_FONT,
   DEFAULT_FONT_SIZE,
   DEFAULT_FONT_WEIGHT,
+  FILTER_ICON_MARGIN,
   HEADER_BORDER_COLOR,
   HEADER_FONT_SIZE,
   HEADER_HEIGHT,
   HEADER_WIDTH,
+  ICON_EDGE_LENGTH,
   MIN_CELL_TEXT_MARGIN,
   MIN_CF_ICON_MARGIN,
   TEXT_HEADER_COLOR,
@@ -252,7 +254,8 @@ export class RendererPlugin extends UIPlugin {
         this.boxes = this.getGridBoxes(renderingContext);
         this.drawBackground(renderingContext);
         this.drawCellBackground(renderingContext);
-        this.drawBorders(renderingContext);
+        this.drawBorders(renderingContext, "border");
+        this.drawBorders(renderingContext, "filterBorder");
         this.drawTexts(renderingContext);
         this.drawIcon(renderingContext);
         break;
@@ -348,11 +351,11 @@ export class RendererPlugin extends UIPlugin {
     }
   }
 
-  private drawBorders(renderingContext: GridRenderingContext) {
+  private drawBorders(renderingContext: GridRenderingContext, name: "border" | "filterBorder") {
     const { ctx, thinLineWidth } = renderingContext;
     for (let box of this.boxes) {
       // fill color
-      let border = box.border;
+      const border = box[name];
       if (border) {
         const { x, y, width, height } = box;
         if (border.left) {
@@ -389,7 +392,7 @@ export class RendererPlugin extends UIPlugin {
         const style = box.style || {};
         const align = box.content.align || "left";
         const italic = style.italic ? "italic " : "";
-        const weight = style.bold ? "bold" : DEFAULT_FONT_WEIGHT;
+        const weight = style.bold || box.isFilterHeader ? "bold" : DEFAULT_FONT_WEIGHT;
         const sizeInPt = style.fontSize || DEFAULT_FONT_SIZE;
         const size = fontSizeMap[sizeInPt];
         const font = `${italic}${weight} ${size}px ${DEFAULT_FONT}`;
@@ -403,7 +406,11 @@ export class RendererPlugin extends UIPlugin {
         if (align === "left") {
           x = box.x + (box.image ? box.image.size + 2 * MIN_CF_ICON_MARGIN : MIN_CELL_TEXT_MARGIN);
         } else if (align === "right") {
-          x = box.x + box.width - MIN_CELL_TEXT_MARGIN;
+          x =
+            box.x +
+            box.width -
+            MIN_CELL_TEXT_MARGIN -
+            (box.isFilterHeader ? 2 * FILTER_ICON_MARGIN + ICON_EDGE_LENGTH : 0);
         } else {
           x = box.x + box.width / 2;
         }
@@ -589,6 +596,7 @@ export class RendererPlugin extends UIPlugin {
       width,
       height,
       border: this.getters.getCellBorder(sheetId, col, row) || undefined,
+      filterBorder: this.getters.getFilterBorder(sheetId, col, row),
       style: {
         ...this.getters.getCellStyle(cell),
         ...this.getters.getConditionalStyle(col, row),
@@ -612,10 +620,14 @@ export class RendererPlugin extends UIPlugin {
       };
     }
 
+    /** Filter Header */
+    box.isFilterHeader = this.getters.isFilterHeader(sheetId, col, row);
+    const headerIconWidth = box.isFilterHeader ? 2 * FILTER_ICON_MARGIN + ICON_EDGE_LENGTH : 0;
+
     /** Content */
     const text = this.getters.getCellText(cell, showFormula);
     const textWidth = this.getters.getTextWidth(cell);
-    const contentWidth = iconBoxWidth + textWidth;
+    const contentWidth = iconBoxWidth + textWidth + headerIconWidth;
     const align = this.computeCellAlignment(cell, contentWidth > width);
     box.content = {
       text,
@@ -630,8 +642,13 @@ export class RendererPlugin extends UIPlugin {
 
     /** ClipRect */
     const isOverflowing = contentWidth > width || fontSizeMap[fontSize] > height;
-    if (cfIcon) {
-      box.clipRect = [box.x + iconBoxWidth, box.y, Math.max(0, width - iconBoxWidth), height];
+    if (cfIcon || box.isFilterHeader) {
+      box.clipRect = [
+        box.x + iconBoxWidth,
+        box.y,
+        Math.max(0, width - iconBoxWidth - headerIconWidth),
+        height,
+      ];
     } else if (isOverflowing) {
       let nextColIndex: number, previousColIndex: number;
 

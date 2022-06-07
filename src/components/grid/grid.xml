@@ -82,6 +82,17 @@
         onClose="() => this.closeMenu()"
       />
       <t
+        t-foreach="env.model.getters.getFilterHeaders(env.model.getters.getActiveSheetId())"
+        t-as="header"
+        t-key="'filter'+header.col + '_' + header.row">
+        <FilterIcon
+          position="getFilterHeaderPosition(header)"
+          isActive="isFilterActive(header)"
+          t-key="'icon_'+header.col + '_' + header.row"
+          onClick="(ev) => this.openFilterMenu(header, ev)"
+        />
+      </t>
+      <t
         t-set="gridSize"
         t-value="env.model.getters.getMaxViewportSize(env.model.getters.getActiveSheet())"
       />

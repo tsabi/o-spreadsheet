@@ -159,6 +159,10 @@ export const coreTypes = new Set<CoreCommandTypes>([
   /** CHART */
   "CREATE_CHART",
   "UPDATE_CHART",
+
+  /** FILTERS */
+  "CREATE_FILTER_TABLE",
+  "UPDATE_FILTER",
 ]);
 
 export function isCoreCommand(cmd: Command): cmd is CoreCommand {
@@ -363,6 +367,23 @@ export interface UpdateChartCommand extends SheetDependentCommand {
 export interface RefreshChartCommand {
   type: "REFRESH_CHART";
   id: UID;
+}
+
+//------------------------------------------------------------------------------
+// Filters
+//------------------------------------------------------------------------------
+
+export interface CreateFilterCommand extends SheetDependentCommand, TargetDependentCommand {
+  type: "CREATE_FILTER_TABLE";
+}
+
+export interface UpdateFilterCommand extends SheetDependentCommand, PositionDependentCommand {
+  type: "UPDATE_FILTER";
+  values: string[];
+}
+
+export interface SetCurrentUsedFilter extends PositionDependentCommand {
+  type: "SET_CURRENT_USED_FILTER";
 }
 
 export interface SetFormattingCommand extends SheetDependentCommand, TargetDependentCommand {
@@ -840,7 +861,11 @@ export type CoreCommand =
 
   /** CHART */
   | CreateChartCommand
-  | UpdateChartCommand;
+  | UpdateChartCommand
+
+  /** FILTERS */
+  | CreateFilterCommand
+  | UpdateFilterCommand;
 
 export type LocalCommand =
   | RequestUndoCommand
@@ -904,7 +929,8 @@ export type LocalCommand =
   | OpenCellPopoverCommand<any>
   | CloseCellPopoverCommand
   | ActivateNextSheetCommand
-  | ActivatePreviousSheetCommand;
+  | ActivatePreviousSheetCommand
+  | SetCurrentUsedFilter;
 
 export type Command = CoreCommand | LocalCommand;
 

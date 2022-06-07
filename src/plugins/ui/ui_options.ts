@@ -1,9 +1,10 @@
-import { Command } from "../../types/index";
+import { Command, Position } from "../../types/index";
 import { UIPlugin } from "../ui_plugin";
 
 export class UIOptionsPlugin extends UIPlugin {
-  static getters = ["shouldShowFormulas"] as const;
+  static getters = ["shouldShowFormulas", "getActiveFilterPosition"] as const;
   private showFormulas: boolean = false;
+  private usedFilterPosition: Position | undefined;
 
   // ---------------------------------------------------------------------------
   // Command Handling
@@ -14,6 +15,9 @@ export class UIOptionsPlugin extends UIPlugin {
       case "SET_FORMULA_VISIBILITY":
         this.showFormulas = cmd.show;
         break;
+      case "SET_CURRENT_USED_FILTER":
+        this.usedFilterPosition = { col: cmd.col, row: cmd.row };
+        break;
     }
   }
 
@@ -23,5 +27,9 @@ export class UIOptionsPlugin extends UIPlugin {
 
   shouldShowFormulas(): boolean {
     return this.showFormulas;
+  }
+
+  getActiveFilterPosition(): Position | undefined {
+    return this.usedFilterPosition;
   }
 }

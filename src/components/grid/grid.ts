@@ -11,8 +11,11 @@ import {
   AUTOFILL_EDGE_LENGTH,
   BACKGROUND_GRAY_COLOR,
   DEFAULT_CELL_HEIGHT,
+  FILTER_EDGE_LENGTH,
   HEADER_HEIGHT,
   HEADER_WIDTH,
+  ICON_EDGE_LENGTH,
+  MENU_WIDTH,
   SCROLLBAR_WIDTH,
 } from "../../constants";
 import { findCellInNewZone, isInside, MAX_DELAY, range } from "../../helpers/index";
@@ -23,12 +26,14 @@ import { ComposerSelection } from "../../plugins/ui/edition";
 import { cellMenuRegistry } from "../../registries/menus/cell_menu_registry";
 import { colMenuRegistry } from "../../registries/menus/col_menu_registry";
 import { dashboardMenuRegistry } from "../../registries/menus/dashboard_menu_registry";
+import { filterMenuRegistry } from "../../registries/menus/filter_menu_registry";
 import { rowMenuRegistry } from "../../registries/menus/row_menu_registry";
 import { Client, DOMCoordinates, Position, Ref, SpreadsheetChildEnv, UID } from "../../types/index";
 import { Autofill } from "../autofill/autofill";
 import { ClientTag } from "../collaborative_client_tag/collaborative_client_tag";
 import { GridComposer } from "../composer/grid_composer/grid_composer";
 import { FiguresContainer } from "../figures/container/container";
+import { FilterIcon } from "../filters/filter_icon/filter_icon";
 import { HeadersOverlay } from "../headers_overlay/headers_overlay";
 import { css } from "../helpers/css";
 import { startDnd } from "../helpers/drag_and_drop";
@@ -49,13 +54,14 @@ import { ScrollBar } from "../scrollbar";
  * - a vertical resizer (same, for rows)
  */
 
-export type ContextMenuType = "ROW" | "COL" | "CELL" | "DASHBOARD";
+export type ContextMenuType = "ROW" | "COL" | "CELL" | "DASHBOARD" | "FILTER";
 
 const registries = {
   ROW: rowMenuRegistry,
   COL: colMenuRegistry,
   CELL: cellMenuRegistry,
   DASHBOARD: dashboardMenuRegistry,
+  FILTER: filterMenuRegistry,
 };
 
 // copy and paste are specific events that should not be managed by the keydown event,
@@ -243,6 +249,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     ClientTag,
     Highlight,
     Popover,
+    FilterIcon,
   };
 
   private menuState!: MenuState;
@@ -910,5 +917,50 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   closeMenu() {
     this.menuState.isOpen = false;
     this.focus();
+  }
+
+  getFilterHeaderPosition(position: Position): DOMCoordinates {
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    const { offsetX, offsetY } = this.env.model.getters.getActiveSnappedViewport();
+    const row = this.env.model.getters.getRowDimensions(sheetId, position.row);
+    const col = this.env.model.getters.getColDimensions(sheetId, position.col);
+    return {
+      x: col.end - FILTER_EDGE_LENGTH + HEADER_WIDTH - offsetX,
+      y: row.end - FILTER_EDGE_LENGTH + HEADER_HEIGHT - offsetY,
+    };
+  }
+
+  isFilterActive(position: Position): boolean {
+    return false;
+    // const sheetId = this.getters.getActiveSheetId();
+    // const col = position.col;
+    // return this.getters.isFilterActive(sheetId, col);
+  }
+
+  openFilterMenu(position: Position) {
+    // console.log("openFilterMenu");
+    // //@ts-ignore
+    // const sheetId = this.env.model.getters.getActiveSheetId();
+    // const { x, y } = this.getFilterHeaderPosition(position);
+    this.env.model.dispatch("SET_CURRENT_USED_FILTER", position);
+    // // const colSize = this.env.model.getters.getColSize(
+    // //   this.env.model.getters.getActiveSheetId(),
+    // //   position.col
+    // // );
+    // // console.log(this.env.model.getters.getRowDimensions(sheetId, position.row));
+    // console.log("y : " + y);
+    // this.toggleContextMenu(
+    //   "FILTER",
+    //   x + ICON_EDGE_LENGTH - MENU_WIDTH,
+    //   y + ICON_EDGE_LENGTH + this.canvasPosition.y
+    // );
+
+    const { col, row } = position;
+    const viewport = this.env.model.getters.getActiveSnappedViewport();
+    const [x, y] = this.env.model.getters.getRect(
+      { left: col, top: row, right: col, bottom: row },
+      viewport
+    );
+    this.toggleContextMenu("FILTER", x + ICON_EDGE_LENGTH - MENU_WIDTH, y + ICON_EDGE_LENGTH);
   }
 }

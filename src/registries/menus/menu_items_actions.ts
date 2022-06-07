@@ -665,6 +665,21 @@ export const INSERT_LINK = (env: SpreadsheetChildEnv) => {
 };
 
 //------------------------------------------------------------------------------
+// Filters action
+//------------------------------------------------------------------------------
+
+export const FILTERS_CREATE_FILTER_TABLE = (env: SpreadsheetChildEnv) => {
+  const sheetId = env.model.getters.getActiveSheetId();
+  const selection = env.model.getters.getSelection().zones;
+  if (selection) {
+    env.model.dispatch("CREATE_FILTER_TABLE", {
+      sheetId,
+      target: selection,
+    });
+  }
+};
+
+//------------------------------------------------------------------------------
 // Sorting action
 //------------------------------------------------------------------------------
 

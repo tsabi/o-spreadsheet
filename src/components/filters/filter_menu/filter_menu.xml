@@ -1,0 +1,34 @@
+<templates>
+  <t t-name="o-spreadsheet.FilterMenuItem" owl="1">
+    <div class="o-filter-menu-item">
+      <div class="o-filter-menu-actions">
+        <div class="o-filter-menu-action-text" t-on-click="selectAll">Select all</div>
+        <div class="o-filter-menu-action-text" t-on-click="clearAll">Clear</div>
+      </div>
+      <input type="text" t-model="state.textFilter"/>
+      <div class="o-filter-menu-list">
+        <t t-foreach="state.values" t-as="value" t-key="value">
+          <div
+            t-on-click="() => selectVal(value)"
+            t-if="value.string.startsWith(state.textFilter)"
+            class="o-menu-item o-filter-menu-value">
+            <div>
+              <div class="o-filter-menu-value-checked" t-if="value.checked">✓</div>
+            </div>
+            <div class="o-filter-menu-value-text">
+              <t t-if="value.string === ''">Blanks</t>
+              <t t-else="" t-esc="value.string"/>
+            </div>
+          </div>
+        </t>
+      </div>
+      <div class="o-separator"/>
+      <div class="o-filter-menu-buttons">
+        <div class="o-filter-menu-button" t-on-click="cancel">Cancel</div>
+        <div class="o-filter-menu-button o-filter-menu-button-primary" t-on-click="confirm">
+          Confirm
+        </div>
+      </div>
+    </div>
+  </t>
+</templates>

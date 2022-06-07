@@ -24,6 +24,8 @@ export interface Box {
   content?: BoxTextContent;
   style: Style;
   border?: Border;
+  filterBorder?: Border;
+  isFilterHeader?: boolean;
   clipRect?: Rect;
   error?: string;
   image?: Image;

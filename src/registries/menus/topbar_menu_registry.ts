@@ -300,6 +300,11 @@ topbarMenuRegistry
     sequence: 80,
     action: ACTIONS.FORMAT_CLEARFORMAT_ACTION,
     separator: true,
+  })
+  .addChild("data_filter", ["data"], {
+    name: _lt("Filter"),
+    sequence: 10,
+    action: ACTIONS.FILTERS_CREATE_FILTER_TABLE,
   });
 
 // Font-sizes
