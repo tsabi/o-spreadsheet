@@ -8,12 +8,12 @@ import {
 import { BACKGROUND_HEADER_COLOR, DEFAULT_FONT_SIZE } from "../../constants";
 import { fontSizes } from "../../fonts";
 import { isEqual } from "../../helpers/index";
+import { interactiveAddMerge } from "../../helpers/ui/merge_interactive";
 import { setFormatter, setStyle, topbarComponentRegistry } from "../../registries/index";
 import { getMenuChildren, getMenuName } from "../../registries/menus/helpers";
 import { topbarMenuRegistry } from "../../registries/menus/topbar_menu_registry";
 import { FullMenuItem } from "../../registries/menu_items_registry";
-import { _lt } from "../../translation";
-import { Align, BorderCommand, CommandResult, SpreadsheetChildEnv, Style } from "../../types/index";
+import { Align, BorderCommand, SpreadsheetChildEnv, Style } from "../../types/index";
 import { ColorPicker } from "../color_picker/color_picker";
 import { Composer } from "../composer/composer/composer";
 import { css } from "../helpers/css";
@@ -398,17 +398,7 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
     if (this.inMerge) {
       this.env.model.dispatch("REMOVE_MERGE", { sheetId, target });
     } else {
-      const result = this.env.model.dispatch("ADD_MERGE", { sheetId, target });
-      if (!result.isSuccessful) {
-        if (result.isCancelledBecause(CommandResult.MergeIsDestructive)) {
-          this.env.askConfirmation(
-            _lt("Merging these cells will only preserve the top-leftmost value. Merge anyway?"),
-            () => {
-              this.env.model.dispatch("ADD_MERGE", { sheetId, target, force: true });
-            }
-          );
-        }
-      }
+      interactiveAddMerge(this.env, sheetId, target);
     }
   }
 

@@ -1,15 +1,44 @@
 import { Component, useState } from "@odoo/owl";
+import {
+  MENU_ITEM_HEIGHT,
+  MENU_SEPARATOR_BORDER_WIDTH,
+  MENU_SEPARATOR_PADDING,
+  MENU_WIDTH,
+} from "../../../constants";
 import { isDefined, positions } from "../../../helpers";
+import { interactiveSortSelection } from "../../../helpers/sort";
 import { FullMenuItem } from "../../../registries";
-import { SpreadsheetChildEnv } from "../../../types";
+import { SortDirection, SpreadsheetChildEnv } from "../../../types";
 import { css } from "../../helpers/css";
 
 const CSS = css/* scss */ `
-  .o-filter-menu-item {
+  .o-filter-menu {
     box-sizing: border-box;
-    padding: 4px 16px;
+    padding: 8px 16px;
     display: flex;
     flex-direction: column;
+    max-height: 300px;
+    background: #fff;
+
+    .o-filter-menu-item {
+      display: flex;
+      justify-content: space-between;
+      box-sizing: border-box;
+      height: ${MENU_ITEM_HEIGHT}px;
+      padding: 4px 16px;
+      overflow: visible;
+      cursor: pointer;
+      user-select: none;
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.08);
+      }
+    }
+
+    .o-separator {
+      border-bottom: ${MENU_SEPARATOR_BORDER_WIDTH}px solid #e0e2e4;
+      margin-top: ${MENU_SEPARATOR_PADDING}px;
+      margin-bottom: ${MENU_SEPARATOR_PADDING}px;
+    }
 
     input {
       margin-bottom: 5px;
@@ -36,15 +65,6 @@ const CSS = css/* scss */ `
     }
 
     .o-filter-menu-value {
-      display: flex;
-      flex-direction: row;
-      cursor: pointer;
-      overflow: visible;
-
-      &:hover {
-        background-color: rgba(0, 0, 0, 0.08);
-      }
-
       div:first-child {
         width: 20px;
         text-align: center;
@@ -91,7 +111,7 @@ const CSS = css/* scss */ `
 
 interface Props {
   menuItem: FullMenuItem;
-  onClose: () => void;
+  onClosed: () => void;
 }
 
 interface Value {
@@ -105,15 +125,16 @@ interface State {
 }
 
 export class FilterMenuItem extends Component<Props, SpreadsheetChildEnv> {
+  static componentSize = { width: MENU_WIDTH, height: 150 };
+
   static template = "o-spreadsheet.FilterMenuItem";
   static style = CSS;
 
   private state: State | undefined;
 
   setup() {
-    const position = this.env.model.getters.getActiveFilterPosition()!;
     const sheetId = this.env.model.getters.getActiveSheetId();
-    const filter = this.env.model.getters.getFilter(sheetId, position.col, position.row);
+    const filter = this.filter;
     if (!filter) {
       this.state = useState({ values: [], textFilter: "" });
       return;
@@ -139,15 +160,17 @@ export class FilterMenuItem extends Component<Props, SpreadsheetChildEnv> {
   }
 
   clearAll() {
-    // this.state.values.map((value) => (value.checked = false));
+    this.state?.values.map((value) => (value.checked = false));
+  }
+
+  get filter() {
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    const position = this.env.model.getters.getActiveFilterPosition()!;
+    return this.env.model.getters.getFilter(sheetId, position.col, position.row);
   }
 
   confirm() {
     const position = this.env.model.getters.getActiveFilterPosition()!;
-
-    // const values = this.state.values.filter((val) => val.checked).map((val) => val.string);
-    // const col = this.env.getters.getActiveFilterCol()!;
-    // this.env.dispatch("SET_FILTER_VALUE", { })
     this.env.model.dispatch("UPDATE_FILTER", {
       ...position,
       sheetId: this.env.model.getters.getActiveSheetId(),
@@ -156,11 +179,22 @@ export class FilterMenuItem extends Component<Props, SpreadsheetChildEnv> {
       ),
     });
     console.log("Confirm filter menu");
-    this.props.onClose();
+    this.props.onClosed();
   }
 
   cancel() {
     console.log("Cancel filter menu");
-    this.props.onClose();
+    this.props.onClosed();
+  }
+
+  sortFilterZone(direction: SortDirection) {
+    const filter = this.filter;
+    if (!filter) {
+      return;
+    }
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    const sortAnchor = { col: filter.col, row: filter.filteredZone.top };
+    interactiveSortSelection(this.env, sheetId, sortAnchor, filter.filteredZone, direction, false);
+    this.props.onClosed();
   }
 }

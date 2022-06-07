@@ -301,10 +301,17 @@ topbarMenuRegistry
     action: ACTIONS.FORMAT_CLEARFORMAT_ACTION,
     separator: true,
   })
-  .addChild("data_filter", ["data"], {
-    name: _lt("Filter"),
+  .addChild("add_data_filter", ["data"], {
+    name: _lt("Add Filter"),
     sequence: 10,
     action: ACTIONS.FILTERS_CREATE_FILTER_TABLE,
+    isVisible: (env) => !ACTIONS.SELECTION_CONTAINS_FILTER(env),
+  })
+  .addChild("remove_data_filter", ["data"], {
+    name: _lt("Remove Filter"),
+    sequence: 10,
+    action: ACTIONS.FILTERS_REMOVE_FILTER_TABLE,
+    isVisible: ACTIONS.SELECTION_CONTAINS_FILTER,
   });
 
 // Font-sizes

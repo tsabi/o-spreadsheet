@@ -162,6 +162,7 @@ export const coreTypes = new Set<CoreCommandTypes>([
 
   /** FILTERS */
   "CREATE_FILTER_TABLE",
+  "REMOVE_FILTER_TABLE",
   "UPDATE_FILTER",
 ]);
 
@@ -375,6 +376,10 @@ export interface RefreshChartCommand {
 
 export interface CreateFilterCommand extends SheetDependentCommand, TargetDependentCommand {
   type: "CREATE_FILTER_TABLE";
+}
+
+export interface RemoveFilterCommand extends SheetDependentCommand, TargetDependentCommand {
+  type: "REMOVE_FILTER_TABLE";
 }
 
 export interface UpdateFilterCommand extends SheetDependentCommand, PositionDependentCommand {
@@ -865,6 +870,7 @@ export type CoreCommand =
 
   /** FILTERS */
   | CreateFilterCommand
+  | RemoveFilterCommand
   | UpdateFilterCommand;
 
 export type LocalCommand =
@@ -1033,6 +1039,11 @@ export const enum CommandResult {
   InvalidViewportSize,
   FigureDoesNotExist,
   InvalidConditionalFormatId,
+  InvalidFilterZone,
+  FilterOverlap,
+  FilterNotFound,
+  MergeAcrossFilter,
+  VerticalMergeInFilter,
 }
 
 export interface CommandHandler<T> {

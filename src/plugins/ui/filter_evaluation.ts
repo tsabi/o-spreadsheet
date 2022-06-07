@@ -5,7 +5,6 @@ import { UIPlugin } from "../ui_plugin";
 
 export class FilterEvaluationPlugin extends UIPlugin {
   static getters = [
-    "getFilteredRows",
     "getFilterBorder",
     "getFilterHeaders",
     "isFilterHeader",
@@ -20,20 +19,14 @@ export class FilterEvaluationPlugin extends UIPlugin {
 
     const hiddenRows = new Set<number>();
     for (let filter of filters) {
-      for (let row = filter.startRow; row <= filter.endRow; row++) {
-        const value = this.getCellValue(sheetId, filter.col, row);
+      for (let row = filter.filteredZone.top; row <= filter.filteredZone.bottom; row++) {
+        const value = this.getCellValueAsString(sheetId, filter.col, row);
         if (filter.filteredValues.includes(value)) {
           hiddenRows.add(row);
         }
       }
     }
     this.hiddenRows = hiddenRows;
-  }
-
-  //TODO probably delete this
-  getFilteredRows(sheetId: UID) {
-    if (this.getters.getActiveSheetId() !== sheetId) return [];
-    return Array.from(this.hiddenRows);
   }
 
   isRowFiltered(sheetId: UID, row: number) {
@@ -86,7 +79,7 @@ export class FilterEvaluationPlugin extends UIPlugin {
     return headers.some((header) => header.col === col && header.row === row);
   }
 
-  private getCellValue(sheetId: UID, col: number, row: number): string {
+  private getCellValueAsString(sheetId: UID, col: number, row: number): string {
     const value = this.getters.getCell(sheetId, col, row)?.evaluated.value;
     return value !== undefined ? String(value) : "";
   }

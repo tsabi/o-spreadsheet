@@ -1,8 +1,9 @@
 import { LinkEditor } from "../../components/link";
 import { BACKGROUND_CHART_COLOR } from "../../constants";
-import { numberToLetters, zoneToXc } from "../../helpers/index";
+import { intersection, numberToLetters, zoneToXc } from "../../helpers/index";
 import { interactiveSortSelection } from "../../helpers/sort";
 import { interactiveCut } from "../../helpers/ui/cut";
+import { interactiveAddFilter } from "../../helpers/ui/filter_interactive";
 import { handlePasteResult, interactivePaste } from "../../helpers/ui/paste";
 import { _lt } from "../../translation";
 import { CellValueType, Format, SpreadsheetChildEnv, Style } from "../../types/index";
@@ -672,11 +673,28 @@ export const FILTERS_CREATE_FILTER_TABLE = (env: SpreadsheetChildEnv) => {
   const sheetId = env.model.getters.getActiveSheetId();
   const selection = env.model.getters.getSelection().zones;
   if (selection) {
-    env.model.dispatch("CREATE_FILTER_TABLE", {
-      sheetId,
-      target: selection,
-    });
+    interactiveAddFilter(env, sheetId, selection);
   }
+};
+
+export const FILTERS_REMOVE_FILTER_TABLE = (env: SpreadsheetChildEnv) => {
+  const sheetId = env.model.getters.getActiveSheetId();
+  env.model.dispatch("REMOVE_FILTER_TABLE", {
+    sheetId,
+    target: env.model.getters.getSelectedZones(),
+  });
+};
+
+export const SELECTION_CONTAINS_FILTER = (env: SpreadsheetChildEnv): boolean => {
+  const sheetId = env.model.getters.getActiveSheetId();
+  for (const zone of env.model.getters.getSelectedZones()) {
+    for (const filterTable of env.model.getters.getFilterTables(sheetId)) {
+      if (intersection(zone, filterTable.zone)) {
+        return true;
+      }
+    }
+  }
+  return false;
 };
 
 //------------------------------------------------------------------------------

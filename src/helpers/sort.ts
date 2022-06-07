@@ -59,7 +59,8 @@ export function interactiveSortSelection(
   sheetId: UID,
   anchor: Position,
   zone: Zone,
-  sortDirection: SortDirection
+  sortDirection: SortDirection,
+  canExpandSelection = true
 ) {
   let result: DispatchResult = DispatchResult.Success;
 
@@ -84,7 +85,7 @@ export function interactiveSortSelection(
   }
 
   const { col, row } = anchor;
-  if (multiColumns) {
+  if (multiColumns || !canExpandSelection) {
     result = env.model.dispatch("SORT_CELLS", { sheetId, col, row, zone, sortDirection });
   } else {
     // check contiguity

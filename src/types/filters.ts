@@ -45,12 +45,8 @@ export class Filter {
   get col() {
     return this.fullRange.zone.left;
   }
-  get startRow() {
-    return this.fullRange.zone.top;
-  }
-  get endRow() {
-    return this.fullRange.zone.bottom;
-  }
+
+  /** Filtered zone, ie. zone of the filter without the header */
   get filteredZone() {
     return { ...this.fullRange.zone, top: this.fullRange.zone.top + 1 };
   }

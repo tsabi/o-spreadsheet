@@ -335,6 +335,17 @@ describe("Sort multi adjacent columns", () => {
     interactiveSortSelection(env, sheetId, anchor, zone, "descending");
     expect(askConfirmation).toHaveBeenCalled();
   });
+
+  test("Sort with adjacent values to the selection but with canExpandSelection = false does not ask for confirmation", () => {
+    askConfirmation = jest.fn();
+    model = new Model(modelData);
+    const zone = toZone("A2:A3");
+    anchor = toCartesian("A2");
+    const env = makeInteractiveTestEnv(model, { askConfirmation });
+    interactiveSortSelection(env, sheetId, anchor, zone, "descending", false);
+    expect(askConfirmation).not.toHaveBeenCalled();
+  });
+
   test("Sort without adjacent values to the selection does not ask for confirmation", () => {
     askConfirmation = jest.fn();
     model = new Model(modelData);

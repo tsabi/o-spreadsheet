@@ -14,8 +14,6 @@ import {
   FILTER_EDGE_LENGTH,
   HEADER_HEIGHT,
   HEADER_WIDTH,
-  ICON_EDGE_LENGTH,
-  MENU_WIDTH,
   SCROLLBAR_WIDTH,
 } from "../../constants";
 import { findCellInNewZone, isInside, MAX_DELAY, range } from "../../helpers/index";
@@ -34,6 +32,7 @@ import { ClientTag } from "../collaborative_client_tag/collaborative_client_tag"
 import { GridComposer } from "../composer/grid_composer/grid_composer";
 import { FiguresContainer } from "../figures/container/container";
 import { FilterIcon } from "../filters/filter_icon/filter_icon";
+import { FilterMenuItem } from "../filters/filter_menu/filter_menu";
 import { HeadersOverlay } from "../headers_overlay/headers_overlay";
 import { css } from "../helpers/css";
 import { startDnd } from "../helpers/drag_and_drop";
@@ -931,10 +930,8 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   }
 
   isFilterActive(position: Position): boolean {
-    return false;
-    // const sheetId = this.getters.getActiveSheetId();
-    // const col = position.col;
-    // return this.getters.isFilterActive(sheetId, col);
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    return this.env.model.getters.isFilterActive(sheetId, position.col, position.row);
   }
 
   openFilterMenu(position: Position) {
@@ -955,12 +952,21 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     //   y + ICON_EDGE_LENGTH + this.canvasPosition.y
     // );
 
-    const { col, row } = position;
-    const viewport = this.env.model.getters.getActiveSnappedViewport();
-    const [x, y] = this.env.model.getters.getRect(
-      { left: col, top: row, right: col, bottom: row },
-      viewport
-    );
-    this.toggleContextMenu("FILTER", x + ICON_EDGE_LENGTH - MENU_WIDTH, y + ICON_EDGE_LENGTH);
+    let { col, row } = position;
+    // const viewport = this.env.model.getters.getActiveSnappedViewport();
+    // const [x, y] = this.env.model.getters.getRect(
+    //   { left: col, top: row, right: col, bottom: row },
+    //   viewport
+    // );
+    // this.toggleContextMenu("FILTER", x + ICON_EDGE_LENGTH - MENU_WIDTH, y + ICON_EDGE_LENGTH);
+    this.env.model.dispatch("OPEN_CELL_POPOVER", {
+      col,
+      row,
+      Component: FilterMenuItem,
+      cellCorner: "BottomLeft",
+      props: {
+        cellPosition: { col, row },
+      },
+    });
   }
 }

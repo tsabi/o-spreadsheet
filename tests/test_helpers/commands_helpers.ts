@@ -609,3 +609,37 @@ export function hideSheet(model: Model, sheetId: UID) {
 export function showSheet(model: Model, sheetId: UID) {
   return model.dispatch("SHOW_SHEET", { sheetId });
 }
+
+export function createFilter(
+  model: Model,
+  range: string,
+  sheetId: UID = model.getters.getActiveSheetId()
+): DispatchResult {
+  return model.dispatch("CREATE_FILTER_TABLE", {
+    sheetId,
+    target: target(range),
+  });
+}
+
+export function updateFilter(
+  model: Model,
+  xc: string,
+  values: string[],
+  sheetId: UID = model.getters.getActiveSheetId()
+): DispatchResult {
+  const { col, row } = toCartesian(xc);
+  return model.dispatch("UPDATE_FILTER", { col, row, sheetId, values });
+}
+
+export function deleteFilter(
+  model: Model,
+  range: string,
+  sheetId: UID = model.getters.getActiveSheetId()
+): DispatchResult {
+  return model.dispatch("REMOVE_FILTER_TABLE", { sheetId, target: target(range) });
+}
+
+export function activateFilter(model: Model, xc: string) {
+  const { col, row } = toCartesian(xc);
+  model.dispatch("SET_CURRENT_USED_FILTER", { col, row });
+}
