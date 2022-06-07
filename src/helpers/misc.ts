@@ -168,7 +168,7 @@ export function getFontSizeMatchingWidth(
   return fontSize;
 }
 
-export function computeIconWidth(context: CanvasRenderingContext2D, style: Style) {
+export function computeCfIconWidth(context: CanvasRenderingContext2D, style: Style) {
   const sizeInPt = style.fontSize || DEFAULT_FONT_SIZE;
   const size = fontSizeMap[sizeInPt];
   return size + 2 * MIN_CF_ICON_MARGIN;
@@ -413,4 +413,19 @@ export function findNextDefinedValue(arr: string[], index: number): string {
 /** Get index of first header added by an ADD_COLUMNS_ROWS command */
 export function getAddHeaderStartIndex(position: "before" | "after", base: number): number {
   return position === "after" ? base + 1 : base;
+}
+
+/** Transform a string to lower case. If the string is undefined, return an empty string */
+export function toLowerCase(str: string | undefined) {
+  return str ? str.toLowerCase() : "";
+}
+
+export function sumOfArray(arr: number[]) {
+  return arr.reduce((partialSum, a) => partialSum + a, 0);
+}
+
+export function getElementHeightWithMargins(el: HTMLElement): number {
+  const styles = window.getComputedStyle(el);
+  const margin = parseFloat(styles["marginTop"]) + parseFloat(styles["marginBottom"]);
+  return el.offsetHeight + margin;
 }

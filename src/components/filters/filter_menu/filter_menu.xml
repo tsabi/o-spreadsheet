@@ -1,0 +1,57 @@
+<templates>
+  <t t-name="o-spreadsheet-FilterMenuItem" owl="1">
+    <div class="o-filter-menu">
+      <div>
+        <div class="o-filter-menu-item" t-on-click="() => this.sortFilterZone('ascending')">
+          Sort ascending (A ⟶ Z)
+        </div>
+        <div class="o-filter-menu-item" t-on-click="() => this.sortFilterZone('descending')">
+          Sort descending (Z ⟶ A)
+        </div>
+      </div>
+      <div class="o-separator"/>
+      <div class="o-filter-menu-actions">
+        <div class="o-filter-menu-action-text" t-on-click="selectAll">Select all</div>
+        <div class="o-filter-menu-action-text" t-on-click="clearAll">Clear</div>
+      </div>
+      <div class="o-filter-search">
+        <input
+          type="text"
+          t-model="state.textFilter"
+          placeholder="Search..."
+          t-on-keydown="(ev) => this.onKeyDown(ev)"
+        />
+        <i class="o-search-icon">
+          <t t-call="o-spreadsheet-Icon.SEARCH"/>
+        </i>
+      </div>
+      <div class="o-filter-menu-list" t-ref="filter_value_list">
+        <t t-foreach="displayedValues" t-as="value" t-key="value.string">
+          <div
+            t-on-click="() => selectVal(value)"
+            class="o-filter-menu-item o-filter-menu-value"
+            t-att-class="{'selected': value.string === state.selectedValue}">
+            <div>
+              <div class="o-filter-menu-value-checked">
+                <span t-if="value.checked">✓</span>
+              </div>
+            </div>
+            <div class="o-filter-menu-value-text">
+              <t t-if="value.string === ''">(Blanks)</t>
+              <t t-else="" t-esc="value.string"/>
+            </div>
+          </div>
+        </t>
+        <div t-if="displayedValues.length === 0" class="o-filter-menu-no-values">No results</div>
+      </div>
+      <div class="o-filter-menu-buttons">
+        <div class="o-filter-menu-button o-filter-menu-button-cancel" t-on-click="cancel">
+          Cancel
+        </div>
+        <div class="o-filter-menu-button o-filter-menu-button-primary" t-on-click="confirm">
+          Confirm
+        </div>
+      </div>
+    </div>
+  </t>
+</templates>

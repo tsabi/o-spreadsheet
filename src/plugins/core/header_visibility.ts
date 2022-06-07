@@ -1,19 +1,16 @@
-import { deepCopy, getAddHeaderStartIndex, range } from "../../helpers";
+import { deepCopy, getAddHeaderStartIndex } from "../../helpers";
 import { Command, CommandResult, ExcelWorkbookData, WorkbookData } from "../../types";
-import { ConsecutiveIndexes, Dimension, HeaderIndex, Position, UID } from "../../types/misc";
+import { ConsecutiveIndexes, Dimension, UID } from "../../types/misc";
 import { CorePlugin } from "../core_plugin";
 
 export class HeaderVisibilityPlugin extends CorePlugin {
   static getters = [
-    "findFirstVisibleColRowIndex",
-    "findLastVisibleColRowIndex",
-    "findVisibleHeader",
     "getHiddenColsGroups",
     "getHiddenRowsGroups",
-    "getNextVisibleCellPosition",
-    "isRowHidden",
-    "isColHidden",
-    "isHeaderHidden",
+    "isRowHiddenByUser",
+    "isColHiddenByUser",
+    "isHeaderHiddenByUser",
+    "getHiddenHeadersByUser",
   ] as const;
 
   private readonly hiddenHeaders: Record<UID, Record<Dimension, Array<boolean>>> = {};
@@ -90,18 +87,26 @@ export class HeaderVisibilityPlugin extends CorePlugin {
     return;
   }
 
-  isRowHidden(sheetId: UID, index: HeaderIndex): boolean {
+  isRowHiddenByUser(sheetId: UID, index: number): boolean {
     return this.hiddenHeaders[sheetId].ROW[index];
   }
 
-  isColHidden(sheetId: UID, index: HeaderIndex): boolean {
+  isColHiddenByUser(sheetId: UID, index: number): boolean {
     return this.hiddenHeaders[sheetId].COL[index];
   }
 
-  isHeaderHidden(sheetId: UID, dimension: Dimension, index: HeaderIndex) {
+  isHeaderHiddenByUser(sheetId: UID, dimension: Dimension, index: number) {
     return dimension === "COL"
-      ? this.isColHidden(sheetId, index)
-      : this.isRowHidden(sheetId, index);
+      ? this.isColHiddenByUser(sheetId, index)
+      : this.isRowHiddenByUser(sheetId, index);
+  }
+
+  getHiddenHeadersByUser(sheetId: UID, dimension: Dimension): number[] {
+    const hiddenHeaders =
+      dimension === "COL" ? this.hiddenHeaders[sheetId].COL : this.hiddenHeaders[sheetId].ROW;
+    const indexes: number[] = [];
+    hiddenHeaders.forEach((isHidden, index) => (isHidden ? indexes.push(index) : undefined));
+    return indexes;
   }
 
   getHiddenColsGroups(sheetId: UID): ConsecutiveIndexes[] {
@@ -142,53 +147,6 @@ export class HeaderVisibilityPlugin extends CorePlugin {
       consecutiveIndexes.pop();
     }
     return consecutiveIndexes;
-  }
-
-  getNextVisibleCellPosition(sheetId: UID, col: HeaderIndex, row: HeaderIndex): Position {
-    return {
-      col: this.findVisibleHeader(sheetId, "COL", range(col, this.getters.getNumberCols(sheetId)))!,
-      row: this.findVisibleHeader(sheetId, "ROW", range(row, this.getters.getNumberRows(sheetId)))!,
-    };
-  }
-
-  findVisibleHeader(
-    sheetId: UID,
-    dimension: Dimension,
-    indexes: HeaderIndex[]
-  ): HeaderIndex | undefined {
-    return indexes.find(
-      (index) =>
-        this.getters.doesHeaderExist(sheetId, dimension, index) &&
-        !this.isHeaderHidden(sheetId, dimension, index)
-    );
-  }
-
-  findLastVisibleColRowIndex(sheetId: UID, dimension: Dimension): HeaderIndex {
-    let lastIndex: HeaderIndex;
-    for (
-      lastIndex = this.getters.getNumberHeaders(sheetId, dimension) - 1;
-      lastIndex >= 0;
-      lastIndex--
-    ) {
-      if (!this.isHeaderHidden(sheetId, dimension, lastIndex)) {
-        return lastIndex;
-      }
-    }
-    return lastIndex;
-  }
-
-  findFirstVisibleColRowIndex(sheetId: UID, dimension: Dimension) {
-    const numberOfHeaders = this.getters.getNumberHeaders(sheetId, dimension);
-
-    for (let i = 0; i < numberOfHeaders - 1; i++) {
-      if (dimension === "COL" && !this.isColHidden(sheetId, i)) {
-        return i;
-      }
-      if (dimension === "ROW" && !this.isRowHidden(sheetId, i)) {
-        return i;
-      }
-    }
-    return undefined;
   }
 
   import(data: WorkbookData) {

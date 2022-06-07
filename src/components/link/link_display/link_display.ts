@@ -116,6 +116,7 @@ export const LinkCellPopoverBuilder: PopoverBuilders = {
       Component: LinkDisplay,
       props: { cellPosition: position },
       cellCorner: "BottomLeft",
+      popoverType: "LinkDisplay",
     };
   },
 };

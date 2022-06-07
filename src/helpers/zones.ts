@@ -1,7 +1,7 @@
 import { _lt } from "../translation";
 import { Position, UnboundedZone, Zone, ZoneDimension } from "../types";
 import { lettersToNumber, numberToLetters, toCartesian, toXC } from "./coordinates";
-import { range } from "./misc";
+import { range, sumOfArray } from "./misc";
 import { isColReference, isRowReference } from "./references";
 
 /**
@@ -196,15 +196,17 @@ export function expandZoneOnInsertion<Z extends UnboundedZone | Zone>(
   start: "left" | "top",
   base: number,
   position: "after" | "before",
-  quantity: number
+  quantity: number,
+  shouldIncludeEnd = false
 ): Z {
   const dimension = start === "left" ? "columns" : "rows";
   const baseElement = position === "before" ? base - 1 : base;
   const end = start === "left" ? "right" : "bottom";
   const zoneEnd = zone[end];
-  let shouldIncludeEnd = false;
+
   if (zoneEnd) {
-    shouldIncludeEnd = position === "before" ? zoneEnd > baseElement : zoneEnd >= baseElement;
+    shouldIncludeEnd =
+      shouldIncludeEnd || position === "before" ? zoneEnd > baseElement : zoneEnd > baseElement;
   }
   if (zone[start] <= baseElement && shouldIncludeEnd) {
     return createAdaptedZone(zone, dimension, "RESIZE", quantity);
@@ -642,6 +644,38 @@ function isFullCol(zone: UnboundedZone): boolean {
   return zone.bottom === undefined;
 }
 
-export function getZoneArea(zone: Zone) {
+/** Return the area of a zone */
+export function getZoneArea(zone: Zone): number {
   return (zone.bottom - zone.top + 1) * (zone.right - zone.left + 1);
+}
+
+/**
+ * Check if the zones are continuous, ie. if they can be merged into a single zone without
+ * including cells outside the zones
+ * */
+export function areZonesContinuous(...zones: Zone[]): boolean {
+  const unionOfZones = union(...zones);
+  return getZoneArea(unionOfZones) === sumOfArray(zones.map(getZoneArea));
+}
+
+/** Return all the columns in the given list of zones */
+export function getZonesCols(zones: Zone[]): Set<number> {
+  const set = new Set<number>();
+  for (let zone of zones) {
+    for (let col of range(zone.left, zone.right + 1)) {
+      set.add(col);
+    }
+  }
+  return set;
+}
+
+/** Return all the rows in the given list of zones */
+export function getZonesRows(zones: Zone[]): Set<number> {
+  const set = new Set<number>();
+  for (let zone of zones) {
+    for (let row of range(zone.top, zone.bottom + 1)) {
+      set.add(row);
+    }
+  }
+  return set;
 }

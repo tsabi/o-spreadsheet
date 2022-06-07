@@ -17,6 +17,9 @@ export const CELL_BORDER_COLOR = "#E2E3E3";
 export const BACKGROUND_CHART_COLOR = "#FFFFFF";
 export const MENU_ITEM_DISABLED_COLOR = "#CACACA";
 export const DEFAULT_COLOR_SCALE_MIDPOINT_COLOR = 0xb6d7a8;
+export const FILTERS_COLOR = "#188038";
+export const BACKGROUND_HEADER_FILTER_COLOR = "#E6F4EA";
+export const BACKGROUND_HEADER_SELECTED_FILTER_COLOR = "#CEEAD6";
 
 // Dimensions
 export const MIN_ROW_HEIGHT = 10;
@@ -35,6 +38,8 @@ export const UNHIDE_ICON_EDGE_LENGTH = 14;
 export const MIN_CF_ICON_MARGIN = 4;
 export const MIN_CELL_TEXT_MARGIN = 4;
 export const CF_ICON_EDGE_LENGTH = 15;
+export const FILTER_ICON_MARGIN = 4;
+export const FILTER_EDGE_LENGTH = 20;
 
 // Menus
 export const MENU_WIDTH = 250;
@@ -53,6 +58,7 @@ export const DEFAULT_FONT = "'Roboto', arial";
 
 // Borders
 export const DEFAULT_BORDER_DESC: BorderDescr = ["thin", "#000"];
+export const DEFAULT_FILTER_BORDER_DESC: BorderDescr = ["thin", FILTERS_COLOR];
 
 // Style
 export const DEFAULT_STYLE: Style = {

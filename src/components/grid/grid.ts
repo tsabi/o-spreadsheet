@@ -12,6 +12,7 @@ import {
   BACKGROUND_GRAY_COLOR,
   ComponentsImportance,
   DEFAULT_CELL_HEIGHT,
+  FILTER_EDGE_LENGTH,
   HEADER_HEIGHT,
   HEADER_WIDTH,
   SCROLLBAR_WIDTH,
@@ -39,6 +40,7 @@ import { Autofill } from "../autofill/autofill";
 import { ClientTag } from "../collaborative_client_tag/collaborative_client_tag";
 import { GridComposer } from "../composer/grid_composer/grid_composer";
 import { FiguresContainer } from "../figures/container/container";
+import { FilterIcon } from "../filters/filter_icon/filter_icon";
 import { HeadersOverlay } from "../headers_overlay/headers_overlay";
 import { css } from "../helpers/css";
 import { startDnd } from "../helpers/drag_and_drop";
@@ -59,7 +61,7 @@ import { ScrollBar } from "../scrollbar";
  * - a vertical resizer (same, for rows)
  */
 
-export type ContextMenuType = "ROW" | "COL" | "CELL" | "DASHBOARD";
+export type ContextMenuType = "ROW" | "COL" | "CELL" | "DASHBOARD" | "FILTER";
 
 const registries = {
   ROW: rowMenuRegistry,
@@ -253,6 +255,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     ClientTag,
     Highlight,
     Popover,
+    FilterIcon,
   };
 
   private menuState!: MenuState;
@@ -552,16 +555,15 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   isAutoFillActive(): boolean {
     const zone = this.env.model.getters.getSelectedZone();
     const sheetId = this.env.model.getters.getActiveSheetId();
-    const { width, height } = this.env.model.getters.getViewportDimension();
-    const { offsetX, offsetY } = this.env.model.getters.getActiveViewport();
     const rightCol = this.env.model.getters.getColDimensions(sheetId, zone.right);
     const bottomRow = this.env.model.getters.getRowDimensions(sheetId, zone.bottom);
-    return (
-      rightCol.end <= offsetX + width &&
-      rightCol.end > offsetX &&
-      bottomRow.end <= offsetY + height &&
-      bottomRow.end > offsetY
-    );
+    return this.isPositionVisible(rightCol.end, bottomRow.end);
+  }
+
+  private isPositionVisible(x: number, y: number) {
+    const { width, height } = this.env.model.getters.getViewportDimension();
+    const { offsetX, offsetY } = this.env.model.getters.getActiveViewport();
+    return x <= offsetX + width && x > offsetX && y <= offsetY + height && y > offsetY;
   }
 
   drawGrid() {
@@ -931,5 +933,45 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   closeMenu() {
     this.menuState.isOpen = false;
     this.focus();
+  }
+
+  getVisibleFilterHeaders(): Position[] {
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    const headerPositions = this.env.model.getters.getFilterHeaders(sheetId);
+    return headerPositions.filter((position) => {
+      const rightCol = this.env.model.getters.getColDimensions(sheetId, position.col);
+      const bottomRow = this.env.model.getters.getRowDimensions(sheetId, position.row);
+      return this.isPositionVisible(rightCol.end, bottomRow.end);
+    });
+  }
+
+  getFilterHeaderPosition(position: Position): DOMCoordinates {
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    const { offsetX, offsetY } = this.env.model.getters.getActiveViewport();
+    const row = this.env.model.getters.getRowDimensions(sheetId, position.row);
+    const col = this.env.model.getters.getColDimensions(sheetId, position.col);
+    return {
+      x: col.end - FILTER_EDGE_LENGTH + HEADER_WIDTH - offsetX,
+      y: row.end - FILTER_EDGE_LENGTH + HEADER_HEIGHT - offsetY,
+    };
+  }
+
+  isFilterActive(position: Position): boolean {
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    return this.env.model.getters.isFilterActive(sheetId, position.col, position.row);
+  }
+
+  toggleFilterMenu(position: Position) {
+    const activePopoverType = this.env.model.getters.getPersistentPopoverTypeAtPosition(position);
+    if (activePopoverType && activePopoverType === "FilterMenu") {
+      this.env.model.dispatch("CLOSE_CELL_POPOVER");
+      return;
+    }
+    const { col, row } = position;
+    this.env.model.dispatch("OPEN_CELL_POPOVER", {
+      col,
+      row,
+      popoverType: "FilterMenu",
+    });
   }
 }

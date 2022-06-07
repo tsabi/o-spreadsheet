@@ -11,6 +11,7 @@ import {
   activateSheet,
   addColumns,
   addRows,
+  createFilter,
   deleteColumns,
   deleteRows,
   hideColumns,
@@ -24,9 +25,11 @@ import {
   selectCell,
   selectColumn,
   selectRow,
+  setCellContent,
   setSelection,
   setViewportOffset,
   undo,
+  updateFilter,
 } from "../test_helpers/commands_helpers";
 
 let model: Model;
@@ -892,4 +895,31 @@ describe("shift viewport up/down", () => {
       expect(model.getters.getSelectedZone()).toEqual(toZone(selectedCell));
     }
   );
+});
+
+test("Viewport is updated when updating a data filter", () => {
+  model = new Model();
+  createFilter(model, "A1:A10");
+  setCellContent(model, "A2", "5");
+  setCellContent(model, "A2", "5");
+  setCellContent(model, "A3", "5");
+  setCellContent(model, "A4", "5");
+  setCellContent(model, "A5", "5");
+  const oldViewport = { ...model.getters.getActiveViewport() };
+  updateFilter(model, "A1", ["5"]);
+  expect(model.getters.getActiveViewport()).not.toEqual(oldViewport);
+});
+
+test("Viewport is updated when updating a cell that change the evaluation of filtered rows", () => {
+  model = new Model();
+  createFilter(model, "A1:A10");
+  setCellContent(model, "A2", "=B1");
+  setCellContent(model, "A2", "=B1");
+  setCellContent(model, "A3", "=B1");
+  setCellContent(model, "A4", "=B1");
+  setCellContent(model, "A5", "=B1");
+  updateFilter(model, "A1", ["5"]);
+  const oldViewport = { ...model.getters.getActiveViewport() };
+  setCellContent(model, "B1", "5");
+  expect(model.getters.getActiveViewport()).not.toEqual(oldViewport);
 });

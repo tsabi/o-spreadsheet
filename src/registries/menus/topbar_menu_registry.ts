@@ -68,18 +68,18 @@ topbarMenuRegistry
     sequence: 20,
     action: ACTIONS.PASTE_FORMAT_ACTION,
   })
-  .addChild("sort_range", ["edit"], {
+  .addChild("sort_range", ["data"], {
     name: _lt("Sort range"),
-    sequence: 62,
+    sequence: 10,
     isVisible: ACTIONS.IS_ONLY_ONE_RANGE,
     separator: true,
   })
-  .addChild("sort_ascending", ["edit", "sort_range"], {
+  .addChild("sort_ascending", ["data", "sort_range"], {
     name: _lt("Ascending (A ⟶ Z)"),
     sequence: 10,
     action: ACTIONS.SORT_CELLS_ASCENDING,
   })
-  .addChild("sort_descending", ["edit", "sort_range"], {
+  .addChild("sort_descending", ["data", "sort_range"], {
     name: _lt("Descending (Z ⟶ A)"),
     sequence: 20,
     action: ACTIONS.SORT_CELLS_DESCENDING,
@@ -308,6 +308,19 @@ topbarMenuRegistry
     sequence: 80,
     action: ACTIONS.FORMAT_CLEARFORMAT_ACTION,
     separator: true,
+  })
+  .addChild("add_data_filter", ["data"], {
+    name: _lt("Add Filter"),
+    sequence: 20,
+    action: ACTIONS.FILTERS_CREATE_FILTER_TABLE,
+    isVisible: (env) => !ACTIONS.SELECTION_CONTAINS_FILTER(env),
+    isEnabled: (env) => ACTIONS.SELECTION_IS_CONTINUOUS(env),
+  })
+  .addChild("remove_data_filter", ["data"], {
+    name: _lt("Remove Filter"),
+    sequence: 20,
+    action: ACTIONS.FILTERS_REMOVE_FILTER_TABLE,
+    isVisible: ACTIONS.SELECTION_CONTAINS_FILTER,
   });
 
 // Font-sizes

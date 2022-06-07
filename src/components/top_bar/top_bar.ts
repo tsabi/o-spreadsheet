@@ -7,17 +7,17 @@ import {
 } from "@odoo/owl";
 import { BACKGROUND_HEADER_COLOR, ComponentsImportance, DEFAULT_FONT_SIZE } from "../../constants";
 import { fontSizes } from "../../fonts";
-import { isEqual } from "../../helpers/index";
+import { areZonesContinuous, isEqual } from "../../helpers/index";
+import { interactiveAddFilter } from "../../helpers/ui/filter_interactive";
+import { interactiveAddMerge } from "../../helpers/ui/merge_interactive";
 import { ComposerSelection } from "../../plugins/ui/edition";
 import { setFormatter, setStyle, topbarComponentRegistry } from "../../registries/index";
 import { getMenuChildren, getMenuName } from "../../registries/menus/helpers";
 import { topbarMenuRegistry } from "../../registries/menus/topbar_menu_registry";
 import { FullMenuItem } from "../../registries/menu_items_registry";
-import { _lt } from "../../translation";
 import {
   Align,
   BorderCommand,
-  CommandResult,
   SetDecimalStep,
   SpreadsheetChildEnv,
   Style,
@@ -162,6 +162,14 @@ css/* scss */ `
           min-width: fit-content;
         }
 
+        .o-tool-outlined {
+          background-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .o-filter-tool {
+          margin-right: 8px;
+        }
+
         .o-tool.active,
         .o-tool:not(.o-disabled):hover {
           background-color: #f1f3f4;
@@ -195,6 +203,7 @@ css/* scss */ `
 
         .o-disabled {
           opacity: 0.6;
+          cursor: default;
         }
 
         .o-dropdown {
@@ -420,17 +429,7 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
     if (this.inMerge) {
       this.env.model.dispatch("REMOVE_MERGE", { sheetId, target });
     } else {
-      const result = this.env.model.dispatch("ADD_MERGE", { sheetId, target });
-      if (!result.isSuccessful) {
-        if (result.isCancelledBecause(CommandResult.MergeIsDestructive)) {
-          this.env.askConfirmation(
-            _lt("Merging these cells will only preserve the top-leftmost value. Merge anyway?"),
-            () => {
-              this.env.model.dispatch("ADD_MERGE", { sheetId, target, force: true });
-            }
-          );
-        }
-      }
+      interactiveAddMerge(this.env, sheetId, target);
     }
   }
 
@@ -501,5 +500,32 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
 
   redo() {
     this.env.model.dispatch("REQUEST_REDO");
+  }
+
+  get selectionContainFilter() {
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    const selectedZones = this.env.model.getters.getSelectedZones();
+    const a = this.env.model.getters.isZonesContainFilter(sheetId, selectedZones);
+    return a;
+  }
+
+  get cannotCreateFilter() {
+    return !areZonesContinuous(...this.env.model.getters.getSelectedZones());
+  }
+
+  createFilter() {
+    if (this.cannotCreateFilter) {
+      return;
+    }
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    const selection = this.env.model.getters.getSelectedZones();
+    interactiveAddFilter(this.env, sheetId, selection);
+  }
+
+  removeFilter() {
+    this.env.model.dispatch("REMOVE_FILTER_TABLE", {
+      sheetId: this.env.model.getters.getActiveSheetId(),
+      target: this.env.model.getters.getSelectedZones(),
+    });
   }
 }

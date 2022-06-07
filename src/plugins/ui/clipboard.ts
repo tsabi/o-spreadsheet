@@ -1,5 +1,12 @@
 import { SELECTION_BORDER_COLOR } from "../../constants";
-import { formatValue, mergeOverlappingZones, positions, union } from "../../helpers/index";
+import {
+  createAdaptedZone,
+  formatValue,
+  mergeOverlappingZones,
+  positions,
+  union,
+} from "../../helpers/index";
+import { FilterTable } from "../../types/filters";
 import {
   CellPosition,
   ClipboardCell,
@@ -27,6 +34,7 @@ interface InsertDeleteCellsTargets {
 interface ClipboardState {
   cells: ClipboardCell[][];
   merges: Zone[];
+  tables: FilterTable[];
   operation: ClipboardOperation;
   zones: Zone[];
   sheetId: UID;
@@ -361,12 +369,18 @@ export class ClipboardPlugin extends UIPlugin {
       cellsInClipboard.push(cellsInRow);
     }
 
+    const tables: FilterTable[] = [];
+    for (let zone of zones) {
+      tables.push(...this.getters.getFilterTablesInZone(sheetId, zone));
+    }
+
     return {
       cells: cellsInClipboard,
       operation,
       sheetId,
       zones: clippedZones,
       merges,
+      tables,
     };
   }
 
@@ -475,6 +489,9 @@ export class ClipboardPlugin extends UIPlugin {
         }
       }
     }
+    if (options === undefined) {
+      this.pasteCopiedTables(state, target);
+    }
   }
 
   private pasteFromCut(state: ClipboardState, target: Zone[]) {
@@ -489,7 +506,39 @@ export class ClipboardPlugin extends UIPlugin {
       row: selection.top,
     });
     this.dispatch("REMOVE_MERGE", { sheetId: state.sheetId, target: state.merges });
+
+    for (let filterTable of state.tables) {
+      this.dispatch("REMOVE_FILTER_TABLE", {
+        sheetId: this.getters.getActiveSheetId(),
+        target: [filterTable.zone],
+      });
+    }
+    this.pasteCopiedTables(state, target);
     this.state = undefined;
+  }
+
+  /** Paste the filter tables that are in the state */
+  private pasteCopiedTables(state: ClipboardState, target: Zone[]) {
+    const sheetId = this.getters.getActiveSheetId();
+    const selection = target[0];
+    const cutZone = state.zones[0];
+    const cutOffset: [number, number] = [
+      selection.left - cutZone.left,
+      selection.top - cutZone.top,
+    ];
+    for (let filterTable of state.tables) {
+      const newTableZone = createAdaptedZone(filterTable.zone, "both", "MOVE", cutOffset);
+      this.dispatch("CREATE_FILTER_TABLE", { sheetId, target: [newTableZone] });
+      for (let filter of filterTable.filters) {
+        const index = filter.col - filterTable.zone.left;
+        this.dispatch("UPDATE_FILTER", {
+          sheetId,
+          col: newTableZone.left + index,
+          row: newTableZone.top,
+          values: filter.filteredValues,
+        });
+      }
+    }
   }
 
   /**

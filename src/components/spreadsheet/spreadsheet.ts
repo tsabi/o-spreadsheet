@@ -10,6 +10,8 @@ import {
   BOTTOMBAR_HEIGHT,
   CF_ICON_EDGE_LENGTH,
   ICON_EDGE_LENGTH,
+  MENU_SEPARATOR_BORDER_WIDTH,
+  MENU_SEPARATOR_PADDING,
   TOPBAR_HEIGHT,
 } from "../../constants";
 import { Model } from "../../model";
@@ -41,6 +43,11 @@ css/* scss */ `
     *:before,
     *:after {
       box-sizing: content-box;
+    }
+    .o-separator {
+      border-bottom: ${MENU_SEPARATOR_BORDER_WIDTH}px solid #e0e2e4;
+      margin-top: ${MENU_SEPARATOR_PADDING}px;
+      margin-bottom: ${MENU_SEPARATOR_PADDING}px;
     }
   }
 

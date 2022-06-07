@@ -11,6 +11,7 @@ import {
   Dimension,
   HeaderIndex,
   SetDecimalStep,
+  SortOptions,
   UID,
 } from "./misc";
 import { RangeData } from "./range";
@@ -171,6 +172,11 @@ export const coreTypes = new Set<CoreCommandTypes>([
   /** CHART */
   "CREATE_CHART",
   "UPDATE_CHART",
+
+  /** FILTERS */
+  "CREATE_FILTER_TABLE",
+  "REMOVE_FILTER_TABLE",
+  "UPDATE_FILTER",
 ]);
 
 export function isCoreCommand(cmd: Command): cmd is CoreCommand {
@@ -375,7 +381,24 @@ export interface RefreshChartCommand {
   id: UID;
 }
 
-export interface SetFormattingCommand extends TargetDependentCommand {
+//------------------------------------------------------------------------------
+// Filters
+//------------------------------------------------------------------------------
+
+export interface CreateFilterCommand extends TargetDependentCommand {
+  type: "CREATE_FILTER_TABLE";
+}
+
+export interface RemoveFilterCommand extends TargetDependentCommand {
+  type: "REMOVE_FILTER_TABLE";
+}
+
+export interface UpdateFilterCommand extends PositionDependentCommand {
+  type: "UPDATE_FILTER";
+  values: string[];
+}
+
+export interface SetFormattingCommand extends SheetDependentCommand, TargetDependentCommand {
   type: "SET_FORMATTING";
   style?: Style;
   border?: BorderCommand;
@@ -715,6 +738,7 @@ export interface SortCommand {
   row: number;
   zone: Zone;
   sortDirection: SortDirection;
+  sortOptions?: SortOptions;
 }
 
 export type SortDirection = "ascending" | "descending";
@@ -849,7 +873,12 @@ export type CoreCommand =
 
   /** CHART */
   | CreateChartCommand
-  | UpdateChartCommand;
+  | UpdateChartCommand
+
+  /** FILTERS */
+  | CreateFilterCommand
+  | RemoveFilterCommand
+  | UpdateFilterCommand;
 
 export type LocalCommand =
   | RequestUndoCommand
@@ -1027,6 +1056,11 @@ export const enum CommandResult {
   FigureDoesNotExist,
   InvalidConditionalFormatId,
   InvalidCellPopover,
+  InvalidFilterZone,
+  FilterOverlap,
+  FilterNotFound,
+  MergeInFilter,
+  NonContinuousTargets,
 }
 
 export interface CommandHandler<T> {

@@ -19,6 +19,7 @@ import {
 import {
   addColumns,
   addRows,
+  createFilter,
   hideColumns,
   hideRows,
   selectCell,
@@ -709,7 +710,7 @@ describe("Menu Item actions", () => {
   });
 
   test("Edit -> Sort ascending", () => {
-    doAction(["edit", "sort_range", "sort_ascending"], env);
+    doAction(["data", "sort_range", "sort_ascending"], env);
     const { anchor, zones } = env.model.getters.getSelection();
     expect(dispatch).toHaveBeenCalledWith("SORT_CELLS", {
       sheetId: env.model.getters.getActiveSheetId(),
@@ -720,7 +721,7 @@ describe("Menu Item actions", () => {
   });
 
   test("Edit -> Sort descending", () => {
-    doAction(["edit", "sort_range", "sort_descending"], env);
+    doAction(["data", "sort_range", "sort_descending"], env);
     const { anchor, zones } = env.model.getters.getSelection();
     expect(dispatch).toHaveBeenCalledWith("SORT_CELLS", {
       sheetId: env.model.getters.getActiveSheetId(),
@@ -731,7 +732,7 @@ describe("Menu Item actions", () => {
   });
 
   describe("Edit -> Sort", () => {
-    const pathSort = ["edit", "sort_range"];
+    const pathSort = ["data", "sort_range"];
 
     test("A selected zone", () => {
       setSelection(model, ["A1:A2"]);
@@ -884,6 +885,82 @@ describe("Menu Item actions", () => {
         sheetId,
         elements: Array.from(Array(model.getters.getNumberRows(sheetId)).keys()),
         dimension: "ROW",
+      });
+    });
+
+    describe("Filters", () => {
+      const createFilterPath = ["data", "add_data_filter"];
+      const removeFilterPath = ["data", "remove_data_filter"];
+
+      test("Filters -> Create filter", () => {
+        setSelection(model, ["A1:A5"]);
+        expect(getName(createFilterPath, env)).toBe("Add Filter");
+        expect(getNode(createFilterPath).isVisible(env)).toBeTruthy();
+        expect(getNode(removeFilterPath).isVisible(env)).toBeFalsy();
+        doAction(createFilterPath, env);
+        expect(dispatch).toHaveBeenCalledWith("CREATE_FILTER_TABLE", {
+          sheetId: model.getters.getActiveSheetId(),
+          target: target("A1:A5"),
+        });
+      });
+
+      test("Filters -> Remove Filter", () => {
+        createFilter(model, "A1:A5");
+        setSelection(model, ["A1:A5"]);
+        expect(getName(removeFilterPath, env)).toBe("Remove Filter");
+        expect(getNode(removeFilterPath).isVisible(env)).toBeTruthy();
+        expect(getNode(createFilterPath).isVisible(env)).toBeFalsy();
+        doAction(removeFilterPath, env);
+        expect(dispatch).toHaveBeenCalledWith("REMOVE_FILTER_TABLE", {
+          sheetId: model.getters.getActiveSheetId(),
+          target: target("A1:A5"),
+        });
+      });
+
+      test("Filters -> Create filter is disabled when the selection isn't continuous", () => {
+        setSelection(model, ["A1", "B6"]);
+        expect(getNode(createFilterPath).isVisible(env)).toBeTruthy();
+        expect(getNode(createFilterPath).isEnabled(env)).toBeFalsy();
+      });
+
+      test("Filters -> Create filter is enabled for continuous selection of multiple zones", () => {
+        setSelection(model, ["A1", "A2:A5", "B1:B5"]);
+        expect(getNode(createFilterPath).isVisible(env)).toBeTruthy();
+        expect(getNode(createFilterPath).isEnabled(env)).toBeTruthy();
+      });
+
+      test("Filters -> Remove Filter is displayed instead of add filter when the selection contains a filter", () => {
+        setSelection(model, ["A1:A5"]);
+        expect(getNode(removeFilterPath).isVisible(env)).toBeFalsy();
+        expect(getNode(createFilterPath).isVisible(env)).toBeTruthy();
+
+        createFilter(model, "A1:B5");
+        expect(getNode(removeFilterPath).isVisible(env)).toBeTruthy();
+        expect(getNode(createFilterPath).isVisible(env)).toBeFalsy();
+
+        setSelection(model, ["A1:B9"]);
+        expect(getNode(removeFilterPath).isVisible(env)).toBeTruthy();
+        expect(getNode(createFilterPath).isVisible(env)).toBeFalsy();
+
+        setSelection(model, ["A1"]);
+        expect(getNode(removeFilterPath).isVisible(env)).toBeTruthy();
+        expect(getNode(createFilterPath).isVisible(env)).toBeFalsy();
+
+        setSelection(model, ["B5"]);
+        expect(getNode(removeFilterPath).isVisible(env)).toBeTruthy();
+        expect(getNode(createFilterPath).isVisible(env)).toBeFalsy();
+
+        setSelection(model, ["C3", "A3"]);
+        expect(getNode(removeFilterPath).isVisible(env)).toBeTruthy();
+        expect(getNode(createFilterPath).isVisible(env)).toBeFalsy();
+
+        setSelection(model, ["C3"]);
+        expect(getNode(removeFilterPath).isVisible(env)).toBeFalsy();
+        expect(getNode(createFilterPath).isVisible(env)).toBeTruthy();
+
+        setSelection(model, ["C3", "D3"]);
+        expect(getNode(removeFilterPath).isVisible(env)).toBeFalsy();
+        expect(getNode(createFilterPath).isVisible(env)).toBeTruthy();
       });
     });
   });

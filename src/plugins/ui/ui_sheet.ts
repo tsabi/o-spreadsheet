@@ -1,7 +1,7 @@
-import { PADDING_AUTORESIZE } from "../../constants";
-import { computeIconWidth, computeTextWidth } from "../../helpers/index";
+import { FILTER_EDGE_LENGTH, FILTER_ICON_MARGIN, PADDING_AUTORESIZE } from "../../constants";
+import { computeCfIconWidth, computeTextWidth, positions } from "../../helpers/index";
 import { Cell, CellValueType, Command, CommandResult, UID } from "../../types";
-import { HeaderIndex, Pixel } from "../../types/misc";
+import { HeaderIndex, Position } from "../../types/misc";
 import { UIPlugin } from "../ui_plugin";
 
 export class SheetUIPlugin extends UIPlugin {
@@ -59,12 +59,19 @@ export class SheetUIPlugin extends UIPlugin {
   // Getters
   // ---------------------------------------------------------------------------
 
-  getCellWidth(cell: Cell): number {
-    let width = this.getTextWidth(cell);
-    const cellPosition = this.getters.getCellPosition(cell.id);
-    const icon = this.getters.getConditionalIcon(cellPosition.col, cellPosition.row);
-    if (icon) {
-      width += computeIconWidth(this.ctx, this.getters.getCellStyle(cell));
+  getCellWidth(sheetId: UID, { col, row }: Position): number {
+    let width = 0;
+    const cell = this.getters.getCell(sheetId, col, row);
+    if (cell) {
+      width += this.getTextWidth(cell);
+    }
+    const cfIcon = this.getters.getConditionalIcon(col, row);
+    if (cfIcon) {
+      width += computeCfIconWidth(this.ctx, this.getters.getCellStyle(cell));
+    }
+    const isFilterHeader = this.getters.isFilterHeader(sheetId, col, row);
+    if (isFilterHeader) {
+      width += FILTER_EDGE_LENGTH + FILTER_ICON_MARGIN;
     }
     return width;
   }
@@ -86,9 +93,9 @@ export class SheetUIPlugin extends UIPlugin {
   // Grid manipulation
   // ---------------------------------------------------------------------------
 
-  private getColMaxWidth(sheetId: UID, index: HeaderIndex): Pixel {
-    const cells = this.getters.getColCells(sheetId, index);
-    const sizes = cells.map((cell: Cell) => this.getCellWidth(cell));
+  private getColMaxWidth(sheetId: UID, index: HeaderIndex): number {
+    const cellsPositions = positions(this.getters.getColsZone(sheetId, index, index));
+    const sizes = cellsPositions.map((position) => this.getCellWidth(sheetId, position));
     return Math.max(0, ...sizes);
   }
 }

@@ -9,6 +9,7 @@ import {
   CreateSheetCommand,
   DispatchResult,
   SortDirection,
+  SortOptions,
   Style,
   UID,
   UpDown,
@@ -593,11 +594,13 @@ export function sort(
     sheetId,
     anchor,
     direction,
+    sortOptions = {},
   }: {
     zone: string;
     sheetId?: UID;
     anchor: string;
     direction: SortDirection;
+    sortOptions?: SortOptions;
   }
 ) {
   const { col, row } = toCartesian(anchor);
@@ -607,6 +610,7 @@ export function sort(
     col,
     row,
     sortDirection: direction,
+    sortOptions,
   });
 }
 
@@ -713,5 +717,47 @@ export function setStyle(
     sheetId: sheetId,
     target: target(targetXc),
     style: style,
+  });
+}
+
+export function createFilter(
+  model: Model,
+  range: string,
+  sheetId: UID = model.getters.getActiveSheetId()
+): DispatchResult {
+  return model.dispatch("CREATE_FILTER_TABLE", {
+    sheetId,
+    target: target(range),
+  });
+}
+
+export function updateFilter(
+  model: Model,
+  xc: string,
+  values: string[],
+  sheetId: UID = model.getters.getActiveSheetId()
+): DispatchResult {
+  const { col, row } = toCartesian(xc);
+  return model.dispatch("UPDATE_FILTER", { col, row, sheetId, values });
+}
+
+export function deleteFilter(
+  model: Model,
+  range: string,
+  sheetId: UID = model.getters.getActiveSheetId()
+): DispatchResult {
+  return model.dispatch("REMOVE_FILTER_TABLE", { sheetId, target: target(range) });
+}
+
+export function setFormat(
+  model: Model,
+  format: string,
+  target = model.getters.getSelectedZones(),
+  sheetId = model.getters.getActiveSheetId()
+) {
+  model.dispatch("SET_FORMATTING", {
+    sheetId,
+    target,
+    format,
   });
 }

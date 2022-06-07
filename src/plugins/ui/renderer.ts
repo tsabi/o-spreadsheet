@@ -2,22 +2,29 @@ import { ICONS } from "../../components/icons/icons";
 import {
   BACKGROUND_HEADER_ACTIVE_COLOR,
   BACKGROUND_HEADER_COLOR,
+  BACKGROUND_HEADER_FILTER_COLOR,
   BACKGROUND_HEADER_SELECTED_COLOR,
+  BACKGROUND_HEADER_SELECTED_FILTER_COLOR,
   CELL_BORDER_COLOR,
   DEFAULT_FONT,
   DEFAULT_FONT_SIZE,
   DEFAULT_FONT_WEIGHT,
+  FILTERS_COLOR,
+  FILTER_EDGE_LENGTH,
+  FILTER_ICON_MARGIN,
   HEADER_BORDER_COLOR,
   HEADER_FONT_SIZE,
   HEADER_HEIGHT,
   HEADER_WIDTH,
+  ICON_EDGE_LENGTH,
   MIN_CELL_TEXT_MARGIN,
   MIN_CF_ICON_MARGIN,
   TEXT_HEADER_COLOR,
 } from "../../constants";
 import { fontSizeMap } from "../../fonts";
 import {
-  intersection,
+  getZonesCols,
+  getZonesRows,
   numberToLetters,
   overlap,
   positionToZone,
@@ -257,7 +264,8 @@ export class RendererPlugin extends UIPlugin {
         this.boxes = this.getGridBoxes(renderingContext);
         this.drawBackground(renderingContext);
         this.drawCellBackground(renderingContext);
-        this.drawBorders(renderingContext);
+        this.drawBorders(renderingContext, "border");
+        this.drawBorders(renderingContext, "filterBorder");
         this.drawTexts(renderingContext);
         this.drawIcon(renderingContext);
         break;
@@ -361,11 +369,11 @@ export class RendererPlugin extends UIPlugin {
     }
   }
 
-  private drawBorders(renderingContext: GridRenderingContext) {
+  private drawBorders(renderingContext: GridRenderingContext, name: "border" | "filterBorder") {
     const { ctx, thinLineWidth } = renderingContext;
     for (let box of this.boxes) {
       // fill color
-      let border = box.border;
+      const border = box[name];
       if (border) {
         const { x, y, width, height } = box;
         if (border.left) {
@@ -402,7 +410,7 @@ export class RendererPlugin extends UIPlugin {
         const style = box.style || {};
         const align = box.content.align || "left";
         const italic = style.italic ? "italic " : "";
-        const weight = style.bold ? "bold" : DEFAULT_FONT_WEIGHT;
+        const weight = style.bold || box.isFilterHeader ? "bold" : DEFAULT_FONT_WEIGHT;
         const sizeInPt = style.fontSize || DEFAULT_FONT_SIZE;
         const size = fontSizeMap[sizeInPt];
         const font = `${italic}${weight} ${size}px ${DEFAULT_FONT}`;
@@ -416,7 +424,11 @@ export class RendererPlugin extends UIPlugin {
         if (align === "left") {
           x = box.x + (box.image ? box.image.size + 2 * MIN_CF_ICON_MARGIN : MIN_CELL_TEXT_MARGIN);
         } else if (align === "right") {
-          x = box.x + box.width - MIN_CELL_TEXT_MARGIN;
+          x =
+            box.x +
+            box.width -
+            MIN_CELL_TEXT_MARGIN -
+            (box.isFilterHeader ? FILTER_ICON_MARGIN + FILTER_EDGE_LENGTH : 0);
         } else {
           x = box.x + box.width / 2;
         }
@@ -478,41 +490,56 @@ export class RendererPlugin extends UIPlugin {
     const { right, left, top, bottom } = viewport;
     const { width, height } = this.getters.getViewportDimensionWithHeaders();
     const selection = this.getters.getSelectedZones();
+    const selectedCols = getZonesCols(selection);
+    const selectedRows = getZonesRows(selection);
     const sheetId = this.getters.getActiveSheetId();
     const numberOfCols = this.getters.getNumberCols(sheetId);
     const numberOfRows = this.getters.getNumberRows(sheetId);
     const activeCols = this.getters.getActiveCols();
     const activeRows = this.getters.getActiveRows();
 
-    ctx.fillStyle = BACKGROUND_HEADER_COLOR;
     ctx.font = `400 ${HEADER_FONT_SIZE}px ${DEFAULT_FONT}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.lineWidth = thinLineWidth;
     ctx.strokeStyle = "#333";
 
-    // background
-    ctx.fillRect(0, 0, width, HEADER_HEIGHT);
-    ctx.fillRect(0, 0, HEADER_WIDTH, height);
-    // selection background
-    ctx.fillStyle = BACKGROUND_HEADER_SELECTED_COLOR;
-    for (let zone of selection) {
-      const colZone = intersection(zone, { ...viewport, top: 0, bottom: numberOfRows - 1 });
-      if (colZone) {
-        const { x, width } = this.getRect(colZone, viewport);
-        ctx.fillStyle = activeCols.has(zone.left)
-          ? BACKGROUND_HEADER_ACTIVE_COLOR
+    // Columns headers background
+    for (let col = left; col <= right; col++) {
+      const colZone = { left: col, right: col, top: 0, bottom: numberOfRows - 1 };
+      const { x, width } = this.getRect(colZone, viewport);
+      const colHasFilter = this.getters.isZonesContainFilter(sheetId, [colZone]);
+      const isColActive = activeCols.has(col);
+      const isColSelected = selectedCols.has(col);
+      if (isColActive) {
+        ctx.fillStyle = colHasFilter ? FILTERS_COLOR : BACKGROUND_HEADER_ACTIVE_COLOR;
+      } else if (isColSelected) {
+        ctx.fillStyle = colHasFilter
+          ? BACKGROUND_HEADER_SELECTED_FILTER_COLOR
           : BACKGROUND_HEADER_SELECTED_COLOR;
-        ctx.fillRect(x, 0, width, HEADER_HEIGHT);
+      } else {
+        ctx.fillStyle = colHasFilter ? BACKGROUND_HEADER_FILTER_COLOR : BACKGROUND_HEADER_COLOR;
       }
-      const rowZone = intersection(zone, { ...viewport, left: 0, right: numberOfCols - 1 });
-      if (rowZone) {
-        const { y, height } = this.getRect(rowZone, viewport);
-        ctx.fillStyle = activeRows.has(zone.top)
-          ? BACKGROUND_HEADER_ACTIVE_COLOR
+      ctx.fillRect(x, 0, width, HEADER_HEIGHT);
+    }
+
+    // Rows headers background
+    for (let row = top; row <= bottom; row++) {
+      const rowZone = { top: row, bottom: row, left: 0, right: numberOfCols - 1 };
+      const { y, height } = this.getRect(rowZone, viewport);
+      const rowHasFilter = this.getters.isZonesContainFilter(sheetId, [rowZone]);
+      const isRowActive = activeRows.has(row);
+      const isRowSelected = selectedRows.has(row);
+      if (isRowActive) {
+        ctx.fillStyle = rowHasFilter ? FILTERS_COLOR : BACKGROUND_HEADER_ACTIVE_COLOR;
+      } else if (isRowSelected) {
+        ctx.fillStyle = rowHasFilter
+          ? BACKGROUND_HEADER_SELECTED_FILTER_COLOR
           : BACKGROUND_HEADER_SELECTED_COLOR;
-        ctx.fillRect(0, y, HEADER_WIDTH, height);
+      } else {
+        ctx.fillStyle = rowHasFilter ? BACKGROUND_HEADER_FILTER_COLOR : BACKGROUND_HEADER_COLOR;
       }
+      ctx.fillRect(0, y, HEADER_WIDTH, height);
     }
 
     // 2 main lines
@@ -605,6 +632,7 @@ export class RendererPlugin extends UIPlugin {
       width,
       height,
       border: this.getters.getCellBorder(sheetId, col, row) || undefined,
+      filterBorder: this.getters.getFilterBorder(sheetId, col, row),
       style: {
         ...this.getters.getCellStyle(cell),
         ...this.getters.getConditionalStyle(col, row),
@@ -628,10 +656,14 @@ export class RendererPlugin extends UIPlugin {
       };
     }
 
+    /** Filter Header */
+    box.isFilterHeader = this.getters.isFilterHeader(sheetId, col, row);
+    const headerIconWidth = box.isFilterHeader ? FILTER_ICON_MARGIN + ICON_EDGE_LENGTH : 0;
+
     /** Content */
     const text = this.getters.getCellText(cell, showFormula);
     const textWidth = this.getters.getTextWidth(cell);
-    const contentWidth = iconBoxWidth + textWidth;
+    const contentWidth = iconBoxWidth + textWidth + headerIconWidth;
     const align = this.computeCellAlignment(cell, contentWidth > width);
     box.content = {
       text,
@@ -649,11 +681,11 @@ export class RendererPlugin extends UIPlugin {
 
     /** ClipRect */
     const isOverflowing = contentWidth > width || fontSizeMap[fontSize] > height;
-    if (cfIcon) {
+    if (cfIcon || box.isFilterHeader) {
       box.clipRect = {
         x: box.x + iconBoxWidth,
         y: box.y,
-        width: Math.max(0, width - iconBoxWidth),
+        width: Math.max(0, width - iconBoxWidth - headerIconWidth),
         height,
       };
     } else if (isOverflowing) {

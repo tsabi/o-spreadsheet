@@ -1,8 +1,21 @@
+import {
+  AddFilterInteractiveContent,
+  interactiveAddFilter,
+} from "../../src/helpers/ui/filter_interactive";
+import {
+  AddMergeInteractiveContent,
+  interactiveAddMerge,
+} from "../../src/helpers/ui/merge_interactive";
 import { interactiveRenameSheet } from "../../src/helpers/ui/sheet";
 import { Model } from "../../src/model";
-import { EditTextOptions } from "../../src/types";
-import { createSheetWithName } from "../test_helpers/commands_helpers";
-import { makeInteractiveTestEnv } from "../test_helpers/helpers";
+import { EditTextOptions, SpreadsheetChildEnv, UID } from "../../src/types";
+import {
+  createFilter,
+  createSheetWithName,
+  merge,
+  setCellContent,
+} from "../test_helpers/commands_helpers";
+import { makeInteractiveTestEnv, target } from "../test_helpers/helpers";
 
 describe("UI Helpers", () => {
   test.each([
@@ -64,5 +77,86 @@ describe("UI Helpers", () => {
       2,
       `A sheet with the name ${sheetName} already exists. Please select another name.`
     );
+  });
+
+  describe("Interactive Create Filter", () => {
+    let model: Model;
+    let sheetId: UID;
+    let contentTextSpy: jest.Mock<any, any>;
+    let env: SpreadsheetChildEnv;
+
+    beforeEach(() => {
+      model = new Model();
+      sheetId = model.getters.getActiveSheetId();
+      contentTextSpy = jest.fn();
+      const notifyUser = (content: string) => {
+        contentTextSpy(content.toString());
+      };
+      env = makeInteractiveTestEnv(model, { notifyUser });
+    });
+
+    test("Successfully create a filter", () => {
+      interactiveAddFilter(env, sheetId, target("A1:B5"));
+      expect(contentTextSpy).toHaveBeenCalledTimes(0);
+    });
+
+    test("Create a filter across a merge", () => {
+      merge(model, "A1:A2");
+      interactiveAddFilter(env, sheetId, target("A1:B1"));
+      expect(contentTextSpy).toHaveBeenCalledWith(AddFilterInteractiveContent.mergeInFilter);
+    });
+
+    test("Create a filter across another filter", () => {
+      createFilter(model, "A1:A2");
+      interactiveAddFilter(env, sheetId, target("A1:B5"));
+      expect(contentTextSpy).toHaveBeenCalledWith(AddFilterInteractiveContent.filterOverlap);
+    });
+
+    test("Create filters with non-continuous zones", () => {
+      interactiveAddFilter(env, sheetId, target("A1:A2,C3"));
+      expect(contentTextSpy).toHaveBeenCalledWith(AddFilterInteractiveContent.nonContinuousTargets);
+    });
+  });
+
+  describe("Interactive Add Merge", () => {
+    let model: Model;
+    let sheetId: UID;
+    let notifyUserTextSpy: jest.Mock<any, any>;
+    let askConfirmationTextSpy: jest.Mock<any, any>;
+    let env: SpreadsheetChildEnv;
+
+    beforeEach(() => {
+      model = new Model();
+      sheetId = model.getters.getActiveSheetId();
+      notifyUserTextSpy = jest.fn();
+      askConfirmationTextSpy = jest.fn();
+      const notifyUser = (content: string) => {
+        notifyUserTextSpy(content.toString());
+      };
+      const askConfirmation = (content: string, confirm: () => any, cancel?: () => any) => {
+        askConfirmationTextSpy(content.toString());
+      };
+      env = makeInteractiveTestEnv(model, { notifyUser, askConfirmation });
+    });
+
+    test("Successfully Create a merge", () => {
+      interactiveAddMerge(env, sheetId, target("A1:B5"));
+      expect(askConfirmationTextSpy).toHaveBeenCalledTimes(0);
+      expect(notifyUserTextSpy).toHaveBeenCalledTimes(0);
+    });
+
+    test("Destructive merge", () => {
+      setCellContent(model, "A2", ":)");
+      interactiveAddMerge(env, sheetId, target("A1:B5"));
+      expect(askConfirmationTextSpy).toHaveBeenCalledWith(
+        AddMergeInteractiveContent.mergeIsDestructive
+      );
+    });
+
+    test("Create a merge inside a filter", () => {
+      createFilter(model, "A1:A2");
+      interactiveAddMerge(env, sheetId, target("A1:B5"));
+      expect(notifyUserTextSpy).toHaveBeenCalledWith(AddMergeInteractiveContent.mergeInFilter);
+    });
   });
 });

@@ -427,3 +427,17 @@ export function toCartesianArray(xc: string): [number, number] {
   const { col, row } = toCartesian(xc);
   return [col, row];
 }
+
+export function getCellsObject(model: Model, sheetId: UID) {
+  const cells = {};
+  for (let cell of Object.values(model.getters.getCells(sheetId))) {
+    const { col, row } = model.getters.getCellPosition(cell.id);
+    cell = model.getters.getCell(sheetId, col, row)!;
+    cells[toXC(col, row)] = {
+      ...cell,
+      value: cell.evaluated.value,
+      content: cell.content,
+    };
+  }
+  return cells;
+}

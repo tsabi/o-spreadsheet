@@ -44,6 +44,8 @@ export class ViewportPlugin extends UIPlugin {
   ] as const;
 
   readonly viewports: ViewportPluginState["viewports"] = {};
+  private isViewportDirty = false;
+
   /**
    * The viewport dimensions are usually set by one of the components
    * (i.e. when grid component is mounted) to properly reflect its state in the DOM.
@@ -144,6 +146,24 @@ export class ViewportPlugin extends UIPlugin {
       case "ACTIVATE_SHEET":
         this.refreshViewport(cmd.sheetIdTo);
         break;
+      case "UPDATE_CELL":
+        if ("content" in cmd) {
+          this.isViewportDirty = true;
+        }
+        break;
+      case "UPDATE_FILTER":
+        this.recomputeViewports();
+        break;
+    }
+  }
+
+  finalize() {
+    // Should recompute the viewport after the evaluation, because with of the data filters the
+    // evaluation can change hidden rows.
+    if (this.isViewportDirty) {
+      this.cleanViewports();
+      this.recomputeViewports();
+      this.isViewportDirty = false;
     }
   }
 
