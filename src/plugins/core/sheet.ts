@@ -225,6 +225,7 @@ export class SheetPlugin extends CorePlugin<SheetState> implements SheetState {
         cells: {},
         conditionalFormats: [],
         figures: [],
+        filterTables: [],
         areGridLinesVisible:
           sheet.areGridLinesVisible === undefined ? true : sheet.areGridLinesVisible,
         isVisible: sheet.isVisible,

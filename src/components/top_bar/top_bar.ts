@@ -8,6 +8,7 @@ import {
 import { BACKGROUND_HEADER_COLOR, DEFAULT_FONT_SIZE } from "../../constants";
 import { fontSizes } from "../../fonts";
 import { isEqual } from "../../helpers/index";
+import { interactiveAddFilter } from "../../helpers/ui/filter_interactive";
 import { interactiveAddMerge } from "../../helpers/ui/merge_interactive";
 import { setFormatter, setStyle, topbarComponentRegistry } from "../../registries/index";
 import { getMenuChildren, getMenuName } from "../../registries/menus/helpers";
@@ -140,6 +141,10 @@ css/* scss */ `
           border-radius: 2px;
           cursor: pointer;
           min-width: fit-content;
+        }
+
+        .o-filter-tool {
+          margin-right: 8px;
         }
 
         .o-tool.active,
@@ -469,5 +474,24 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
 
   redo() {
     this.env.model.dispatch("REQUEST_REDO");
+  }
+
+  get selectionContainFilter() {
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    const selectedZones = this.env.model.getters.getSelectedZones();
+    return this.env.model.getters.isZonesContainFilter(sheetId, selectedZones);
+  }
+
+  createFilter() {
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    const selection = this.env.model.getters.getSelectedZones();
+    interactiveAddFilter(this.env, sheetId, selection);
+  }
+
+  removeFilter() {
+    this.env.model.dispatch("REMOVE_FILTER_TABLE", {
+      sheetId: this.env.model.getters.getActiveSheetId(),
+      target: this.env.model.getters.getSelectedZones(),
+    });
   }
 }

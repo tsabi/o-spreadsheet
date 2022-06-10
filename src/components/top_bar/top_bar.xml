@@ -252,7 +252,25 @@
               </div>
             </div>
           </div>
+          <div class="o-divider"/>
+          <div
+            t-if="selectionContainFilter"
+            class="o-tool o-filter-tool"
+            title="Remove selected filters"
+            t-att-class="{}"
+            t-on-click="removeFilter">
+            <t t-call="o-spreadsheet.Icon.FILTER_ICON_ACTIVE"/>
+          </div>
+          <div
+            t-else=""
+            class="o-tool o-filter-tool"
+            title="Create a Filter"
+            t-att-class="{}"
+            t-on-click="createFilter">
+            <t t-call="o-spreadsheet.Icon.FILTER_ICON_INACTIVE"/>
+          </div>
         </div>
+
         <Composer
           inputStyle="composerStyle"
           focus="props.focusComposer"

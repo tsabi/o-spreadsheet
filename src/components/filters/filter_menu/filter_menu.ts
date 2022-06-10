@@ -5,8 +5,7 @@ import {
   MENU_SEPARATOR_PADDING,
   MENU_WIDTH,
 } from "../../../constants";
-import { isDefined, positions } from "../../../helpers";
-import { interactiveSortSelection } from "../../../helpers/sort";
+import { fuzzyLookup, isDefined, positions } from "../../../helpers";
 import { FullMenuItem } from "../../../registries";
 import { SortDirection, SpreadsheetChildEnv } from "../../../types";
 import { css } from "../../helpers/css";
@@ -47,7 +46,7 @@ const CSS = css/* scss */ `
     .o-filter-menu-actions {
       display: flex;
       flex-direction: row;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
 
       .o-filter-menu-action-text {
         cursor: pointer;
@@ -125,7 +124,7 @@ interface State {
 }
 
 export class FilterMenuItem extends Component<Props, SpreadsheetChildEnv> {
-  static componentSize = { width: MENU_WIDTH, height: 150 };
+  static componentSize = { width: MENU_WIDTH, height: 300 };
 
   static template = "o-spreadsheet.FilterMenuItem";
   static style = CSS;
@@ -169,6 +168,23 @@ export class FilterMenuItem extends Component<Props, SpreadsheetChildEnv> {
     return this.env.model.getters.getFilter(sheetId, position.col, position.row);
   }
 
+  get filterTable() {
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    const position = this.env.model.getters.getActiveFilterPosition()!;
+    return this.env.model.getters.getFilterTable(sheetId, position.col, position.row);
+  }
+
+  get displayedValues() {
+    if (!this.state) {
+      return [];
+    }
+    if (!this.state.textFilter) {
+      return this.state.values;
+    }
+    const values = fuzzyLookup(this.state.textFilter, this.state.values, (val) => val.string);
+    return values;
+  }
+
   confirm() {
     const position = this.env.model.getters.getActiveFilterPosition()!;
     this.env.model.dispatch("UPDATE_FILTER", {
@@ -178,23 +194,32 @@ export class FilterMenuItem extends Component<Props, SpreadsheetChildEnv> {
         isDefined
       ),
     });
-    console.log("Confirm filter menu");
     this.props.onClosed();
   }
 
   cancel() {
-    console.log("Cancel filter menu");
     this.props.onClosed();
   }
 
-  sortFilterZone(direction: SortDirection) {
+  sortFilterZone(sortDirection: SortDirection) {
     const filter = this.filter;
-    if (!filter) {
+    const filterTable = this.filterTable;
+    if (!filter || !filterTable) {
       return;
     }
     const sheetId = this.env.model.getters.getActiveSheetId();
     const sortAnchor = { col: filter.col, row: filter.filteredZone.top };
-    interactiveSortSelection(this.env, sheetId, sortAnchor, filter.filteredZone, direction, false);
+    // interactiveSortSelection(this.env, sheetId, sortAnchor, filter.filteredZone, direction, {
+    //   staticSelection: true,
+    // });
+    this.env.model.dispatch("SORT_CELLS", {
+      sheetId,
+      col: sortAnchor.col,
+      row: sortAnchor.row,
+      zone: filterTable.contentZone,
+      sortDirection,
+      sortOptions: { emptyCellAsZero: true, hasNoHeader: true },
+    });
     this.props.onClosed();
   }
 }

@@ -6,14 +6,17 @@ import {
   AddMergeCommand,
   ClearCellCommand,
   ClearFormattingCommand,
+  CreateFilterCommand,
   DeleteContentCommand,
   RemoveColumnsRowsCommand,
+  RemoveFilterCommand,
   RemoveMergeCommand,
   ResizeColumnsRowsCommand,
   SetBorderCommand,
   SetFormattingCommand,
   UpdateCellCommand,
   UpdateCellPositionCommand,
+  UpdateFilterCommand,
 } from "../../../src/types";
 import { createEqualCF, target } from "../../test_helpers/helpers";
 
@@ -49,8 +52,14 @@ describe("OT with REMOVE_COLUMN", () => {
     row: 1,
     border: { left: ["thin", "#000"] },
   };
+  const updateFilter: Omit<UpdateFilterCommand, "col"> = {
+    type: "UPDATE_FILTER",
+    sheetId,
+    row: 0,
+    values: [""],
+  };
 
-  describe.each([updateCell, updateCellPosition, clearCell, setBorder])(
+  describe.each([updateCell, updateCellPosition, clearCell, setBorder, updateFilter])(
     "single cell commands",
     (cmd) => {
       test(`remove columns before ${cmd.type}`, () => {
@@ -108,46 +117,60 @@ describe("OT with REMOVE_COLUMN", () => {
     cf: createEqualCF("1", { fillColor: "#FF0000" }, "1"),
   };
 
-  describe.each([deleteContent, setFormatting, clearFormatting, addConditionalFormat])(
-    "target commands",
-    (cmd) => {
-      test(`remove columns before ${cmd.type}`, () => {
-        const command = { ...cmd, target: [toZone("A1:A3")] };
-        const result = transform(command, removeColumns);
-        expect(result).toEqual(command);
-      });
-      test(`remove columns after ${cmd.type}`, () => {
-        const command = { ...cmd, target: [toZone("M1:O2")] };
-        const result = transform(command, removeColumns);
-        expect(result).toEqual({ ...command, target: [toZone("J1:L2")] });
-      });
-      test(`remove columns before and after ${cmd.type}`, () => {
-        const command = { ...cmd, target: [toZone("E1:E2")] };
-        const result = transform(command, removeColumns);
-        expect(result).toEqual({ ...command, target: [toZone("C1:C2")] });
-      });
-      test(`${cmd.type} in removed columns`, () => {
-        const command = { ...cmd, target: [toZone("F1:G2")] };
-        const result = transform(command, removeColumns);
-        expect(result).toEqual({ ...command, target: [toZone("D1:D2")] });
-      });
-      test(`${cmd.type} and columns removed in different sheets`, () => {
-        const command = { ...cmd, target: [toZone("A1:F3")], sheetId: "42" };
-        const result = transform(command, removeColumns);
-        expect(result).toEqual(command);
-      });
-      test(`${cmd.type} with a target removed`, () => {
-        const command = { ...cmd, target: [toZone("C1:D2")] };
-        const result = transform(command, removeColumns);
-        expect(result).toBeUndefined();
-      });
-      test(`${cmd.type} with a target removed, but another valid`, () => {
-        const command = { ...cmd, target: [toZone("C1:D2"), toZone("A1")] };
-        const result = transform(command, removeColumns);
-        expect(result).toEqual({ ...command, target: [toZone("A1")] });
-      });
-    }
-  );
+  const createFilters: Omit<CreateFilterCommand, "target"> = {
+    type: "CREATE_FILTER_TABLE",
+    sheetId,
+  };
+
+  const removeFilters: Omit<RemoveFilterCommand, "target"> = {
+    type: "REMOVE_FILTER_TABLE",
+    sheetId,
+  };
+
+  describe.each([
+    deleteContent,
+    setFormatting,
+    clearFormatting,
+    addConditionalFormat,
+    createFilters,
+    removeFilters,
+  ])("target commands", (cmd) => {
+    test(`remove columns before ${cmd.type}`, () => {
+      const command = { ...cmd, target: [toZone("A1:A3")] };
+      const result = transform(command, removeColumns);
+      expect(result).toEqual(command);
+    });
+    test(`remove columns after ${cmd.type}`, () => {
+      const command = { ...cmd, target: [toZone("M1:O2")] };
+      const result = transform(command, removeColumns);
+      expect(result).toEqual({ ...command, target: [toZone("J1:L2")] });
+    });
+    test(`remove columns before and after ${cmd.type}`, () => {
+      const command = { ...cmd, target: [toZone("E1:E2")] };
+      const result = transform(command, removeColumns);
+      expect(result).toEqual({ ...command, target: [toZone("C1:C2")] });
+    });
+    test(`${cmd.type} in removed columns`, () => {
+      const command = { ...cmd, target: [toZone("F1:G2")] };
+      const result = transform(command, removeColumns);
+      expect(result).toEqual({ ...command, target: [toZone("D1:D2")] });
+    });
+    test(`${cmd.type} and columns removed in different sheets`, () => {
+      const command = { ...cmd, target: [toZone("A1:F3")], sheetId: "42" };
+      const result = transform(command, removeColumns);
+      expect(result).toEqual(command);
+    });
+    test(`${cmd.type} with a target removed`, () => {
+      const command = { ...cmd, target: [toZone("C1:D2")] };
+      const result = transform(command, removeColumns);
+      expect(result).toBeUndefined();
+    });
+    test(`${cmd.type} with a target removed, but another valid`, () => {
+      const command = { ...cmd, target: [toZone("C1:D2"), toZone("A1")] };
+      const result = transform(command, removeColumns);
+      expect(result).toEqual({ ...command, target: [toZone("A1")] });
+    });
+  });
 
   describe("OT with RemoveColumns - AddColumns", () => {
     const toTransform: Omit<AddColumnsRowsCommand, "base"> = {

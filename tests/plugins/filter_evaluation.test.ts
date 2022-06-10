@@ -1,7 +1,15 @@
 import { Model } from "../../src";
 import { toZone } from "../../src/helpers";
 import { SheetId } from "../../src/types";
-import { createFilter, setCellContent, updateFilter } from "../test_helpers/commands_helpers";
+import {
+  createFilter,
+  hideColumns,
+  hideRows,
+  setCellContent,
+  setFormat,
+  updateFilter,
+} from "../test_helpers/commands_helpers";
+import { target } from "../test_helpers/helpers";
 import { DEFAULT_FILTER_BORDER_DESC } from "./../../src/constants";
 
 describe("Filters plugin", () => {
@@ -35,6 +43,13 @@ describe("Filters plugin", () => {
     expect(model.getters.isRowHidden(sheetId, 4)).toEqual(false);
   });
 
+  test("Filters use the formatted value of the cells", () => {
+    setCellContent(model, "A2", "2");
+    setFormat(model, "m/d/yyyy", target("A2"));
+    console.log(model.getters.getCell(sheetId, 0, 1));
+    expect(model.getters.isRowHidden(sheetId, 1)).toEqual(true);
+  });
+
   test("Header isn't filtered", () => {
     updateFilter(model, "A1", ["A1"]);
     expect(model.getters.isRowHidden(sheetId, 0)).toEqual(false);
@@ -57,9 +72,38 @@ describe("Filters plugin", () => {
     expect(model.getters.isRowHidden(sheetId, 4)).toEqual(false);
   });
 
+  test("Hidden rows are updated when the value of a filtered cell change", () => {
+    setCellContent(model, "D1", "5");
+    setCellContent(model, "A2", "=D1");
+    updateFilter(model, "A1", ["5"]);
+    expect(model.getters.isRowHidden(sheetId, 1)).toEqual(true);
+
+    setCellContent(model, "D1", "9");
+    expect(model.getters.isRowHidden(sheetId, 1)).toEqual(false);
+  });
+
   test("Filters borders are correct", () => {
     createFilter(model, "A7:B9");
     const zone = toZone("A7:B9");
+    for (let row = zone.top; row <= zone.bottom; row++) {
+      for (let col = zone.left; col <= zone.right; col++) {
+        const filterBorder = model.getters.getFilterBorder(sheetId, col, row);
+        const expected = {};
+        expected["top"] = row === zone.top ? DEFAULT_FILTER_BORDER_DESC : undefined;
+        expected["bottom"] = row === zone.bottom ? DEFAULT_FILTER_BORDER_DESC : undefined;
+        expected["left"] = col === zone.left ? DEFAULT_FILTER_BORDER_DESC : undefined;
+        expected["right"] = col === zone.right ? DEFAULT_FILTER_BORDER_DESC : undefined;
+        expect(filterBorder).toEqual(expected);
+      }
+    }
+  });
+
+  test("Filters borders are correct when cols and rows of the filter are hidden", () => {
+    createFilter(model, "A7:E14");
+    hideColumns(model, ["E", "A", "B"]);
+    hideRows(model, [6, 12, 13]);
+
+    const zone = toZone("C8:D12");
     for (let row = zone.top; row <= zone.bottom; row++) {
       for (let col = zone.left; col <= zone.right; col++) {
         const filterBorder = model.getters.getFilterBorder(sheetId, col, row);

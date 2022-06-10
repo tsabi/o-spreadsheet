@@ -1,5 +1,5 @@
-import { deepCopy, intersection, isInside, overlap, union, zoneToXc } from "../../helpers";
-import { FilterTable } from "../../types/filters";
+import { deepCopy, intersection, isInside, overlap, toZone, zoneToXc } from "../../helpers";
+import { FilterData, FilterTable } from "../../types/filters";
 import {
   CommandResult,
   CoreCommand,
@@ -16,28 +16,15 @@ interface FiltersState {
   filters: Record<UID, Array<FilterTable>>;
 }
 
-/**
- * Questions nathan :
- *  - filter quand la valeur change (c'est une formule)
- *     - google fait n'imp, on perd totalement la row et on peu pas la récupérer sans disable le filter
- *     - Excel change la valeur filtrée.
- *  - c'est bien partagé et sauvegardé les filters ?
- *  - Icone filter dans la topbar en plus de dans Data => filter ?
- *  - merge :
- *     - allow single line merges ?
- *  - Searchbar : startwith or contains ?
- *  - sort
- *    - blank spaces : current w/ sort : at the bottom. Same as Excel. GSheet put them on top for ascending, bottom descending
- *    - sort : only filter column, whole table row, or whole sheet
- *    - merge : value only at top-left, or whole merge ?
- *
- * Question:
- *  - faire match du CSS avec odoo
- *    - typiquement, button primary color
- */
-
 export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersState {
-  static getters = ["getFilter", "getFilters", "getFilterTables", "isFilterActive"] as const;
+  static getters = [
+    "getFilter",
+    "getFilters",
+    "getFilterTable",
+    "getFilterTables",
+    "isFilterActive",
+    "isZonesContainFilter",
+  ] as const;
 
   filters: Record<UID, Array<FilterTable>> = {};
 
@@ -59,11 +46,8 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
           }
           const mergesInTarget = this.getters.getMergesInZone(cmd.sheetId, zone);
           for (let merge of mergesInTarget) {
-            if (zoneToXc(zone) !== zoneToXc(union(merge, zone))) {
-              return CommandResult.MergeAcrossFilter;
-            }
-            if (merge.bottom !== merge.top) {
-              return CommandResult.VerticalMergeInFilter;
+            if (overlap(zone, merge)) {
+              return CommandResult.MergeInFilter;
             }
           }
         }
@@ -76,14 +60,8 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
       case "ADD_MERGE":
         for (let merge of cmd.target) {
           for (let filterTable of this.getFilterTables(cmd.sheetId)) {
-            const zone = filterTable.zone;
-            if (overlap(zone, merge)) {
-              if (zoneToXc(zone) !== zoneToXc(union(merge, zone))) {
-                return CommandResult.MergeAcrossFilter;
-              }
-              if (merge.bottom !== merge.top) {
-                return CommandResult.VerticalMergeInFilter;
-              }
+            if (overlap(filterTable.zone, merge)) {
+              return CommandResult.MergeInFilter;
             }
           }
         }
@@ -108,9 +86,7 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
       case "CREATE_FILTER_TABLE": {
         for (let zone of cmd.target) {
           const filters = this.filters[cmd.sheetId] ? [...this.filters[cmd.sheetId]] : [];
-          const createRange = (zone: Zone) =>
-            this.getters.getRangeFromSheetXC(cmd.sheetId, zoneToXc(zone));
-          const newFilter = new FilterTable(zone, createRange);
+          const newFilter = this.createFilterTable(cmd.sheetId, zone);
           filters.push(newFilter);
           this.history.update("filters", cmd.sheetId, filters);
         }
@@ -172,9 +148,29 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
     return undefined;
   }
 
+  getFilterTable(sheetId: SheetId, col: number, row: number): FilterTable | undefined {
+    for (let filterTable of this.filters[sheetId]) {
+      if (isInside(col, row, filterTable.zone)) {
+        return filterTable;
+      }
+    }
+    return undefined;
+  }
+
   isFilterActive(sheetId: SheetId, col: number, row: number): boolean {
     const filter = this.getFilter(sheetId, col, row);
     return Boolean(filter && filter.filteredValues.length);
+  }
+
+  isZonesContainFilter(sheetId: SheetId, zones: Zone[]): boolean {
+    for (const zone of zones) {
+      for (const filterTable of this.getFilterTables(sheetId)) {
+        if (intersection(zone, filterTable.zone)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   private getFilterTableId(sheetId: UID, col: number, row: number): number | undefined {
@@ -200,18 +196,57 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
     return { filterId, filterTableId };
   }
 
+  private createFilterTable(sheetId: SheetId, zone: Zone): FilterTable {
+    const createRange = (zone: Zone) => this.getters.getRangeFromSheetXC(sheetId, zoneToXc(zone));
+    return new FilterTable(zone, createRange);
+  }
+
   // ---------------------------------------------------------------------------
   // Import/Export
   // ---------------------------------------------------------------------------
 
   import(data: WorkbookData) {
+    this.filters = {};
     for (let sheet of data.sheets) {
-      this.filters[sheet.id] = [];
+      const filterTables: FilterTable[] = [];
+      for (let filterTableData of sheet.filterTables || []) {
+        const table = this.createFilterTable(sheet.id, toZone(filterTableData.range));
+        filterTables.push(table);
+        for (let filterData of filterTableData.filters) {
+          const filter = table.filters.find((f) => f.col === filterData.col);
+          if (!filter) {
+            console.warn("Error when loading a filter");
+            continue;
+          }
+          filter.filteredValues = filterData.filteredValues;
+        }
+      }
+
+      this.filters[sheet.id] = filterTables;
     }
   }
 
   export(data: WorkbookData) {
-    //TODO
+    for (let sheet of data.sheets) {
+      for (let filterTable of this.filters[sheet.id]) {
+        const filtersData: FilterData[] = [];
+        for (let filter of filterTable.filters) {
+          // Only export filtered values that are still in the sheet at the time of export
+          const valuesInSheet = this.getters
+            .getCellsInZone(sheet.id, filter.filteredZone)
+            .map((cell) => cell?.evaluated.value)
+            .map((val) => (val !== undefined && val !== null ? String(val) : ""));
+          filtersData.push({
+            col: filter.col,
+            filteredValues: filter.filteredValues.filter((val) => valuesInSheet.includes(val)),
+          });
+        }
+        sheet.filterTables.push({
+          range: this.getters.getRangeString(filterTable.range, sheet.id),
+          filters: filtersData,
+        });
+      }
+    }
   }
 
   exportForExcel(data: ExcelWorkbookData) {

@@ -9,17 +9,10 @@ import {
   selectCell,
   setAnchorCorner,
   setCellContent,
+  setFormat,
 } from "../test_helpers/commands_helpers";
 import { getCell, getCellContent } from "../test_helpers/getters_helpers";
 import { getPlugin } from "../test_helpers/helpers";
-
-function setFormat(model: Model, format: string) {
-  model.dispatch("SET_FORMATTING", {
-    sheetId: model.getters.getActiveSheetId(),
-    target: model.getters.getSelectedZones(),
-    format,
-  });
-}
 
 function setDecimal(model: Model, step: number) {
   model.dispatch("SET_DECIMAL", {

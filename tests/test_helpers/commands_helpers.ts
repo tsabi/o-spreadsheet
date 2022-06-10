@@ -10,6 +10,7 @@ import {
   CreateSheetCommand,
   DispatchResult,
   SortDirection,
+  SortOptions,
   UID,
   UpDown,
 } from "../../src/types";
@@ -507,11 +508,13 @@ export function sort(
     sheetId,
     anchor,
     direction,
+    sortOptions = {},
   }: {
     zone: string;
     sheetId?: UID;
     anchor: string;
     direction: SortDirection;
+    sortOptions?: SortOptions;
   }
 ) {
   const { col, row } = toCartesian(anchor);
@@ -521,6 +524,7 @@ export function sort(
     col,
     row,
     sortDirection: direction,
+    sortOptions,
   });
 }
 
@@ -642,4 +646,17 @@ export function deleteFilter(
 export function activateFilter(model: Model, xc: string) {
   const { col, row } = toCartesian(xc);
   model.dispatch("SET_CURRENT_USED_FILTER", { col, row });
+}
+
+export function setFormat(
+  model: Model,
+  format: string,
+  target = model.getters.getSelectedZones(),
+  sheetId = model.getters.getActiveSheetId()
+) {
+  model.dispatch("SET_FORMATTING", {
+    sheetId,
+    target,
+    format,
+  });
 }

@@ -250,3 +250,8 @@ export interface Lazy<T> {
    */
   map: <U>(callback: (value: T) => U) => Lazy<U>;
 }
+
+export interface SortOptions {
+  hasNoHeader?: boolean;
+  emptyCellAsZero?: boolean;
+}

@@ -16,10 +16,9 @@
       </div>
       <input type="text" t-model="state.textFilter"/>
       <div class="o-filter-menu-list">
-        <t t-foreach="state.values" t-as="value" t-key="value">
+        <t t-foreach="displayedValues" t-as="value" t-key="value.string">
           <div
             t-on-click="() => selectVal(value)"
-            t-if="value.string.startsWith(state.textFilter)"
             class="o-filter-menu-item o-filter-menu-value">
             <div>
               <div class="o-filter-menu-value-checked" t-if="value.checked">✓</div>
@@ -33,7 +32,9 @@
       </div>
       <div class="o-separator"/>
       <div class="o-filter-menu-buttons">
-        <div class="o-filter-menu-button o-filter-menu-button-cancel" t-on-click="cancel">Cancel</div>
+        <div class="o-filter-menu-button o-filter-menu-button-cancel" t-on-click="cancel">
+          Cancel
+        </div>
         <div class="o-filter-menu-button o-filter-menu-button-primary" t-on-click="confirm">
           Confirm
         </div>

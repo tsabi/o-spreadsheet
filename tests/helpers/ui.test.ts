@@ -100,18 +100,10 @@ describe("UI Helpers", () => {
       expect(contentTextSpy).toHaveBeenCalledTimes(0);
     });
 
-    test("Create a filter over a vertical merge", () => {
-      merge(model, "A1:A2");
-      interactiveAddFilter(env, sheetId, target("A1:B5"));
-      expect(contentTextSpy).toHaveBeenCalledWith(
-        AddFilterInteractiveContent.verticalMergeInFilter
-      );
-    });
-
     test("Create a filter across a merge", () => {
       merge(model, "A1:A2");
       interactiveAddFilter(env, sheetId, target("A1:B1"));
-      expect(contentTextSpy).toHaveBeenCalledWith(AddFilterInteractiveContent.mergeAcrossFilter);
+      expect(contentTextSpy).toHaveBeenCalledWith(AddFilterInteractiveContent.mergeInFilter);
     });
 
     test("Create a filter across another filter", () => {
@@ -156,18 +148,10 @@ describe("UI Helpers", () => {
       );
     });
 
-    test("Create a merge across a filter", () => {
+    test("Create a merge inside a filter", () => {
       createFilter(model, "A1:A2");
       interactiveAddMerge(env, sheetId, target("A1:B5"));
-      expect(notifyUserTextSpy).toHaveBeenCalledWith(AddMergeInteractiveContent.mergeAcrossFilter);
-    });
-
-    test("Create vertical merge inside a filter", () => {
-      createFilter(model, "A1:A6");
-      interactiveAddMerge(env, sheetId, target("A1:A2"));
-      expect(notifyUserTextSpy).toHaveBeenCalledWith(
-        AddMergeInteractiveContent.verticalMergeInFilter
-      );
+      expect(notifyUserTextSpy).toHaveBeenCalledWith(AddMergeInteractiveContent.mergeInFilter);
     });
   });
 });

@@ -6,14 +6,17 @@ import {
   AddMergeCommand,
   ClearCellCommand,
   ClearFormattingCommand,
+  CreateFilterCommand,
   DeleteContentCommand,
   RemoveColumnsRowsCommand,
+  RemoveFilterCommand,
   RemoveMergeCommand,
   ResizeColumnsRowsCommand,
   SetBorderCommand,
   SetFormattingCommand,
   UpdateCellCommand,
   UpdateCellPositionCommand,
+  UpdateFilterCommand,
 } from "../../../src/types";
 import { createEqualCF, target } from "../../test_helpers/helpers";
 
@@ -58,8 +61,14 @@ describe("OT with ADD_COLUMNS_ROWS with dimension ROW", () => {
     col: 1,
     border: { left: ["thin", "#000"] },
   };
+  const updateFilter: Omit<UpdateFilterCommand, "row"> = {
+    type: "UPDATE_FILTER",
+    sheetId,
+    col: 0,
+    values: [""],
+  };
 
-  describe.each([updateCell, updateCellPosition, clearCell, setBorder])(
+  describe.each([updateCell, updateCellPosition, clearCell, setBorder, updateFilter])(
     "OT with ADD_COLUMNS_ROW with dimension ROW",
     (cmd) => {
       test(`${cmd.type} before added rows`, () => {
@@ -112,41 +121,55 @@ describe("OT with ADD_COLUMNS_ROWS with dimension ROW", () => {
     cf: createEqualCF("1", { fillColor: "#FF0000" }, "1"),
   };
 
-  describe.each([deleteContent, setFormatting, clearFormatting, addConditionalFormat])(
-    "target commands",
-    (cmd) => {
-      test(`add rows before ${cmd.type}`, () => {
-        const command = { ...cmd, target: [toZone("A1:C1")] };
-        const result = transform(command, addRowsAfter);
-        expect(result).toEqual(command);
-      });
-      test(`add rows after ${cmd.type}`, () => {
-        const command = { ...cmd, target: [toZone("A10:B11")] };
-        const result = transform(command, addRowsAfter);
-        expect(result).toEqual({ ...command, target: [toZone("A12:B13")] });
-      });
-      test(`add rows after in ${cmd.type}`, () => {
-        const command = { ...cmd, target: [toZone("A5:B6")] };
-        const result = transform(command, addRowsAfter);
-        expect(result).toEqual({ ...command, target: [toZone("A5:B8")] });
-      });
-      test(`add rows before in ${cmd.type}`, () => {
-        const command = { ...cmd, target: [toZone("A5:B6")] };
-        const result = transform(command, addRowsBefore);
-        expect(result).toEqual({ ...command, target: [toZone("A5:B6")] });
-      });
-      test(`${cmd.type} and rows added in different sheets`, () => {
-        const command = { ...cmd, target: [toZone("A1:F3")], sheetId: "42" };
-        const result = transform(command, addRowsAfter);
-        expect(result).toEqual(command);
-      });
-      test(`${cmd.type} with two targets, one before and one after`, () => {
-        const command = { ...cmd, target: [toZone("A1:C1"), toZone("A10:B11")] };
-        const result = transform(command, addRowsAfter);
-        expect(result).toEqual({ ...command, target: [toZone("A1:C1"), toZone("A12:B13")] });
-      });
-    }
-  );
+  const createFilters: Omit<CreateFilterCommand, "target"> = {
+    type: "CREATE_FILTER_TABLE",
+    sheetId,
+  };
+
+  const removeFilters: Omit<RemoveFilterCommand, "target"> = {
+    type: "REMOVE_FILTER_TABLE",
+    sheetId,
+  };
+
+  describe.each([
+    deleteContent,
+    setFormatting,
+    clearFormatting,
+    addConditionalFormat,
+    createFilters,
+    removeFilters,
+  ])("target commands", (cmd) => {
+    test(`add rows before ${cmd.type}`, () => {
+      const command = { ...cmd, target: [toZone("A1:C1")] };
+      const result = transform(command, addRowsAfter);
+      expect(result).toEqual(command);
+    });
+    test(`add rows after ${cmd.type}`, () => {
+      const command = { ...cmd, target: [toZone("A10:B11")] };
+      const result = transform(command, addRowsAfter);
+      expect(result).toEqual({ ...command, target: [toZone("A12:B13")] });
+    });
+    test(`add rows after in ${cmd.type}`, () => {
+      const command = { ...cmd, target: [toZone("A5:B6")] };
+      const result = transform(command, addRowsAfter);
+      expect(result).toEqual({ ...command, target: [toZone("A5:B8")] });
+    });
+    test(`add rows before in ${cmd.type}`, () => {
+      const command = { ...cmd, target: [toZone("A5:B6")] };
+      const result = transform(command, addRowsBefore);
+      expect(result).toEqual({ ...command, target: [toZone("A5:B6")] });
+    });
+    test(`${cmd.type} and rows added in different sheets`, () => {
+      const command = { ...cmd, target: [toZone("A1:F3")], sheetId: "42" };
+      const result = transform(command, addRowsAfter);
+      expect(result).toEqual(command);
+    });
+    test(`${cmd.type} with two targets, one before and one after`, () => {
+      const command = { ...cmd, target: [toZone("A1:C1"), toZone("A10:B11")] };
+      const result = transform(command, addRowsAfter);
+      expect(result).toEqual({ ...command, target: [toZone("A1:C1"), toZone("A12:B13")] });
+    });
+  });
 
   const resizeRowsCommand: Omit<ResizeColumnsRowsCommand, "elements"> = {
     type: "RESIZE_COLUMNS_ROWS",

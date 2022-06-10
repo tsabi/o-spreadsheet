@@ -2,8 +2,7 @@ import { _lt } from "../../translation";
 import { CommandResult, SheetId, SpreadsheetChildEnv, Zone } from "../../types";
 
 export const AddMergeInteractiveContent = {
-  mergeAcrossFilter: "You can't merge cells that cross the borders of an existing filter.",
-  verticalMergeInFilter: "You can't vertically merge cells that intersect an existing filter.",
+  mergeInFilter: "You can't merge cells inside of an existing filter.",
   mergeIsDestructive:
     "Merging these cells will only preserve the top-leftmost value. Merge anyway?",
 };
@@ -15,10 +14,8 @@ export function interactiveAddMerge(env: SpreadsheetChildEnv, sheetId: SheetId, 
       env.askConfirmation(_lt(AddMergeInteractiveContent.mergeIsDestructive), () => {
         env.model.dispatch("ADD_MERGE", { sheetId, target, force: true });
       });
-    } else if (result.isCancelledBecause(CommandResult.MergeAcrossFilter)) {
-      env.notifyUser(_lt(AddMergeInteractiveContent.mergeAcrossFilter));
-    } else if (result.isCancelledBecause(CommandResult.VerticalMergeInFilter)) {
-      env.notifyUser(_lt(AddMergeInteractiveContent.verticalMergeInFilter));
+    } else if (result.isCancelledBecause(CommandResult.MergeInFilter)) {
+      env.notifyUser(_lt(AddMergeInteractiveContent.mergeInFilter));
     }
   }
 }

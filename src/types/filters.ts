@@ -20,6 +20,12 @@ export class FilterTable {
     return this.range.zone;
   }
 
+  /** Get zone of the table without the headers */
+  get contentZone() {
+    const zone = this.range.zone;
+    return { ...zone, top: zone.top + 1 };
+  }
+
   getFilterId(col: number): number | undefined {
     for (let i = 0; i < this.filters.length; i++) {
       if (this.filters[i].col === col) {
@@ -50,4 +56,14 @@ export class Filter {
   get filteredZone() {
     return { ...this.fullRange.zone, top: this.fullRange.zone.top + 1 };
   }
+}
+
+export interface FilterTableData {
+  range: string;
+  filters: FilterData[];
+}
+
+export interface FilterData {
+  col: number;
+  filteredValues: string[];
 }

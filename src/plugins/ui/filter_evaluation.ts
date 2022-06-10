@@ -1,6 +1,6 @@
 import { DEFAULT_FILTER_BORDER_DESC } from "../../constants";
-import { isInside } from "../../helpers";
-import { Border, Position, UID } from "../../types";
+import { isInside, range } from "../../helpers";
+import { Border, Position, SheetId } from "../../types";
 import { UIPlugin } from "../ui_plugin";
 
 export class FilterEvaluationPlugin extends UIPlugin {
@@ -29,7 +29,7 @@ export class FilterEvaluationPlugin extends UIPlugin {
     this.hiddenRows = hiddenRows;
   }
 
-  isRowFiltered(sheetId: UID, row: number) {
+  isRowFiltered(sheetId: SheetId, row: number) {
     if (sheetId !== this.getters.getActiveSheetId()) {
       return false;
     }
@@ -37,16 +37,24 @@ export class FilterEvaluationPlugin extends UIPlugin {
     return this.hiddenRows.has(row);
   }
 
-  getFilterBorder(sheetId: UID, col: number, row: number): Border | undefined {
-    //TODO : when bottom/top is hidden
+  getFilterBorder(sheetId: SheetId, col: number, row: number): Border | undefined {
     for (let filters of this.getters.getFilterTables(sheetId)) {
       const zone = filters.zone;
+
+      // The borders should be at the edges of the visible zone of the filter
+      const colsRange = range(zone.left, zone.right + 1);
+      const rowsRange = range(zone.top, zone.bottom + 1);
+      const visibleLeft = this.getters.findVisibleHeader(sheetId, "COL", colsRange);
+      const visibleRight = this.getters.findVisibleHeader(sheetId, "COL", colsRange.reverse());
+      const visibleTop = this.getters.findVisibleHeader(sheetId, "ROW", rowsRange);
+      const visibleBottom = this.getters.findVisibleHeader(sheetId, "ROW", rowsRange.reverse());
+
       if (isInside(col, row, zone)) {
         const border = {
-          top: row === zone.top ? DEFAULT_FILTER_BORDER_DESC : undefined,
-          bottom: row === zone.bottom ? DEFAULT_FILTER_BORDER_DESC : undefined,
-          left: col === zone.left ? DEFAULT_FILTER_BORDER_DESC : undefined,
-          right: col === zone.right ? DEFAULT_FILTER_BORDER_DESC : undefined,
+          top: row === visibleTop ? DEFAULT_FILTER_BORDER_DESC : undefined,
+          bottom: row === visibleBottom ? DEFAULT_FILTER_BORDER_DESC : undefined,
+          left: col === visibleLeft ? DEFAULT_FILTER_BORDER_DESC : undefined,
+          right: col === visibleRight ? DEFAULT_FILTER_BORDER_DESC : undefined,
         };
         if (border.top || border.bottom || border.left || border.right) {
           return border;
@@ -56,7 +64,7 @@ export class FilterEvaluationPlugin extends UIPlugin {
     return undefined;
   }
 
-  getFilterHeaders(sheetId: UID): Position[] {
+  getFilterHeaders(sheetId: SheetId): Position[] {
     const headers: Position[] = [];
     for (let filters of this.getters.getFilterTables(sheetId)) {
       const zone = filters.zone;
@@ -74,13 +82,13 @@ export class FilterEvaluationPlugin extends UIPlugin {
     return headers;
   }
 
-  isFilterHeader(sheetId: UID, col: number, row: number): boolean {
+  isFilterHeader(sheetId: SheetId, col: number, row: number): boolean {
     const headers = this.getFilterHeaders(sheetId);
     return headers.some((header) => header.col === col && header.row === row);
   }
 
-  private getCellValueAsString(sheetId: UID, col: number, row: number): string {
-    const value = this.getters.getCell(sheetId, col, row)?.evaluated.value;
-    return value !== undefined ? String(value) : "";
+  private getCellValueAsString(sheetId: SheetId, col: number, row: number): string {
+    const value = this.getters.getCell(sheetId, col, row)?.formattedValue;
+    return value !== undefined && value !== null ? String(value) : "";
   }
 }

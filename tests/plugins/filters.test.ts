@@ -1,5 +1,14 @@
 import { CommandResult, Model } from "../../src";
-import { createFilter, merge, redo, undo, updateFilter } from "../test_helpers/commands_helpers";
+import { SheetId } from "../../src/types";
+import {
+  createFilter,
+  deleteFilter,
+  merge,
+  redo,
+  setCellContent,
+  undo,
+  updateFilter,
+} from "../test_helpers/commands_helpers";
 
 // function getHiddenRows(model: Model) {
 //   return model.getters.getHiddenRowsGroups(model.getters.getActiveSheetId()).flat();
@@ -7,11 +16,11 @@ import { createFilter, merge, redo, undo, updateFilter } from "../test_helpers/c
 
 describe("Filters plugin", () => {
   let model: Model;
-  //   let sheetId: SheetId;
+  let sheetId: SheetId;
 
   beforeEach(() => {
     model = new Model();
-    // sheetId = model.getters.getActiveSheetId();
+    sheetId = model.getters.getActiveSheetId();
   });
 
   describe("Dispatch results", () => {
@@ -41,61 +50,24 @@ describe("Filters plugin", () => {
     describe("merges", () => {
       test("Create Filter is correctly rejected when a merge in partially inside the filter", () => {
         merge(model, "A1:B1");
-        expect(createFilter(model, "A1:A5")).toBeCancelledBecause(CommandResult.MergeAcrossFilter);
+        expect(createFilter(model, "A1:A5")).toBeCancelledBecause(CommandResult.MergeInFilter);
       });
 
-      test("Create Filter is correctly rejected when a vertical merge is in the filter", () => {
+      test("Create Filter is correctly rejected when  merge is in the filter", () => {
         merge(model, "A1:A2");
-        expect(createFilter(model, "A1:A5")).toBeCancelledBecause(
-          CommandResult.VerticalMergeInFilter
-        );
-      });
-
-      test("Create Filter accepted when horizontal merge is in the filter", () => {
-        merge(model, "A1:B1");
-        expect(createFilter(model, "A1:B5")).toBeSuccessfullyDispatched();
+        expect(createFilter(model, "A1:A5")).toBeCancelledBecause(CommandResult.MergeInFilter);
       });
 
       test("Add Merge is correctly rejected when the merge is partially inside a filter", () => {
         createFilter(model, "A1:A5");
-        expect(merge(model, "A1:B1")).toBeCancelledBecause(CommandResult.MergeAcrossFilter);
+        expect(merge(model, "A1:B1")).toBeCancelledBecause(CommandResult.MergeInFilter);
       });
 
-      test("Add Merge is correctly rejected when creating a vertical merge inside a filter", () => {
+      test("Add Merge is correctly rejected when creating a merge inside a filter", () => {
         createFilter(model, "A1:A5");
-        expect(merge(model, "A1:A2")).toBeCancelledBecause(CommandResult.VerticalMergeInFilter);
-      });
-
-      test("Add Merge accepted when creating horizontal merge inside a filter", () => {
-        createFilter(model, "A1:B5");
-        expect(merge(model, "A1:B1")).toBeSuccessfullyDispatched();
+        expect(merge(model, "A1:A2")).toBeCancelledBecause(CommandResult.MergeInFilter);
       });
     });
-    // test("Set Filter value is rejected if the filter is not defined", () => {
-    //   const model = new Model();
-    //   createFilter(model, "A1:A4");
-    //   expect(setFilterValue(model, "A1", "ANY")).toBeSuccessfullyDispatched();
-    //   expect(setFilterValue(model, "B1", "ANY")).toBeCancelledBecause(
-    //     CommandResult.InvalidFilterZone
-    //   );
-    //   expect(setFilterValue(model, "B2", "ANY")).toBeCancelledBecause(
-    //     CommandResult.InvalidFilterZone
-    //   );
-    //   deleteFilter(model);
-    //   expect(setFilterValue(model, "A1", "ANY")).toBeCancelledBecause(CommandResult.MissingFilter);
-    // });
-
-    // test("delete filter is rejected if the filter is not defined", () => {
-    //   const model = new Model();
-    //   expect(deleteFilter(model)).toBeCancelledBecause(CommandResult.MissingFilter);
-    // });
-
-    // test("delete filter is accepted if the filter is defined", () => {
-    //   const model = new Model();
-    //   createSheet(model, { sheetId: "42" });
-    //   createFilter(model, "A1:B2");
-    //   expect(deleteFilter(model)).toBeSuccessfullyDispatched();
-    // });
   });
 
   //   test("GetFilterZoneValues", () => {
@@ -249,17 +221,87 @@ describe("Filters plugin", () => {
       expect(model.getters.getFilterTables(sheetId).length).toBe(1);
     });
 
-    // test("Can undo/redo a delete filter value", () => {
-    //   const model = new Model();
-    //   createFilter(model, "A1:A4");
-    //   const sheetId = model.getters.getActiveSheetId();
-    //   expect(model.getters.isSheetContainsFilter(sheetId)).toBe(true);
-    //   removeFilter(model);
-    //   expect(model.getters.isSheetContainsFilter(sheetId)).toBe(false);
-    //   undo(model);
-    //   expect(model.getters.isSheetContainsFilter(sheetId)).toBe(true);
-    //   redo(model);
-    //   expect(model.getters.isSheetContainsFilter(sheetId)).toBe(false);
-    // });
+    test("Can undo/redo a delete filter", () => {
+      const model = new Model();
+      createFilter(model, "A1:A4");
+      const sheetId = model.getters.getActiveSheetId();
+      expect(model.getters.getFilter(sheetId, 0, 0)).toBeTruthy();
+      deleteFilter(model, "A1");
+      expect(model.getters.getFilter(sheetId, 0, 0)).toBeFalsy();
+      undo(model);
+      expect(model.getters.getFilter(sheetId, 0, 0)).toBeTruthy();
+      redo(model);
+      expect(model.getters.getFilter(sheetId, 0, 0)).toBeFalsy();
+    });
+
+    test("Can undo/redo update a filter", () => {
+      const model = new Model();
+      createFilter(model, "A1:A4");
+      updateFilter(model, "A1", ["Value"]);
+      const sheetId = model.getters.getActiveSheetId();
+      expect(model.getters.getFilter(sheetId, 0, 0)!.filteredValues).toEqual(["Value"]);
+      updateFilter(model, "A1", ["Modified"]);
+      expect(model.getters.getFilter(sheetId, 0, 0)!.filteredValues).toEqual(["Modified"]);
+      undo(model);
+      expect(model.getters.getFilter(sheetId, 0, 0)!.filteredValues).toEqual(["Value"]);
+      redo(model);
+      expect(model.getters.getFilter(sheetId, 0, 0)!.filteredValues).toEqual(["Modified"]);
+    });
+  });
+
+  test("Import/Export filters", () => {
+    createFilter(model, "A1:B5");
+    createFilter(model, "C5:C9");
+    updateFilter(model, "A1", ["5"]);
+    updateFilter(model, "B1", ["8", "hey"]);
+
+    const exported = model.exportData();
+    expect(exported.sheets[0].filterTables).toMatchObject([
+      {
+        range: "A1:B5",
+        filters: [
+          {
+            col: 0,
+            filteredValues: ["5"],
+          },
+          {
+            col: 1,
+            filteredValues: ["8", "hey"],
+          },
+        ],
+      },
+      {
+        range: "C5:C9",
+        filters: [
+          {
+            col: 2,
+            filteredValues: [],
+          },
+        ],
+      },
+    ]);
+
+    const imported = new Model(exported);
+    expect(JSON.stringify(imported.getters.getFilterTables(sheetId))).toEqual(
+      JSON.stringify(model.getters.getFilterTables(sheetId))
+    );
+  });
+
+  test("Filtered values that don't filter any row are dropped at export", () => {
+    // This happens if we have for example B1 = 5, A1=B1, we filter 5 in the col A, but then we change B1 to 9
+    createFilter(model, "A1:A3");
+    const filteredValues = ["a", "b", "c", "d", "e", "f"];
+    updateFilter(model, "A1", filteredValues);
+    expect(model.getters.getFilter(sheetId, 0, 0)!.filteredValues).toEqual(filteredValues);
+
+    setCellContent(model, "A1", "a");
+    setCellContent(model, "A2", "b");
+    setCellContent(model, "A3", "e");
+
+    // "a" isn't filtered because it's the header of the filter
+    expect(model.exportData().sheets[0].filterTables[0].filters[0].filteredValues).toEqual([
+      "b",
+      "e",
+    ]);
   });
 });

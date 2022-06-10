@@ -12,7 +12,7 @@ import {
   Style,
   Zone,
 } from "./index";
-import { Border, CellPosition, ClipboardOptions, Dimension, UID } from "./misc";
+import { Border, CellPosition, ClipboardOptions, Dimension, SortOptions, UID } from "./misc";
 
 // -----------------------------------------------------------------------------
 // Grid commands
@@ -733,6 +733,7 @@ export interface SortCommand {
   row: number;
   zone: Zone;
   sortDirection: SortDirection;
+  sortOptions?: SortOptions;
 }
 
 export type SortDirection = "ascending" | "descending";
@@ -1042,8 +1043,7 @@ export const enum CommandResult {
   InvalidFilterZone,
   FilterOverlap,
   FilterNotFound,
-  MergeAcrossFilter,
-  VerticalMergeInFilter,
+  MergeInFilter,
 }
 
 export interface CommandHandler<T> {

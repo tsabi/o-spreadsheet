@@ -31,13 +31,18 @@ function convertCell(cell: Cell | undefined, index: number): CellWithIndex {
 
 export function sortCells(
   cells: (Cell | undefined)[],
-  sortDirection: SortDirection
+  sortDirection: SortDirection,
+  emptyCellAsZero: boolean
 ): CellWithIndex[] {
   const cellsWithIndex: CellWithIndex[] = cells.map(convertCell);
-  const emptyCells: CellWithIndex[] = cellsWithIndex.filter((x) => x.type === CellValueType.empty);
-  const nonEmptyCells: CellWithIndex[] = cellsWithIndex.filter(
-    (x) => x.type !== CellValueType.empty
-  );
+  let emptyCells: CellWithIndex[] = cellsWithIndex.filter((x) => x.type === CellValueType.empty);
+  let nonEmptyCells: CellWithIndex[] = cellsWithIndex.filter((x) => x.type !== CellValueType.empty);
+  if (emptyCellAsZero) {
+    nonEmptyCells.push(
+      ...emptyCells.map((emptyCell) => ({ ...emptyCell, type: CellValueType.number, value: 0 }))
+    );
+    emptyCells = [];
+  }
 
   const inverse = sortDirection === "descending" ? -1 : 1;
 
@@ -59,8 +64,7 @@ export function interactiveSortSelection(
   sheetId: UID,
   anchor: Position,
   zone: Zone,
-  sortDirection: SortDirection,
-  canExpandSelection = true
+  sortDirection: SortDirection
 ) {
   let result: DispatchResult = DispatchResult.Success;
 
@@ -85,7 +89,7 @@ export function interactiveSortSelection(
   }
 
   const { col, row } = anchor;
-  if (multiColumns || !canExpandSelection) {
+  if (multiColumns) {
     result = env.model.dispatch("SORT_CELLS", { sheetId, col, row, zone, sortDirection });
   } else {
     // check contiguity

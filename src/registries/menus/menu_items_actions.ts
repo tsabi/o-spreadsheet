@@ -1,6 +1,6 @@
 import { LinkEditor } from "../../components/link";
 import { BACKGROUND_CHART_COLOR } from "../../constants";
-import { intersection, numberToLetters, zoneToXc } from "../../helpers/index";
+import { numberToLetters, zoneToXc } from "../../helpers/index";
 import { interactiveSortSelection } from "../../helpers/sort";
 import { interactiveCut } from "../../helpers/ui/cut";
 import { interactiveAddFilter } from "../../helpers/ui/filter_interactive";
@@ -687,14 +687,8 @@ export const FILTERS_REMOVE_FILTER_TABLE = (env: SpreadsheetChildEnv) => {
 
 export const SELECTION_CONTAINS_FILTER = (env: SpreadsheetChildEnv): boolean => {
   const sheetId = env.model.getters.getActiveSheetId();
-  for (const zone of env.model.getters.getSelectedZones()) {
-    for (const filterTable of env.model.getters.getFilterTables(sheetId)) {
-      if (intersection(zone, filterTable.zone)) {
-        return true;
-      }
-    }
-  }
-  return false;
+  const selectedZones = env.model.getters.getSelectedZones();
+  return env.model.getters.isZonesContainFilter(sheetId, selectedZones);
 };
 
 //------------------------------------------------------------------------------
