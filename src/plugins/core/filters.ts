@@ -1,6 +1,7 @@
 import { deepCopy, intersection, isInside, overlap, toZone, zoneToXc } from "../../helpers";
 import { FilterData, FilterTable } from "../../types/filters";
 import {
+  ApplyRangeChange,
   CommandResult,
   CoreCommand,
   ExcelWorkbookData,
@@ -27,6 +28,66 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
   ] as const;
 
   filters: Record<UID, Array<FilterTable>> = {};
+
+  adaptRanges(applyChange: ApplyRangeChange, sheetId?: UID) {
+    const sheetIds = sheetId ? [sheetId] : Object.keys(this.filters);
+    for (const sheetId of sheetIds) {
+      for (let tableId = 0; tableId < this.getFilterTables(sheetId).length; tableId++) {
+        const filterTable = this.filters[sheetId][tableId];
+        const change = applyChange(filterTable.range);
+        if (change.changeType === "RESIZE" || change.changeType === "MOVE") {
+          const newFilters = this.adaptFilterTableFilters(
+            sheetId,
+            change.range.zone,
+            filterTable.filters,
+            applyChange
+          );
+          this.history.update("filters", sheetId, tableId, "filters", newFilters);
+          this.history.update("filters", sheetId, tableId, "range", change.range);
+        } else if (change.changeType === "REMOVE") {
+          //TODO change array to object and remove
+        } else if (change.changeType !== "NONE") {
+          this.history.update("filters", sheetId, tableId, "range", change.range);
+        }
+      }
+    }
+  }
+
+  adaptFilterTableFilters(
+    sheetId: SheetId,
+    filterTableZone: Zone,
+    filters: Filter[],
+    applyChange: ApplyRangeChange
+  ): Filter[] {
+    const newFilters: Filter[] = [];
+    for (let col = filterTableZone.left; col <= filterTableZone.right; col++) {
+      const filter = filters.find((filter) => filter.col === col);
+      if (!filter) {
+        newFilters.push(
+          new Filter(
+            this.getters.getRangeFromSheetXC(
+              sheetId,
+              zoneToXc({ ...filterTableZone, left: col, right: col })
+            ),
+            []
+          )
+        );
+        continue;
+      }
+      const filterChange = applyChange(filter.fullRange);
+      if (filterChange.changeType === "REMOVE") {
+        continue;
+      } else if (filterChange.changeType !== "NONE") {
+        console.log("OldZone : ");
+        console.log(filter.fullRange.zone);
+        console.log("NewZone : ");
+        console.log(filterChange.range.zone);
+
+        newFilters.push(new Filter(filterChange.range, filter.filteredValues));
+      }
+    }
+    return newFilters;
+  }
 
   // ---------------------------------------------------------------------------
   // Command Handling

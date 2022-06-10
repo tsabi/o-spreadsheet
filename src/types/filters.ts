@@ -56,6 +56,10 @@ export class Filter {
   get filteredZone() {
     return { ...this.fullRange.zone, top: this.fullRange.zone.top + 1 };
   }
+
+  clone() {
+    return new Filter({ ...this.fullRange }, [...this.filteredValues]);
+  }
 }
 
 export interface FilterTableData {
