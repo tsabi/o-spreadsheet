@@ -360,7 +360,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       cell.evaluated.type === CellValueType.error &&
       cell.evaluated.error.logLevel > CellErrorLevel.silent
     ) {
-      const viewport = this.env.model.getters.getActiveSnappedViewport();
+      const viewport = this.env.model.getters.getActiveViewport();
       const [x, y, width] = this.env.model.getters.getRect(
         { left: col, top: row, right: col, bottom: row },
         viewport
@@ -390,7 +390,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   get shouldDisplayLink(): boolean {
     const sheetId = this.env.model.getters.getActiveSheetId();
     const { col, row } = this.activeCellPosition;
-    const viewport = this.env.model.getters.getActiveSnappedViewport();
+    const viewport = this.env.model.getters.getActiveViewport();
     const cell = this.env.model.getters.getCell(sheetId, col, row);
     return (
       this.env.model.getters.isVisibleInViewport(col, row, viewport) &&
@@ -413,7 +413,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       position.col,
       position.row
     );
-    const viewport = this.env.model.getters.getActiveSnappedViewport();
+    const viewport = this.env.model.getters.getActiveViewport();
     const [x, y, width, height] = this.env.model.getters.getRect(
       { left: col, top: row, right: col, bottom: row },
       viewport
@@ -568,12 +568,8 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   }
 
   onScroll() {
-    const { offsetScrollbarX, offsetScrollbarY } =
-      this.env.model.getters.getActiveSnappedViewport();
-    if (
-      offsetScrollbarX !== this.hScrollbar.scroll ||
-      offsetScrollbarY !== this.vScrollbar.scroll
-    ) {
+    const { offsetX, offsetY } = this.env.model.getters.getActiveViewport();
+    if (offsetX !== this.hScrollbar.scroll || offsetY !== this.vScrollbar.scroll) {
       const { maxOffsetX, maxOffsetY } = this.env.model.getters.getMaximumViewportOffset(
         this.env.model.getters.getActiveSheet()
       );
@@ -592,10 +588,25 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     }
   }
 
+  isAutoFillActive(): boolean {
+    const zone = this.env.model.getters.getSelectedZone();
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    const { width, height } = this.env.model.getters.getViewportDimension();
+    const { offsetX, offsetY } = this.env.model.getters.getActiveViewport();
+    const rightCol = this.env.model.getters.getColDimensions(sheetId, zone.right);
+    const bottomRow = this.env.model.getters.getRowDimensions(sheetId, zone.bottom);
+    return (
+      rightCol.end <= offsetX + width &&
+      rightCol.end >= offsetX &&
+      bottomRow.end <= offsetY + height &&
+      bottomRow.end >= offsetY
+    );
+  }
+
   getAutofillPosition() {
     const zone = this.env.model.getters.getSelectedZone();
     const sheet = this.env.model.getters.getActiveSheet();
-    const { offsetX, offsetY } = this.env.model.getters.getActiveSnappedViewport();
+    const { offsetX, offsetY } = this.env.model.getters.getActiveViewport();
     const col = this.env.model.getters.getColDimensions(sheet.id, zone.right);
     const row = this.env.model.getters.getRowDimensions(sheet.id, zone.bottom);
     return {
@@ -606,10 +617,9 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
 
   drawGrid() {
     //reposition scrollbar
-    const { offsetScrollbarX, offsetScrollbarY } =
-      this.env.model.getters.getActiveSnappedViewport();
-    this.hScrollbar.scroll = offsetScrollbarX;
-    this.vScrollbar.scroll = offsetScrollbarY;
+    const { offsetX, offsetY } = this.env.model.getters.getActiveViewport();
+    this.hScrollbar.scroll = offsetX;
+    this.vScrollbar.scroll = offsetY;
     // check for position changes
     this.checkSheetChanges();
     // drawing grid on canvas
@@ -619,7 +629,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     const thinLineWidth = 0.4 * dpr;
     const renderingContext = {
       ctx,
-      viewport: this.env.model.getters.getActiveSnappedViewport(),
+      viewport: this.env.model.getters.getActiveViewport(),
       dpr,
       thinLineWidth,
     };
@@ -743,7 +753,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       const colEdgeScroll = this.env.model.getters.getEdgeScrollCol(x);
       const rowEdgeScroll = this.env.model.getters.getEdgeScrollRow(y);
 
-      const { left, right, top, bottom } = this.env.model.getters.getActiveSnappedViewport();
+      const { left, right, top, bottom } = this.env.model.getters.getActiveViewport();
       let col: number, row: number;
       if (colEdgeScroll.canEdgeScroll) {
         col = colEdgeScroll.direction > 0 ? right : left - 1;
@@ -835,7 +845,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       const oldZone = this.env.model.getters.getSelectedZone();
       this.env.model.selection.resizeAnchorZone(direction, ev.ctrlKey ? "end" : "one");
       const newZone = this.env.model.getters.getSelectedZone();
-      const viewport = this.env.model.getters.getActiveSnappedViewport();
+      const viewport = this.env.model.getters.getActiveViewport();
       const sheet = this.env.model.getters.getActiveSheet();
       let { col, row } = findCellInNewZone(oldZone, newZone);
       col = Math.min(col, sheet.cols.length - 1);

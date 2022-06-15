@@ -64,6 +64,7 @@ export interface SnappedViewport extends Viewport {
 }
 
 export interface GridRenderingContext {
+  //TODORAR: remove viewport from arguments- we cal always take the actvie Viewport
   ctx: CanvasRenderingContext2D;
   viewport: Viewport;
   dpr: number;

@@ -795,7 +795,7 @@ describe("Edge-Scrolling on mouseMove in selection", () => {
     jest.advanceTimersByTime(advanceTimer);
     triggerMouseEvent(".o-col-resizer", "mouseup", 1.5 * width, y);
 
-    expect(model.getters.getActiveSnappedViewport()).toMatchObject({
+    expect(model.getters.getActiveViewport()).toMatchObject({
       left: 6,
       right: 15,
       top: 0,
@@ -809,7 +809,7 @@ describe("Edge-Scrolling on mouseMove in selection", () => {
     jest.advanceTimersByTime(advanceTimer2);
     triggerMouseEvent(".o-col-resizer", "mouseup", -0.5 * width, y);
 
-    expect(model.getters.getActiveSnappedViewport()).toMatchObject({
+    expect(model.getters.getActiveViewport()).toMatchObject({
       left: 3,
       right: 12,
       top: 0,
@@ -826,7 +826,7 @@ describe("Edge-Scrolling on mouseMove in selection", () => {
     jest.advanceTimersByTime(advanceTimer);
     triggerMouseEvent(".o-row-resizer", "mouseup", x, 1.5 * height);
 
-    expect(model.getters.getActiveSnappedViewport()).toMatchObject({
+    expect(model.getters.getActiveViewport()).toMatchObject({
       left: 0,
       right: 9,
       top: 6,
@@ -839,7 +839,7 @@ describe("Edge-Scrolling on mouseMove in selection", () => {
     jest.advanceTimersByTime(advanceTimer2);
     triggerMouseEvent(".o-row-resizer", "mouseup", x, -0.5 * height);
 
-    expect(model.getters.getActiveSnappedViewport()).toMatchObject({
+    expect(model.getters.getActiveViewport()).toMatchObject({
       left: 0,
       right: 9,
       top: 3,

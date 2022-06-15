@@ -393,14 +393,14 @@ describe("Composer / selectionInput interactions", () => {
 
   test("Selecting a range should not scroll the viewport to the current Grid selection", async () => {
     const model = parent.model;
-    const startViewport = model.getters.getActiveSnappedViewport();
+    const startViewport = model.getters.getActiveViewport();
     await typeInComposerTopBar("=");
     // scroll
     fixture
       .querySelector(".o-grid")!
       .dispatchEvent(new WheelEvent("wheel", { deltaY: 3 * DEFAULT_CELL_HEIGHT }));
     await nextTick();
-    const scrolledViewport = model.getters.getActiveSnappedViewport();
+    const scrolledViewport = model.getters.getActiveViewport();
     expect(scrolledViewport).toMatchObject({
       ...startViewport,
       top: startViewport.top + 3,
@@ -410,6 +410,6 @@ describe("Composer / selectionInput interactions", () => {
     });
     await clickCell(model, "E5");
     expect(model.getters.getSelectedZones()).toEqual([toZone("A1")]);
-    expect(model.getters.getActiveSnappedViewport()).toMatchObject(scrolledViewport);
+    expect(model.getters.getActiveViewport()).toMatchObject(scrolledViewport);
   });
 });
