@@ -903,6 +903,43 @@ describe("Test XLSX export", () => {
     const model = new Model({ sheets: [{ id: "sheet0" }, { id: "sheet1", isVisible: false }] });
     expect(await exportPrettifiedXlsx(model)).toMatchSnapshot();
   });
+
+  test("iconset mltiple iconsets", async () => {
+    const model = new Model({
+      sheets: [
+        {
+          colNumber: 2,
+          rowNumber: 5,
+          cells: {},
+          conditionalFormats: [
+            {
+              id: "5",
+              ranges: ["B1:B5"],
+              rule: {
+                type: "IconSetRule",
+                icons: {
+                  upper: "arrowGood",
+                  middle: "smileyGood",
+                  lower: "smileyNeutral",
+                },
+                lowerInflectionPoint: {
+                  operator: "ge",
+                  type: "percentile",
+                  value: "33",
+                },
+                upperInflectionPoint: {
+                  operator: "gt",
+                  type: "percentile",
+                  value: "66",
+                },
+              },
+            },
+          ],
+        },
+      ],
+    });
+    model.exportXLSX();
+  });
 });
 
 describe("XML parser", () => {

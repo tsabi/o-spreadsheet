@@ -192,6 +192,19 @@ function addColorScaleRule(cf: ConditionalFormat, rule: ColorScaleRule): XMLStri
 function addIconSetRule(cf: ConditionalFormat, rule: IconSetRule): XMLString {
   const ruleAttributes = commonCfAttributes(cf);
   ruleAttributes.push(["type", "iconSet"]);
+  const iconsSets = Object.values(rule.icons).map(getIconSetOfIcon);
+  let customIconSet = false;
+  if (iconsSets.some((icon) => icon !== iconsSets[0])) {
+    customIconSet = true;
+  }
+  const iconSetAttributes: XMLAttributes = customIconSet
+    ? [["custom", 1]]
+    : [["iconSet", getIconSet(rule.icons)]];
+  const iconsAttributes: XMLAttributes[] = Object.values(rule.icons).map((icon) => [
+    ["iconSet", getIconSetOfIcon(icon)],
+    ["iconId", 0],
+  ]);
+
   /** mimic our flow:
    * for a given IconSet CF, each range of the "ranges set" has its own behaviour.
    */
@@ -225,15 +238,20 @@ function addIconSetRule(cf: ConditionalFormat, rule: IconSetRule): XMLString {
     const cfValueObjectNodes = cfValueObject.map(
       (attrs) => escapeXml/*xml*/ `<cfvo ${formatAttributes(attrs)} />`
     );
+    const cfIconsNodes = iconsAttributes.map(
+      (attrs) => escapeXml/*xml*/ `<cfIcon ${formatAttributes(attrs)} />`
+    );
     conditionalFormats.push(escapeXml/*xml*/ `
       <conditionalFormatting sqref="${range}">
         <cfRule ${formatAttributes(ruleAttributes)}>
-          <iconSet iconSet="${getIconSet(rule.icons)}">
+          <iconSet ${formatAttributes(iconSetAttributes)}>
             ${joinXmlNodes(cfValueObjectNodes)}
+            ${customIconSet ? joinXmlNodes(cfIconsNodes) : ""}
           </iconSet>
         </cfRule>
       </conditionalFormatting>
     `);
+    console.log(conditionalFormats[conditionalFormats.length - 1]);
   }
 
   return joinXmlNodes(conditionalFormats);
@@ -254,6 +272,12 @@ function getIconSet(iconSet: IconSet): ExcelIconSet {
   return XLSX_ICONSET_MAP[
     Object.keys(XLSX_ICONSET_MAP).find((key) => iconSet.upper.toLowerCase().startsWith(key)) ||
       "dots"
+  ];
+}
+
+function getIconSetOfIcon(icon: string): ExcelIconSet {
+  return XLSX_ICONSET_MAP[
+    Object.keys(XLSX_ICONSET_MAP).find((key) => icon.toLowerCase().startsWith(key)) || "dots"
   ];
 }
 
