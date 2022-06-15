@@ -2,13 +2,9 @@ import { DEFAULT_CELL_HEIGHT, DEFAULT_CELL_WIDTH } from "../constants";
 import { Col, Header, HeaderData, Row } from "../types";
 import { numberToLetters } from "./coordinates";
 
-export function searchHeaderIndex(
-  headers: Header[],
-  position: number,
-  startIndex: number = 0
-): number {
+export function searchHeaderIndex(headers: Header[], position: number): number {
   let size = 0;
-  for (let i = startIndex; i <= headers.length - 1; i++) {
+  for (let i = 0; i <= headers.length - 1; i++) {
     if (headers[i].isHidden) {
       continue;
     }

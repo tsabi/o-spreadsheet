@@ -193,9 +193,9 @@ export class ViewportPlugin extends UIPlugin {
     const lastRow = findLastVisibleColRow(sheet, "rows");
     const { end: lastColEnd, size: lastColSize } = this.getters.getColDimensions(sheetId, lastCol);
     const { end: lastRowEnd, size: lastRowSize } = this.getters.getRowDimensions(sheetId, lastRow);
-    const leftColIndex = searchHeaderIndex(sheet.cols, lastColEnd - this.viewportWidth, 0);
+    const leftColIndex = searchHeaderIndex(sheet.cols, lastColEnd - this.viewportWidth);
     const leftCol = sheet.cols[leftColIndex];
-    const leftRowIndex = searchHeaderIndex(sheet.rows, lastRowEnd - this.viewportHeight, 0);
+    const leftRowIndex = searchHeaderIndex(sheet.rows, lastRowEnd - this.viewportHeight);
     const topRow = sheet.rows[leftRowIndex];
 
     const width =
@@ -350,7 +350,7 @@ export class ViewportPlugin extends UIPlugin {
     const sheet = this.getters.getSheet(sheetId);
     const cols = sheet.cols;
     viewport.left = searchHeaderIndex(cols, viewport.offsetX);
-    viewport.right = searchHeaderIndex(cols, this.viewportWidth, viewport.left);
+    viewport.right = searchHeaderIndex(cols, this.viewportWidth + viewport.offsetX);
     if (viewport.right === -1) {
       viewport.right = cols.length - 1;
     }
@@ -362,7 +362,7 @@ export class ViewportPlugin extends UIPlugin {
     const sheet = this.getters.getSheet(sheetId);
     const rows = sheet.rows;
     viewport.top = searchHeaderIndex(rows, viewport.offsetY);
-    viewport.bottom = searchHeaderIndex(rows, this.viewportHeight, viewport.top);
+    viewport.bottom = searchHeaderIndex(rows, this.viewportHeight + viewport.offsetY);
     if (viewport.bottom === -1) {
       viewport.bottom = rows.length - 1;
     }

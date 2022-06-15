@@ -80,7 +80,7 @@ export class RendererPlugin extends UIPlugin {
     }
     const cols = this.getters.getActiveSheet().cols;
     const viewport = this.getters.getActiveSnappedViewport();
-    return searchHeaderIndex(cols, x, viewport.left);
+    return searchHeaderIndex(cols, x + viewport.offsetX);
   }
 
   /**
@@ -94,7 +94,7 @@ export class RendererPlugin extends UIPlugin {
     }
     const rows = this.getters.getActiveSheet().rows;
     const viewport = this.getters.getActiveSnappedViewport();
-    return searchHeaderIndex(rows, y, viewport.top);
+    return searchHeaderIndex(rows, y + viewport.offsetY);
   }
 
   /**
