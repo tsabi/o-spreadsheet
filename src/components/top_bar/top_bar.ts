@@ -98,6 +98,8 @@ css/* scss */ `
     font-size: 13px;
     line-height: 1.2;
     user-select: none;
+    font-weight: 500;
+    color: #666666;
 
     .o-topbar-top {
       border-bottom: 1px solid #e0e2e4;
@@ -150,17 +152,17 @@ css/* scss */ `
         display: flex;
         flex-shrink: 0;
         margin-left: 16px;
-        color: #333;
         cursor: default;
 
         .o-tool {
           display: flex;
+          justify-content: center;
           align-items: center;
           margin: 2px;
           padding: 0px 3px;
           border-radius: 2px;
           cursor: pointer;
-          min-width: fit-content;
+          min-width: 20px;
         }
 
         .o-tool-outlined {
@@ -173,7 +175,7 @@ css/* scss */ `
 
         .o-tool.active,
         .o-tool:not(.o-disabled):hover {
-          background-color: #f1f3f4;
+          background-color: #017d831a;
         }
 
         .o-with-color > span {
