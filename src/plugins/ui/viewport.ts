@@ -107,12 +107,25 @@ export class ViewportPlugin extends UIPlugin {
         this.setViewportOffset(cmd.offsetX, cmd.offsetY);
         break;
       case "SHIFT_VIEWPORT_DOWN":
-        const { top } = this.getActiveViewport();
-        const sheetId = this.getters.getActiveSheetId();
-        const shiftedOffsetY = this.clipOffsetY(
-          this.getters.getRowDimensions(sheetId, top).start + this.viewportHeight
-        );
-        this.shiftVertically(shiftedOffsetY);
+        // const { maxOffsetY } = this.getMaximumViewportOffset(this.getters.getActiveSheet());
+        // const topRow = this.getActiveTopRow();
+        // const shiftedOffsetY = Math.min(maxOffsetY, topRow.start + this.viewportHeight);
+        // const newRowIndex = this.getters.getRowIndex(shiftedOffsetY + HEADER_HEIGHT, 0);
+        // this.shiftVertically(this.getters.getRow(sheetId, newRowIndex).start);
+        const { top, offsetY } = this.getActiveViewport();
+        const sheet = this.getters.getActiveSheet();
+        const { maxOffsetY } = this.getMaximumViewportOffset(sheet);
+        const topRow = this.getters.getRowDimensions(sheet.id, top);
+        const shiftedOffsetY = Math.min(maxOffsetY, topRow.start + this.viewportHeight);
+        const newRowIndex = this.getters.getRowIndex(shiftedOffsetY + HEADER_HEIGHT - offsetY);
+        this.shiftVertically(this.getters.getRowDimensions(sheet.id, newRowIndex).start);
+
+        // const { top } = this.getActiveViewport();
+        // const sheetId = this.getters.getActiveSheetId();
+        // const shiftedOffsetY = this.clipOffsetY(
+        //   this.getters.getRowDimensions(sheetId, top).start + this.viewportHeight
+        // );
+        // this.shiftVertically(shiftedOffsetY);
         break;
       case "SHIFT_VIEWPORT_UP": {
         const { top } = this.getActiveViewport();
