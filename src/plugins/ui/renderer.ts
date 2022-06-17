@@ -310,7 +310,7 @@ export class RendererPlugin extends UIPlugin {
     ctx.fillRect(0, 0, width, height);
 
     // background grid
-    const { right, left, top, bottom } = viewport;
+    const { right, left, top, bottom, offsetX } = viewport;
 
     if (!this.getters.getGridLinesVisibility(sheetId) || this.getters.isDashboard()) {
       return;
@@ -341,8 +341,12 @@ export class RendererPlugin extends UIPlugin {
       const zone = { left, right, top: i, bottom: i };
       const [, y, rowWidth, rowHeight] = this.getRect(zone, viewport);
       ctx.moveTo(0, y + rowHeight);
+      const leftCol = this.getters.getColDimensions(sheetId, viewport.left);
       ctx.lineTo(
-        Math.min(width, rowWidth + (this.getters.isDashboard() ? 0 : HEADER_WIDTH)),
+        Math.min(
+          width,
+          rowWidth - (offsetX - leftCol.start) + (this.getters.isDashboard() ? 0 : HEADER_WIDTH)
+        ),
         y + rowHeight
       );
     }
