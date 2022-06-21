@@ -2,7 +2,7 @@
 //   id : string;
 // }
 
-import { isDefined, toXC } from "../helpers";
+import { isDefined } from "../helpers";
 import { StateObserver } from "../state_observer";
 import {
   ApplyRangeChange,
@@ -15,29 +15,27 @@ import {
 } from "../types";
 import { RangeAdapter } from "./core/range";
 
-export interface PositionMap extends Iterable<[CellPosition, string]> {
-  set(sheetId: UID, position: Position, id: Id): void;
-  get(sheetId: UID, position: Position): Id | undefined;
+export interface HeaderMap extends Iterable<[CellPosition, string]> {
+  set(sheetId: UID, position: Position, id: ItemId): void;
+  get(sheetId: UID, position: Position): ItemId | undefined;
   delete(sheetId: UID, position: Position): void;
   getPosition(value: string): CellPosition | undefined; //TODO change CellPosition into something generic
   positions(): CellPosition[];
 }
 
-type Id = string;
-type SheetId = UID;
+type ItemId = string;
 
 interface PositionMapManagerState {
-  values: Record<SheetId, (Id | undefined)[][] | undefined>;
-  inverseMap: Record<Id, Range | undefined>;
+  values: Record<UID, (ItemId | undefined)[][] | undefined>;
 }
 
-export class PositionMapManager implements RangeProvider, PositionMap, PositionMapManagerState {
+export class PositionMapManager implements RangeProvider, HeaderMap, PositionMapManagerState {
   static nextHistoryId = 0;
   private history: WorkbookHistory<PositionMapManagerState>;
-  readonly values: Record<SheetId, (Id | undefined)[][] | undefined> = {};
-  readonly inverseMap: Record<Id, Range | undefined> = {};
+  readonly values: Record<UID, (ItemId | undefined)[][] | undefined> = {};
+  readonly inverseMap: Record<ItemId, Range | undefined> = {};
 
-  constructor(stateObserver: StateObserver, private range: RangeAdapter) {
+  constructor(stateObserver: StateObserver, range: RangeAdapter) {
     range.addRangeProvider(this.adaptRanges.bind(this));
     this.history = Object.assign(Object.create(stateObserver), {
       update: stateObserver.addChange.bind(stateObserver, this),
@@ -64,7 +62,7 @@ export class PositionMapManager implements RangeProvider, PositionMap, PositionM
 
   adaptRanges(applyChange: ApplyRangeChange, sheetId?: UID) {
     // aggregate updates while iterating and apply them later
-    const toModify: { range: Range; id: Id }[] = [];
+    const toModify: { range: Range; id: ItemId }[] = [];
     for (const currentRange of Object.values(this.inverseMap).filter(isDefined)) {
       const sheetId = currentRange.sheetId;
       const col = currentRange.zone.left;
@@ -78,7 +76,6 @@ export class PositionMapManager implements RangeProvider, PositionMap, PositionM
       switch (change.changeType) {
         case "REMOVE":
           this.history.update("values", sheetId, col, row, undefined);
-          this.history.update("inverseMap", id, undefined);
           break;
         case "RESIZE":
           throw new Error("Cannot resize a cell range");
@@ -86,7 +83,6 @@ export class PositionMapManager implements RangeProvider, PositionMap, PositionM
         case "CHANGE":
           const range = change.range;
           toModify.push({ range, id });
-          this.history.update("inverseMap", id, range);
           this.history.update("values", sheetId, col, row, undefined); // delete previous entry
           break;
       }
@@ -100,19 +96,16 @@ export class PositionMapManager implements RangeProvider, PositionMap, PositionM
     }
   }
 
-  set(sheetId: UID, position: Position, id: Id) {
+  set(sheetId: UID, position: Position, id: ItemId) {
     const { col, row } = position;
     const value = this.get(sheetId, position);
-    const range = this.range.getRangeFromSheetXC(sheetId, toXC(col, row));
     if (value) {
       this.history.update("values", sheetId, col, row, id);
-      this.history.update("inverseMap", id, range);
     }
     this.history.update("values", sheetId, col, row, id);
-    this.history.update("inverseMap", id, range);
   }
 
-  get(sheetId: UID, { col, row }: Position): Id | undefined {
+  get(sheetId: UID, { col, row }: Position): ItemId | undefined {
     // default value?
     return this.values[sheetId]?.[col]?.[row];
   }
@@ -128,7 +121,6 @@ export class PositionMapManager implements RangeProvider, PositionMap, PositionM
   delete(sheetId: UID, { col, row }: Position) {
     const id = this.get(sheetId, { col, row });
     if (id) {
-      this.history.update("inverseMap", id, undefined);
       this.history.update("values", sheetId, col, row, undefined); // remove previous entry
     }
   }

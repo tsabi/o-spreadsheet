@@ -13,7 +13,7 @@ import {
 import { CoreGetters } from "../types/getters";
 import { BasePlugin } from "./base_plugin";
 import { RangeAdapter } from "./core/range";
-import { PositionMap, PositionMapManager } from "./position_map";
+import { HeaderMap, PositionMapManager } from "./position_map";
 
 export interface CorePluginConstructor {
   new (
@@ -56,7 +56,7 @@ export class CorePlugin<State = any, C = CoreCommand>
     this.uuidGenerator = uuidGenerator;
   }
 
-  protected newPositionMap(): PositionMap {
+  protected newPositionMap(): HeaderMap {
     return new PositionMapManager(this.stateObserver, this.range);
   }
 
