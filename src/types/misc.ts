@@ -173,6 +173,11 @@ export interface Highlight {
   color: string | null;
 }
 
+export interface PaneDivision {
+  horizontal: number;
+  vertical: number;
+}
+
 export type BorderCommand =
   | "all"
   | "hv"

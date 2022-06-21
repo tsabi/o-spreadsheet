@@ -19,6 +19,7 @@ import {
   CreateSheetCommand,
   Dimension,
   ExcelWorkbookData,
+  PaneDivision,
   RenameSheetCommand,
   Row,
   Sheet,
@@ -64,6 +65,7 @@ export class SheetPlugin extends CorePlugin<SheetState> implements SheetState {
     "getNextSheetName",
     "isEmpty",
     "getSheetSize",
+    "getPaneDivisions",
   ] as const;
 
   readonly sheetIdsMapName: Record<string, UID | undefined> = {};
@@ -399,6 +401,10 @@ export class SheetPlugin extends CorePlugin<SheetState> implements SheetState {
       height: this.getNumberRows(sheetId),
       width: this.getNumberCols(sheetId),
     };
+  }
+  
+  getPaneDivisions(sheetId: UID): PaneDivision {
+    return { horizontal: 0, vertical: 0 };
   }
 
   // ---------------------------------------------------------------------------

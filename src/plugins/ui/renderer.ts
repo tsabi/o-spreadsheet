@@ -16,14 +16,7 @@ import {
   TEXT_HEADER_COLOR,
 } from "../../constants";
 import { fontSizeMap } from "../../fonts";
-import {
-  intersection,
-  numberToLetters,
-  overlap,
-  positionToZone,
-  scrollDelay,
-  union,
-} from "../../helpers/index";
+import { intersection, numberToLetters, overlap, positionToZone, union } from "../../helpers/index";
 import { CellErrorLevel } from "../../types/errors";
 import {
   Align,
@@ -31,12 +24,10 @@ import {
   Cell,
   CellValueType,
   Dimension,
-  EdgeScrollInfo,
   GridRenderingContext,
   HeaderDimensions,
   LAYERS,
   Rect,
-  ScrollDirection,
   UID,
   Viewport,
   Zone,
@@ -57,9 +48,6 @@ export class RendererPlugin extends UIPlugin {
     "getRowDimensions",
     "getRowDimensionsInViewport",
     "getRect",
-    "isVisibleInViewport",
-    "getEdgeScrollCol",
-    "getEdgeScrollRow",
   ] as const;
 
   private boxes: Box[] = [];
@@ -196,53 +184,6 @@ export class RendererPlugin extends UIPlugin {
     const y = this.getHeaderOffset("ROW", top, zone.top);
     const height = this.getSizeBetweenHeaders("ROW", zone.top, zone.bottom);
     return [x, y, width, height];
-  }
-
-  /**
-   * Check if a given position is visible in the viewport.
-   */
-  isVisibleInViewport(col: number, row: number, viewport: Viewport): boolean {
-    const { right, left, top, bottom } = viewport;
-    return row <= bottom && row >= top && col >= left && col <= right;
-  }
-
-  getEdgeScrollCol(x: number): EdgeScrollInfo {
-    let canEdgeScroll = false;
-    let direction: ScrollDirection = 0;
-    let delay = 0;
-    const { width } = this.getters.getViewportDimension();
-    const { width: gridWidth } = this.getters.getMaxViewportSize(this.getters.getActiveSheet());
-    const { left, offsetX } = this.getters.getActiveViewport();
-    if (x < 0 && left > 0) {
-      canEdgeScroll = true;
-      direction = -1;
-      delay = scrollDelay(-x);
-    } else if (x > width && offsetX < gridWidth - width) {
-      canEdgeScroll = true;
-      direction = +1;
-      delay = scrollDelay(x - width);
-    }
-
-    return { canEdgeScroll, direction, delay };
-  }
-
-  getEdgeScrollRow(y: number): EdgeScrollInfo {
-    let canEdgeScroll = false;
-    let direction: ScrollDirection = 0;
-    let delay = 0;
-    const { height } = this.getters.getViewportDimension();
-    const { height: gridHeight } = this.getters.getMaxViewportSize(this.getters.getActiveSheet());
-    const { top, offsetY } = this.getters.getActiveViewport();
-    if (y < 0 && top > 0) {
-      canEdgeScroll = true;
-      direction = -1;
-      delay = scrollDelay(-y);
-    } else if (y > height && offsetY < gridHeight - height) {
-      canEdgeScroll = true;
-      direction = +1;
-      delay = scrollDelay(y - height);
-    }
-    return { canEdgeScroll, direction, delay };
   }
 
   // ---------------------------------------------------------------------------
