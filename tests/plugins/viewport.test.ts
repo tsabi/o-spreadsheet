@@ -236,7 +236,7 @@ describe("Viewport of Simple sheet", () => {
 
     // too large
     model.dispatch("RESIZE_VIEWPORT", { height: 1000, width: 1000 });
-    const { maxOffsetY } = model.getters.getMaximumViewportOffset(model.getters.getActiveSheet());
+    const { maxOffsetY } = model.getters.getMaximumViewportOffset(model.getters.getActiveSheetId());
     const tooLargeOffsetResult = setViewportOffset(model, 0, maxOffsetY + 1);
 
     expect(tooLargeOffsetResult).toBeCancelledBecause(CommandResult.InvalidOffset);
@@ -535,7 +535,7 @@ describe("Viewport of Simple sheet", () => {
       height: 1000,
     });
     let { width: gridWidth, height: gridHeight } = model.getters.getMaxViewportSize(
-      model.getters.getActiveSheet()
+      model.getters.getActiveSheetId()
     );
     let { width, height } = model.getters.getViewportDimensionWithHeaders();
     setViewportOffset(model, gridWidth - width, gridHeight - height);
@@ -546,7 +546,7 @@ describe("Viewport of Simple sheet", () => {
     });
     ({ width, height } = model.getters.getViewportDimensionWithHeaders());
     ({ width: gridWidth, height: gridHeight } = model.getters.getMaxViewportSize(
-      model.getters.getActiveSheet()
+      model.getters.getActiveSheetId()
     ));
 
     expect(model.getters.getActiveViewport()).toMatchObject({

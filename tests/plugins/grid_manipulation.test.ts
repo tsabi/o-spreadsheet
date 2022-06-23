@@ -359,24 +359,24 @@ describe("Columns", () => {
         ],
       });
       const sheet = model.getters.getActiveSheet();
-      const dimensions = model.getters.getMaxViewportSize(sheet);
+      const dimensions = model.getters.getMaxViewportSize(sheet.id);
       hideColumns(model, ["B", "C", "D"], sheet.id);
-      let dimensions2 = model.getters.getMaxViewportSize(sheet);
+      let dimensions2 = model.getters.getMaxViewportSize(sheet.id);
       expect(dimensions2.width).toEqual(dimensions.width - 3 * DEFAULT_CELL_WIDTH);
       unhideColumns(model, ["D"], sheet.id);
-      dimensions2 = model.getters.getMaxViewportSize(sheet);
+      dimensions2 = model.getters.getMaxViewportSize(sheet.id);
       expect(dimensions2.width).toEqual(dimensions.width - 2 * DEFAULT_CELL_WIDTH);
     });
 
     test("On Hide/ unhide Column on big sheet", () => {
       model = new Model();
       const sheet = model.getters.getActiveSheet();
-      const dimensions = model.getters.getMaxViewportSize(sheet);
+      const dimensions = model.getters.getMaxViewportSize(sheet.id);
       hideColumns(model, ["B", "C", "D"], sheet.id);
-      let dimensions2 = model.getters.getMaxViewportSize(sheet);
+      let dimensions2 = model.getters.getMaxViewportSize(sheet.id);
       expect(dimensions2.width).toEqual(dimensions.width - 3 * DEFAULT_CELL_WIDTH);
       unhideColumns(model, ["D"], sheet.id);
-      dimensions2 = model.getters.getMaxViewportSize(sheet);
+      dimensions2 = model.getters.getMaxViewportSize(sheet.id);
       expect(dimensions2.width).toEqual(dimensions.width - 2 * DEFAULT_CELL_WIDTH);
     });
   });
@@ -1158,7 +1158,7 @@ describe("Rows", () => {
       expect(model.getters.getRowSize(sheetId, 3)).toBe(10);
       expect(model.getters.getRowSize(sheetId, 4)).toBe(20);
       expect(model.getters.getRowSize(sheetId, 5)).toBe(size);
-      const dimensions = model.getters.getMaxViewportSize(model.getters.getActiveSheet());
+      const dimensions = model.getters.getMaxViewportSize(model.getters.getActiveSheetId());
       expect(dimensions).toMatchObject({ width: 192, height: 124 });
       expect(model.getters.getNumberRows(sheetId)).toBe(6);
     });
@@ -1172,7 +1172,7 @@ describe("Rows", () => {
       expect(model.getters.getRowSize(sheetId, 3)).toBe(20);
       expect(model.getters.getRowSize(sheetId, 4)).toBe(20);
       expect(model.getters.getRowSize(sheetId, 5)).toBe(size);
-      const dimensions = model.getters.getMaxViewportSize(model.getters.getActiveSheet());
+      const dimensions = model.getters.getMaxViewportSize(model.getters.getActiveSheetId());
       expect(dimensions).toMatchObject({ width: 192, height: 144 });
       expect(model.getters.getNumberRows(sheetId)).toBe(6);
     });
@@ -1185,12 +1185,12 @@ describe("Rows", () => {
 
     test("activate Sheet: same size", () => {
       addRows(model, "after", 2, 1);
-      let dimensions = model.getters.getMaxViewportSize(model.getters.getActiveSheet());
+      let dimensions = model.getters.getMaxViewportSize(model.getters.getActiveSheetId());
       expect(dimensions).toMatchObject({ width: 192, height: 124 });
       const to = model.getters.getActiveSheetId();
       createSheet(model, { activate: true, sheetId: "42" });
       activateSheet(model, to);
-      dimensions = model.getters.getMaxViewportSize(model.getters.getActiveSheet());
+      dimensions = model.getters.getMaxViewportSize(model.getters.getActiveSheetId());
       expect(dimensions).toMatchObject({ width: 192, height: 124 });
     });
 
@@ -1204,24 +1204,24 @@ describe("Rows", () => {
         ],
       });
       const sheet = model.getters.getActiveSheet();
-      const dimensions = model.getters.getMaxViewportSize(sheet);
+      const dimensions = model.getters.getMaxViewportSize(sheet.id);
       hideRows(model, [1, 2, 3], sheet.id);
-      let dimensions2 = model.getters.getMaxViewportSize(sheet);
+      let dimensions2 = model.getters.getMaxViewportSize(sheet.id);
       expect(dimensions2.height).toEqual(dimensions.height - 3 * DEFAULT_CELL_HEIGHT);
       unhideRows(model, [3], sheet.id);
-      dimensions2 = model.getters.getMaxViewportSize(sheet);
+      dimensions2 = model.getters.getMaxViewportSize(sheet.id);
       expect(dimensions2.height).toEqual(dimensions.height - 2 * DEFAULT_CELL_HEIGHT);
     });
 
     test("On Hide/ unhide Row on big sheet", () => {
       model = new Model();
       const sheet = model.getters.getActiveSheet();
-      const dimensions = model.getters.getMaxViewportSize(sheet);
+      const dimensions = model.getters.getMaxViewportSize(sheet.id);
       hideRows(model, [1, 2, 3], sheet.id);
-      let dimensions2 = model.getters.getMaxViewportSize(sheet);
+      let dimensions2 = model.getters.getMaxViewportSize(sheet.id);
       expect(dimensions2.height).toEqual(dimensions.height - 3 * DEFAULT_CELL_HEIGHT);
       unhideRows(model, [3], sheet.id);
-      dimensions2 = model.getters.getMaxViewportSize(sheet);
+      dimensions2 = model.getters.getMaxViewportSize(sheet.id);
       expect(dimensions2.height).toEqual(dimensions.height - 2 * DEFAULT_CELL_HEIGHT);
     });
   });

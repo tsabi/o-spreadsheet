@@ -879,7 +879,7 @@ describe("Events on Grid update viewport correctly", () => {
 
   test("Scroll viewport then alter selection with keyboard from before last cell to last cell does not shift viewport", async () => {
     await simulateClick(".o-grid-overlay"); // gain focus on grid element
-    const { width } = model.getters.getMaxViewportSize(model.getters.getActiveSheet());
+    const { width } = model.getters.getMaxViewportSize(model.getters.getActiveSheetId());
     const { width: viewportWidth } = model.getters.getViewportDimensionWithHeaders();
     document.activeElement!.dispatchEvent(
       // scroll completely to the right
@@ -922,7 +922,7 @@ describe("Events on Grid update viewport correctly", () => {
 
   test("Scroll viewport then alter selection with mouse from before last cell to last cell does not shift viewport", async () => {
     await simulateClick(".o-grid-overlay"); // gain focus on grid element
-    const { width } = model.getters.getMaxViewportSize(model.getters.getActiveSheet());
+    const { width } = model.getters.getMaxViewportSize(model.getters.getActiveSheetId());
     const { width: viewportWidth } = model.getters.getViewportDimensionWithHeaders();
     document.activeElement!.dispatchEvent(
       // scroll completely to the right

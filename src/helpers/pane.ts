@@ -2,14 +2,13 @@ import { DEFAULT_CELL_HEIGHT, DEFAULT_CELL_WIDTH } from "../constants";
 import { /*Dimension,*/ Getters, Position, UID, Zone, ZoneDimension } from "../types";
 
 export class Pane {
-  //   viewport: Viewport;
   getters: Getters;
-  private top: number;
-  private bottom: number;
-  private left: number;
-  private right: number;
-  private offsetX: number;
-  private offsetY: number;
+  top!: number;
+  bottom!: number;
+  left!: number;
+  right!: number;
+  offsetX!: number;
+  offsetY!: number;
   offsetScrollbarX: number;
   offsetScrollbarY: number;
   canScrollVertically: boolean;
@@ -24,21 +23,13 @@ export class Pane {
     getters: Getters,
     sheetId: UID,
     boundaries: Zone,
-    sizeInGrid: { viewportWidth: number; viewportHeight: number }, // TODO : in pixels  -> maybe infered ?
+    sizeInGrid: { viewportWidth: number; viewportHeight: number },
     options: { canScrollVertically: boolean; canScrollHorizontally: boolean },
     offsets: { x: number; y: number },
     // TODO maybe remove
     isVisible: boolean = true
-    // range: RangeAdapter,
   ) {
-    //
-    this.left = 0;
-    this.right = 0;
-    this.top = 0; // => inféré par this.adjustViewportZoneX/Y
-    this.bottom = 0;
-    this.offsetX = 0;
-    this.offsetY = 0;
-    //
+    this.getters = getters;
     this.isVisible = isVisible;
     this.sheetId = sheetId;
     this.viewportWidth = sizeInGrid.viewportWidth;
@@ -46,16 +37,19 @@ export class Pane {
     this.boundaries = boundaries;
     this.offsetScrollbarX = offsets.x;
     this.offsetScrollbarY = offsets.y;
-    this.getters = getters;
     this.canScrollVertically = options.canScrollVertically;
     this.canScrollHorizontally = options.canScrollHorizontally;
 
     this.adjustViewportOffsetX();
     this.adjustViewportOffsetY();
-    console.log("JUST CREATED");
   }
 
   // PUBLIC
+  /**
+   * This function will make sure that the provided cell position (or current selected position) is part of
+   * the viewport that is actually displayed on the client. We therefore adjust the offset of the snapped
+   * viewport until it contains the cell completely.
+   */
   adjustPosition(position?: Position) {
     if (!this.isVisible) {
       return;
@@ -134,7 +128,10 @@ export class Pane {
     this.adjustViewportZoneY();
   }
 
-  private adjustViewportOffsetX() {
+  /** Corrects the pane's horizontal offset based on the current structure
+   *  To make sure that at least on column is visible inside the pane.
+   */
+  adjustViewportOffsetX() {
     if (!this.isVisible || !this.canScrollHorizontally) {
       return;
     }
@@ -147,7 +144,10 @@ export class Pane {
     this.adjustViewportZoneX();
   }
 
-  private adjustViewportOffsetY() {
+  /** Corrects the pane's vertical offset based on the current structure
+   *  To make sure that at least on row is visible inside the pane.
+   */
+  adjustViewportOffsetY() {
     if (!this.isVisible || !this.canScrollVertically) {
       return;
     }
@@ -159,6 +159,7 @@ export class Pane {
     this.adjustViewportZoneY();
   }
 
+  /** Updates the pane zone based on its horizontal offset (will find Left) and its width (will find Right) */
   private adjustViewportZoneX() {
     const sheetId = this.sheetId;
     this.left = this.getters.searchHeaderIndex(sheetId, "COL", this.offsetScrollbarX);
@@ -169,6 +170,7 @@ export class Pane {
     this.offsetX = this.getters.getColDimensions(sheetId, this.left).start;
   }
 
+  /** Updates the pane zone based on its vertical offset (will find Top) and its width (will find Bottom) */
   private adjustViewportZoneY() {
     const sheetId = this.sheetId;
     this.top = this.getters.searchHeaderIndex(sheetId, "ROW", this.offsetScrollbarY);
@@ -219,15 +221,3 @@ export class Pane {
     return { width, height };
   }
 }
-
-/**
- * Notes
- *
- *
- *   Viewport contiendra les différents panes, chaque pane aura donc une zone interne ainsi que son offset courant
- *
- *
- *
- *
- * =>  frozen pane can only
- */

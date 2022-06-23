@@ -99,7 +99,7 @@
       />
       <t
         t-set="gridSize"
-        t-value="env.model.getters.getMaxViewportSize(env.model.getters.getActiveSheet())"
+        t-value="env.model.getters.getMaxViewportSize(env.model.getters.getActiveSheetId())"
       />
       <div
         class="o-scrollbar vertical"

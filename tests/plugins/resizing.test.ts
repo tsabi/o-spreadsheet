@@ -21,19 +21,19 @@ describe("Model resizer", () => {
     const sheet = model.getters.getActiveSheet();
     const sheetId = sheet.id;
     const initialSize = model.getters.getColSize(sheetId, 1);
-    const initialWidth = model.getters.getMaxViewportSize(sheet).width;
+    const initialWidth = model.getters.getMaxViewportSize(sheet.id).width;
 
     resizeColumns(model, ["B"], model.getters.getColSize(sheetId, 1) + 100);
     expect(model.getters.getColSize(sheetId, 1)).toBe(196);
-    expect(model.getters.getMaxViewportSize(sheet).width).toBe(initialWidth + 100);
+    expect(model.getters.getMaxViewportSize(sheet.id).width).toBe(initialWidth + 100);
 
     undo(model);
     expect(model.getters.getColSize(sheetId, 1)).toBe(initialSize);
-    expect(model.getters.getMaxViewportSize(sheet).width).toBe(initialWidth);
+    expect(model.getters.getMaxViewportSize(sheet.id).width).toBe(initialWidth);
 
     redo(model);
     expect(model.getters.getColSize(sheetId, 1)).toBe(initialSize + 100);
-    expect(model.getters.getMaxViewportSize(sheet).width).toBe(initialWidth + 100);
+    expect(model.getters.getMaxViewportSize(sheet.id).width).toBe(initialWidth + 100);
   });
 
   test("Cannot resize column in invalid sheet", async () => {
@@ -72,15 +72,15 @@ describe("Model resizer", () => {
     const sheet = model.getters.getActiveSheet();
     const sheetId = sheet.id;
     const initialSize = model.getters.getRowSize(sheetId, 1);
-    const initialHeight = model.getters.getMaxViewportSize(sheet).height;
+    const initialHeight = model.getters.getMaxViewportSize(sheet.id).height;
 
     resizeRows(model, [1], initialSize + 100);
     expect(model.getters.getRowSize(sheetId, 1)).toBe(initialSize + 100);
-    expect(model.getters.getMaxViewportSize(sheet).height).toBe(initialHeight + 100);
+    expect(model.getters.getMaxViewportSize(sheet.id).height).toBe(initialHeight + 100);
 
     undo(model);
     expect(model.getters.getRowSize(sheetId, 1)).toBe(initialSize);
-    expect(model.getters.getMaxViewportSize(sheet).height).toBe(initialHeight);
+    expect(model.getters.getMaxViewportSize(sheet.id).height).toBe(initialHeight);
   });
 
   test("Can resize row of inactive sheet", async () => {
@@ -110,10 +110,10 @@ describe("Model resizer", () => {
     expect(model.getters.getActiveSheetId()).toBe(sheet2);
     resizeColumns(model, ["B"], model.getters.getColSize(sheet2, 1) + 100, sheet2);
 
-    const initialWidth = model.getters.getMaxViewportSize(model.getters.getActiveSheet()).width;
+    const initialWidth = model.getters.getMaxViewportSize(model.getters.getActiveSheetId()).width;
 
     activateSheet(model, sheet1);
-    expect(model.getters.getMaxViewportSize(model.getters.getActiveSheet()).width).toBe(
+    expect(model.getters.getMaxViewportSize(model.getters.getActiveSheetId()).width).toBe(
       initialWidth - 100
     );
   });
@@ -147,12 +147,14 @@ describe("Model resizer", () => {
     const model = new Model();
     const sheet = model.getters.getActiveSheet();
     const sheetId = sheet.id;
-    const { width: initialWidth, height: initialHeight } = model.getters.getMaxViewportSize(sheet);
+    const { width: initialWidth, height: initialHeight } = model.getters.getMaxViewportSize(
+      sheet.id
+    );
     resizeColumns(model, ["B"], model.getters.getColSize(sheetId, 1) + 100);
-    expect(model.getters.getMaxViewportSize(sheet).width).toBe(initialWidth + 100);
+    expect(model.getters.getMaxViewportSize(sheetId).width).toBe(initialWidth + 100);
 
     resizeRows(model, [1], model.getters.getRowSize(sheetId, 1) + 42);
-    expect(model.getters.getMaxViewportSize(sheet).height).toBe(initialHeight + 42);
+    expect(model.getters.getMaxViewportSize(sheet.id).height).toBe(initialHeight + 42);
   });
 
   describe("Sheet manipulation keep resized rows/cols", () => {
