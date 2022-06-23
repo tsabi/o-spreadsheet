@@ -128,6 +128,7 @@ export const FILTER_ICON_MARGIN = 2;
 
 // Menus
 export const MENU_WIDTH = 250;
+export const MENU_VERTICAL_PADDING = 8;
 export const MENU_ITEM_HEIGHT = 28;
 export const MENU_SEPARATOR_BORDER_WIDTH = 1;
 export const MENU_SEPARATOR_PADDING = 5;

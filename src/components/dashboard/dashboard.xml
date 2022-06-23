@@ -10,7 +10,7 @@
         />
         <canvas t-ref="canvas"/>
         <GridPopover
-          gridPosition="canvasPosition"
+          gridRect="gridRect"
           hoveredCell="hoveredCell"
           onMouseWheel.bind="onMouseWheel"
           onClosePopover.bind="onClosePopover"

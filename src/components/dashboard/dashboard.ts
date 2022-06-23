@@ -178,6 +178,10 @@ export class SpreadsheetDashboard extends Component<Props, SpreadsheetChildEnv> 
     ev.clipboardData!.setData("text/plain", content);
     ev.preventDefault();
   }
+
+  get gridRect(): Rect {
+    return { ...this.canvasPosition, ...this.env.model.getters.getSheetViewDimensionWithHeaders() };
+  }
 }
 
 SpreadsheetDashboard.props = {};

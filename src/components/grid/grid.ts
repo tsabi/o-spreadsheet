@@ -21,6 +21,7 @@ import {
   HeaderIndex,
   Pixel,
   Position,
+  Rect,
   Ref,
   SpreadsheetChildEnv,
 } from "../../types/index";
@@ -329,6 +330,10 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
 
   isCellHovered(col: HeaderIndex, row: HeaderIndex): boolean {
     return this.hoveredCell.col === col && this.hoveredCell.row === row;
+  }
+
+  get gridRect(): Rect {
+    return { ...this.canvasPosition, ...this.env.model.getters.getSheetViewDimensionWithHeaders() };
   }
 
   // ---------------------------------------------------------------------------

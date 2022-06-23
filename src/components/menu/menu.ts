@@ -4,6 +4,7 @@ import {
   MENU_ITEM_DISABLED_COLOR,
   MENU_ITEM_HEIGHT,
   MENU_SEPARATOR_HEIGHT,
+  MENU_VERTICAL_PADDING,
   MENU_WIDTH,
   TOPBAR_HEIGHT,
 } from "../../constants";
@@ -13,7 +14,7 @@ import { DOMCoordinates, Pixel, SpreadsheetChildEnv } from "../../types";
 import { css } from "../helpers/css";
 import { isChildEvent } from "../helpers/dom_helpers";
 import { useAbsolutePosition } from "../helpers/position_hook";
-import { Popover } from "../popover/popover";
+import { Popover, PopoverProps } from "../popover/popover";
 
 //------------------------------------------------------------------------------
 // Context Menu Component
@@ -22,7 +23,10 @@ import { Popover } from "../popover/popover";
 css/* scss */ `
   .o-menu {
     background-color: white;
-    padding: 5px 0px;
+    padding: ${MENU_VERTICAL_PADDING}px 0px;
+    width: ${MENU_WIDTH}px;
+    box-sizing: border-box !important;
+
     .o-menu-item {
       display: flex;
       justify-content: space-between;
@@ -85,7 +89,6 @@ export interface MenuState {
 }
 export class Menu extends Component<Props, SpreadsheetChildEnv> {
   static template = "o-spreadsheet-Menu";
-  MENU_WIDTH = MENU_WIDTH;
 
   static components = { Menu, Popover };
   static defaultProps = {
@@ -120,11 +123,7 @@ export class Menu extends Component<Props, SpreadsheetChildEnv> {
     return this.menuComponentHeight(this.props.menuItems);
   }
 
-  get subMenuHeight(): Pixel {
-    return this.menuComponentHeight(this.subMenu.menuItems);
-  }
-
-  get popover() {
+  get popover(): PopoverProps {
     const isRoot = this.props.depth === 1;
     let marginTop = 6;
     if (!this.env.isDashboard()) {
@@ -133,8 +132,14 @@ export class Menu extends Component<Props, SpreadsheetChildEnv> {
     return {
       // some margin between the header and the component
       marginTop,
-      flipHorizontalOffset: MENU_WIDTH * (this.props.depth - 1),
-      flipVerticalOffset: isRoot ? 0 : MENU_ITEM_HEIGHT,
+      anchorRect: {
+        x: this.props.position.x - MENU_WIDTH * (this.props.depth - 1),
+        y: this.props.position.y,
+        width: isRoot ? 0 : MENU_WIDTH,
+        height: isRoot ? 0 : MENU_ITEM_HEIGHT,
+      },
+      positioning: isRoot ? "BottomLeft" : "TopRight",
+      verticalOffset: isRoot ? 0 : MENU_VERTICAL_PADDING,
     };
   }
 
@@ -159,7 +164,7 @@ export class Menu extends Component<Props, SpreadsheetChildEnv> {
    */
   private subMenuVerticalPosition(position: Pixel): Pixel {
     const menusAbove = this.props.menuItems.slice(0, position);
-    return this.menuComponentHeight(menusAbove) + this.position.y;
+    return this.menuComponentHeight(menusAbove, false) + this.position.y;
   }
 
   private onClick(ev: MouseEvent) {
@@ -181,13 +186,27 @@ export class Menu extends Component<Props, SpreadsheetChildEnv> {
   }
 
   /**
-   * Return the total height (in pixels) needed for some
-   * menu items
+   * Return the total height (in pixels) needed for the given menu items
+   *
+   * @param isEntireMenu : indicates if the given menuItems represent an entire menu or just part of one. The difference
+   * between the two is that a entire menu won't display separators at the bottom, and a slice of a menu won't have bottom padding.
    */
-  private menuComponentHeight(menuItems: MenuItem[]): Pixel {
-    const separators = menuItems.filter((m) => m.separator);
+  private menuComponentHeight(menuItems: MenuItem[], isEntireMenu = true): Pixel {
+    // Separators at the bottom of the menu aren't displayed
+    const separators = menuItems.filter(
+      (m, index) => m.separator && !(isEntireMenu && index === menuItems.length - 1)
+    );
     const others = menuItems;
-    return MENU_ITEM_HEIGHT * others.length + separators.length * MENU_SEPARATOR_HEIGHT;
+    let height =
+      MENU_VERTICAL_PADDING + // top padding
+      MENU_ITEM_HEIGHT * others.length + // height of the menu items
+      separators.length * MENU_SEPARATOR_HEIGHT; // height of the separators
+
+    // A slice of a menu won't have bottom padding
+    if (isEntireMenu) {
+      height += MENU_VERTICAL_PADDING;
+    }
+    return height;
   }
 
   getName(menu: FullMenuItem) {

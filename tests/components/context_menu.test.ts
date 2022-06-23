@@ -1,6 +1,11 @@
 import { App, Component, useSubEnv, xml } from "@odoo/owl";
 import { Menu } from "../../src/components/menu/menu";
-import { MENU_ITEM_HEIGHT, MENU_WIDTH, TOPBAR_HEIGHT } from "../../src/constants";
+import {
+  MENU_ITEM_HEIGHT,
+  MENU_VERTICAL_PADDING,
+  MENU_WIDTH,
+  TOPBAR_HEIGHT,
+} from "../../src/constants";
 import { toXC } from "../../src/helpers";
 import { Model } from "../../src/model";
 import { createFullMenuItem, FullMenuItem } from "../../src/registries";
@@ -20,6 +25,21 @@ import {
 let fixture: HTMLElement;
 let app: App;
 let model: Model;
+const originalGetBoundingClientRect = HTMLDivElement.prototype.getBoundingClientRect;
+jest
+  .spyOn(HTMLDivElement.prototype, "getBoundingClientRect")
+  .mockImplementation(function (this: HTMLDivElement) {
+    if (this.className.includes("o-menu")) {
+      return getPosition(this);
+    } else if (this.className.includes("o-popover")) {
+      const childName = (this.firstChild?.firstChild as HTMLElement)?.title;
+      if (childName && childName.includes("subMenu")) {
+        return getSubMenuSize();
+      }
+      return getMenuSize();
+    }
+    return originalGetBoundingClientRect.call(this);
+  });
 
 beforeEach(async () => {
   const clipboard = new MockClipboard();
@@ -43,13 +63,32 @@ function getSelectionAnchorCellXc(model: Model): string {
   return toXC(col, row);
 }
 
-function getPosition(element: string | Element): { top: number; left: number } {
+function getPosition(element: string | Element): {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+} {
   const menu = typeof element === "string" ? fixture.querySelector(element)! : element;
-  const { top, left } = window.getComputedStyle(menu.parentElement!);
-  return {
+  const {
+    top,
+    left,
+    width,
+    //@ts-ignore
+    "max-width": maxWidth,
+    height,
+    //@ts-ignore
+    "max-height": maxHeight,
+  } = window.getComputedStyle(menu.parentElement!);
+
+  const rect = {
     top: parseInt(top.replace("px", "")),
     left: parseInt(left.replace("px", "")),
+    width: parseInt(width.replace("px", "")) || parseInt(maxWidth.replace("px", "")),
+    height: parseInt(height.replace("px", "")) || parseInt(maxHeight.replace("px", "")),
   };
+
+  return rect;
 }
 
 function getMenuPosition() {
@@ -69,7 +108,7 @@ function getItemSize() {
 function getSize(menuItemsCount: number): { width: number; height: number } {
   return {
     width: MENU_WIDTH,
-    height: getItemSize() * menuItemsCount,
+    height: getItemSize() * menuItemsCount + 2 * MENU_VERTICAL_PADDING,
   };
 }
 
@@ -112,7 +151,6 @@ async function renderContextMenu(
   });
   app.addTemplates(OWL_TEMPLATES);
   parent = await app.mount(fixture);
-
   await nextTick();
   return [x, y];
 }
@@ -137,18 +175,6 @@ const subMenu: FullMenuItem[] = [
     ],
   }),
 ];
-
-const originalGetBoundingClientRect = HTMLDivElement.prototype.getBoundingClientRect;
-// @ts-ignore the mock should return a complete DOMRect, not only { top, left }
-jest
-  .spyOn(HTMLDivElement.prototype, "getBoundingClientRect")
-  .mockImplementation(function (this: HTMLDivElement) {
-    const menu = this.className.includes("o-menu");
-    if (menu) {
-      return getPosition(this);
-    }
-    return originalGetBoundingClientRect.call(this);
-  });
 
 class ContextMenuParent extends Component {
   static template = xml/* xml */ `
@@ -731,9 +757,8 @@ describe("Context Menu position on large screen 1000px/1000px", () => {
     await simulateClick("div[data-name='root']");
     const { left, top } = getSubMenuPosition();
     const { top: rootTop } = getMenuPosition();
-    const { height } = getSubMenuSize();
+    const { height, width } = getSubMenuSize();
     const { height: rootHeight } = getMenuSize();
-    const { width } = getSubMenuSize();
     expect(rootTop).toBe(clickY - rootHeight);
     expect(top).toBe(clickY - height);
     expect(left).toBe(clickX + width);

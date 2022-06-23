@@ -51,7 +51,7 @@
       </t>
       <GridPopover
         t-if="!menuState.isOpen"
-        gridPosition="canvasPosition"
+        gridRect="gridRect"
         hoveredCell="hoveredCell"
         onMouseWheel.bind="onMouseWheel"
         onClosePopover.bind="onClosePopover"

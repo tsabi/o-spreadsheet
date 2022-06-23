@@ -95,8 +95,10 @@ jest
   .spyOn(HTMLDivElement.prototype, "getBoundingClientRect")
   // @ts-ignore the mock should return a complete DOMRect, not only { top, left }
   .mockImplementation(function (this: HTMLDivElement) {
-    if (this.className.includes("o-spreadsheet")) {
-      return { top: 100, left: 200 };
+    if (this.className.includes("o-popover")) {
+      return { height: 0, width: 0 };
+    } else if (this.className.includes("o-spreadsheet")) {
+      return { top: 100, left: 200, height: 1000, width: 1000 };
     } else if (this.className.includes("o-chart-menu-item")) {
       return { top: 500, left: 500 };
     }

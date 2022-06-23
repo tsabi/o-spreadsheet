@@ -4,7 +4,7 @@ import { CellPopoverComponent, PopoverBuilders } from "../../types/cell_popovers
 import { CellErrorLevel } from "../../types/errors";
 import { css } from "../helpers/css";
 
-const ERROR_TOOLTIP_HEIGHT = 40;
+const ERROR_TOOLTIP_HEIGHT = 80;
 const ERROR_TOOLTIP_WIDTH = 180;
 
 css/* scss */ `
@@ -13,6 +13,8 @@ css/* scss */ `
     background-color: white;
     border-left: 3px solid red;
     padding: 10px;
+    width: ${ERROR_TOOLTIP_WIDTH}px;
+    box-sizing: border-box !important;
   }
 `;
 
@@ -21,8 +23,8 @@ interface ErrorToolTipProps {
   onClosed?: () => void;
 }
 
-class ErrorToolTip extends Component<ErrorToolTipProps> {
-  static size = { width: ERROR_TOOLTIP_WIDTH, height: ERROR_TOOLTIP_HEIGHT };
+export class ErrorToolTip extends Component<ErrorToolTipProps> {
+  static maxSize = { maxHeight: ERROR_TOOLTIP_HEIGHT };
   static template = "o-spreadsheet-ErrorToolTip";
   static components = {};
 }
