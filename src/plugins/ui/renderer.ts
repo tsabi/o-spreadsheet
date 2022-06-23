@@ -210,7 +210,8 @@ export class RendererPlugin extends UIPlugin {
   }
 
   private drawBackground(renderingContext: GridRenderingContext) {
-    const { ctx, thinLineWidth, viewport } = renderingContext;
+    const { ctx, thinLineWidth } = renderingContext;
+    const viewport = this.getters.getActiveViewport();
     const { width, height } = this.getters.getViewportDimensionWithHeaders();
     const sheetId = this.getters.getActiveSheetId();
 
@@ -409,7 +410,8 @@ export class RendererPlugin extends UIPlugin {
   }
 
   private drawHeaders(renderingContext: GridRenderingContext) {
-    const { ctx, thinLineWidth, viewport } = renderingContext;
+    const { ctx, thinLineWidth } = renderingContext;
+    const viewport = this.getters.getActiveViewport();
     const { right, left, top, bottom } = viewport;
     const { width, height } = this.getters.getViewportDimensionWithHeaders();
     const selection = this.getters.getSelectedZones();
@@ -641,7 +643,7 @@ export class RendererPlugin extends UIPlugin {
   private getGridBoxes(renderingContext: GridRenderingContext): Box[] {
     const boxes: Box[] = [];
 
-    const { viewport } = renderingContext;
+    const viewport = this.getters.getActiveViewport();
     const { right, left, top, bottom } = viewport;
     const sheet = this.getters.getActiveSheet();
     const { id: sheetId } = sheet;
