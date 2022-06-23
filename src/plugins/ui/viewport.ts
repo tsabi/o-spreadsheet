@@ -8,6 +8,7 @@ import {
   CommandResult,
   Dimension,
   EdgeScrollInfo,
+  Figure,
   Position,
   ScrollDirection,
   UID,
@@ -42,6 +43,7 @@ export class ViewportPlugin extends UIPlugin {
     "getEdgeScrollCol",
     "getEdgeScrollRow",
     "searchHeaderIndex",
+    "getVisibleFigures",
   ] as const;
 
   readonly panes: Record<UID, SheetPanes> = {};
@@ -485,5 +487,23 @@ export class ViewportPlugin extends UIPlugin {
       delay = scrollDelay(y - height);
     }
     return { canEdgeScroll, direction, delay };
+  }
+
+  getVisibleFigures(): Figure[] {
+    const sheetId = this.getters.getActiveSheetId();
+    const result: Figure[] = [];
+    const figures = this.getters.getFigures(sheetId);
+    const { offsetX, offsetY } = this.getters.getActiveViewport();
+    const { width, height } = this.getters.getViewportDimensionWithHeaders();
+    for (let figure of figures) {
+      if (figure.x >= offsetX + width || figure.x + figure.width <= offsetX) {
+        continue;
+      }
+      if (figure.y >= offsetY + height || figure.y + figure.height <= offsetY) {
+        continue;
+      }
+      result.push(figure);
+    }
+    return result;
   }
 }
