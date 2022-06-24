@@ -72,7 +72,7 @@ export function watchClipboardOutline(model: Model) {
   });
   const isDotOutlined = (zones: Zone[]): boolean => {
     return zones.every((zone) => {
-      const [x, y, width, height] = model.getters.getRect(zone);
+      const { x, y, width, height } = model.getters.getRect(zone);
       return outlinedRects.some(
         (rect) => rect[0] === x && rect[1] === y && rect[2] === width && rect[3] === height
       );

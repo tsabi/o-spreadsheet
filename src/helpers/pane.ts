@@ -1,5 +1,5 @@
 import { DEFAULT_CELL_HEIGHT, DEFAULT_CELL_WIDTH } from "../constants";
-import { /*Dimension,*/ Getters, Position, UID, Zone, ZoneDimension } from "../types";
+import { /*Dimension,*/ Getters, Position, Rect, UID, Zone, ZoneDimension } from "../types";
 
 export class Pane {
   getters: Getters;
@@ -110,6 +110,11 @@ export class Pane {
   adjustViewportZone() {
     this.adjustViewportZoneX();
     this.adjustViewportZoneY();
+  }
+
+  getRect(zone: Zone): Rect {
+    // TODO
+    return { x: 0, y: 0, width: 10, height: 10 };
   }
 
   // PRIVATE

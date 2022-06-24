@@ -222,6 +222,10 @@ export class ViewportPlugin extends UIPlugin {
   // Private
   // ---------------------------------------------------------------------------
 
+  getPanes(sheetId: UID): Pane[] {
+    return Object.values(this.panes[sheetId]).filter(isDefined);
+  }
+
   searchHeaderIndex(
     sheetId: UID,
     dimension: Dimension,
@@ -313,9 +317,9 @@ export class ViewportPlugin extends UIPlugin {
     const sheetId = this.getters.getActiveSheetId();
     this.getViewport(sheetId);
 
-    Object.values(this.panes[sheetId])
-      .filter(isDefined)
-      .forEach((pane) => pane.setViewportOffset(offsetX, offsetY));
+    Object.values(this.getPanes(sheetId)).forEach((pane) =>
+      pane.setViewportOffset(offsetX, offsetY)
+    );
   }
 
   /**
@@ -425,8 +429,7 @@ export class ViewportPlugin extends UIPlugin {
   private refreshViewport(sheetId: UID, anchorPosition?: Position) {
     this.getViewport(sheetId);
 
-    Object.values(this.panes[sheetId]) // this.getViewport(sheetId)
-      .filter(isDefined)
+    Object.values(this.getPanes(sheetId)) // this.getViewport(sheetId)
       .forEach((pane) => {
         pane.adjustViewportZone();
         pane.adjustPosition(anchorPosition);
@@ -514,19 +517,19 @@ export class ViewportPlugin extends UIPlugin {
    * Get the offset of a header (see getColRowOffset), adjusted with the header
    * size (HEADER_HEIGHT and HEADER_WIDTH)
    */
-  private getHeaderOffset(dimension: Dimension, start: number, index: number): number {
+  /*private getHeaderOffset(dimension: Dimension, start: number, index: number): number {
     let size = this.getColRowOffset(dimension, start, index);
     if (!this.getters.isDashboard()) {
       size += dimension === "ROW" ? HEADER_HEIGHT : HEADER_WIDTH;
     }
     return size;
-  }
+  }*/
 
   /**
    * Get the actual size between two headers.
    * The size from A to B is the distance between A.start and B.end
    */
-  private getSizeBetweenHeaders(dimension: Dimension, from: number, to: number): number {
+  /*private getSizeBetweenHeaders(dimension: Dimension, from: number, to: number): number {
     const sheetId = this.getters.getActiveSheetId();
     let size = 0;
     for (let i = from; i <= to; i++) {
@@ -539,17 +542,28 @@ export class ViewportPlugin extends UIPlugin {
           : this.getters.getRowSize(sheetId, i);
     }
     return size;
-  }
+  }*/
 
   /**
    * Computes the coordinates and size to draw the zone on the canvas
    */
   getRect(zone: Zone): Rect {
-    const { left, top } = this.getActiveViewport();
-    const x = this.getHeaderOffset("COL", left, zone.left);
-    const width = this.getSizeBetweenHeaders("COL", zone.left, zone.right);
-    const y = this.getHeaderOffset("ROW", top, zone.top);
-    const height = this.getSizeBetweenHeaders("ROW", zone.top, zone.bottom);
-    return [x, y, width, height];
+    //const { left, top } = this.getActiveViewport();
+    //const x = this.getHeaderOffset("COL", left, zone.left);
+    //const width = this.getSizeBetweenHeaders("COL", zone.left, zone.right);
+    //const y = this.getHeaderOffset("ROW", top, zone.top);
+    //const height = this.getSizeBetweenHeaders("ROW", zone.top, zone.bottom);
+    //return [x, y, width, height];
+
+    const sheetId = this.getters.getActiveSheetId();
+    const paneRects = this.getPanes(sheetId)
+      .map((pane) => pane.getRect(zone))
+      .filter(isDefined);
+
+    const x = Math.min(...paneRects.map((rect) => rect.x));
+    const y = Math.min(...paneRects.map((rect) => rect.y));
+    const width = Math.max(...paneRects.map((rect) => rect.x + rect.width)) - x;
+    const height = Math.max(...paneRects.map((rect) => rect.y + rect.height)) - y;
+    return { x, y, width, height };
   }
 }

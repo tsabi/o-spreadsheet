@@ -354,7 +354,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       cell.evaluated.type === CellValueType.error &&
       cell.evaluated.error.logLevel > CellErrorLevel.silent
     ) {
-      const [x, y, width] = this.env.model.getters.getRect({
+      const { x, y, width } = this.env.model.getters.getRect({
         left: col,
         top: row,
         right: col,
@@ -408,7 +408,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       position.col,
       position.row
     );
-    const [x, y, width, height] = this.env.model.getters.getRect({
+    const { x, y, width, height } = this.env.model.getters.getRect({
       left: col,
       top: row,
       right: col,

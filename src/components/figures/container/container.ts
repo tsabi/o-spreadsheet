@@ -144,6 +144,8 @@ export class FiguresContainer extends Component<Props, SpreadsheetChildEnv> {
   }
 
   getStyle(info: FigureInfo) {
+    // TODO should be adapted - the goal wioll be to make sure that a graph is ALWAYS displayed in the bottomright pane
+
     const { figure, isSelected } = info;
     const { offsetX, offsetY } = this.env.model.getters.getActiveViewport();
     const target = figure.id === (isSelected && this.dnd.figureId) ? this.dnd : figure;

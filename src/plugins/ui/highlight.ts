@@ -70,7 +70,7 @@ export class HighlightPlugin extends UIPlugin {
         highlights.findIndex((h) => isEqual(h.zone, highlight.zone) && h.sheetId === sheetId) ===
         index
     )) {
-      const [x, y, width, height] = this.getters.getRect(h.zone);
+      const { x, y, width, height } = this.getters.getRect(h.zone);
       if (width > 0 && height > 0) {
         ctx.strokeStyle = h.color!;
         ctx.strokeRect(x + lineWidth / 2, y + lineWidth / 2, width - lineWidth, height - lineWidth);

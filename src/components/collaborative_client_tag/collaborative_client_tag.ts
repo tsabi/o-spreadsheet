@@ -28,7 +28,7 @@ export class ClientTag extends Component<ClientTagProps, SpreadsheetChildEnv> {
   get tagStyle(): string {
     const { col, row, color } = this.props;
     const { height } = this.env.model.getters.getViewportDimensionWithHeaders();
-    const [x, y, ,] = this.env.model.getters.getRect({
+    const { x, y } = this.env.model.getters.getRect({
       left: col,
       top: row,
       right: col,

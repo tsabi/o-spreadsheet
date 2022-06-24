@@ -725,7 +725,7 @@ export class GridSelectionPlugin extends UIPlugin {
     ctx.lineWidth = 1.5 * thinLineWidth;
     ctx.globalCompositeOperation = "multiply";
     for (const zone of zones) {
-      const [x, y, width, height] = this.getters.getRect(zone);
+      const { x, y, width, height } = this.getters.getRect(zone);
       ctx.fillRect(x, y, width, height);
       ctx.strokeRect(x, y, width, height);
     }
@@ -748,7 +748,7 @@ export class GridSelectionPlugin extends UIPlugin {
         right: col,
       };
     }
-    const [x, y, width, height] = this.getters.getRect(zone);
+    const { x, y, width, height } = this.getters.getRect(zone);
     if (width > 0 && height > 0) {
       ctx.strokeRect(x, y, width, height);
     }
