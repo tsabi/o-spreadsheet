@@ -1,5 +1,6 @@
 import { DEFAULT_CELL_HEIGHT, DEFAULT_CELL_WIDTH } from "../constants";
 import { /*Dimension,*/ Getters, Position, Rect, UID, Zone, ZoneDimension } from "../types";
+import { intersection } from "./zones";
 
 export class Pane {
   getters: Getters;
@@ -112,12 +113,27 @@ export class Pane {
     this.adjustViewportZoneY();
   }
 
-  getRect(zone: Zone): Rect {
+  getRect(zone: Zone): Rect | undefined {
+    const targetZone = intersection(zone, this.zone);
+
     // TODO
-    return { x: 0, y: 0, width: 10, height: 10 };
+    if (targetZone) {
+      return {
+        x: this.getters.getSizeBetweenHeaders("COL", this.zone.left, targetZone.left - 1),
+        y: this.getters.getSizeBetweenHeaders("ROW", this.zone.top, targetZone.top - 1),
+        width: this.getters.getSizeBetweenHeaders("COL", targetZone.left, targetZone.right),
+        height: this.getters.getSizeBetweenHeaders("ROW", targetZone.top, targetZone.bottom),
+      };
+    } else {
+      return undefined;
+    }
   }
 
   // PRIVATE
+
+  get zone() {
+    return { left: this.left, right: this.right, top: this.top, bottom: this.bottom };
+  }
   private setViewportOffsetX(offsetX: number) {
     if (!this.isVisible || !this.canScrollHorizontally) {
       return;
