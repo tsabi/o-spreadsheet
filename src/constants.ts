@@ -112,3 +112,5 @@ export enum ComponentsImportance {
   Popover = 30,
   ChartAnchor = 1000,
 }
+
+export const DEFAULT_VIEWPORT_SIZE = 1000;

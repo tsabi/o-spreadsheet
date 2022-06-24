@@ -27,7 +27,6 @@ import {
   GridRenderingContext,
   HeaderDimensions,
   LAYERS,
-  Rect,
   UID,
   Viewport,
   Zone,
@@ -47,7 +46,6 @@ export class RendererPlugin extends UIPlugin {
     "getColDimensionsInViewport",
     "getRowDimensions",
     "getRowDimensionsInViewport",
-    "getRect",
   ] as const;
 
   private boxes: Box[] = [];
@@ -155,37 +153,6 @@ export class RendererPlugin extends UIPlugin {
     return size;
   }
 
-  /**
-   * Get the actual size between two headers.
-   * The size from A to B is the distance between A.start and B.end
-   */
-  private getSizeBetweenHeaders(dimension: Dimension, from: number, to: number): number {
-    const sheetId = this.getters.getActiveSheetId();
-    let size = 0;
-    for (let i = from; i <= to; i++) {
-      if (this.getters.isHeaderHidden(sheetId, dimension, i)) {
-        continue;
-      }
-      size +=
-        dimension === "COL"
-          ? this.getters.getColSize(sheetId, i)
-          : this.getters.getRowSize(sheetId, i);
-    }
-    return size;
-  }
-
-  /**
-   * Computes the coordinates and size to draw the zone on the canvas
-   */
-  getRect(zone: Zone, viewport: Viewport): Rect {
-    const { left, top } = viewport;
-    const x = this.getHeaderOffset("COL", left, zone.left);
-    const width = this.getSizeBetweenHeaders("COL", zone.left, zone.right);
-    const y = this.getHeaderOffset("ROW", top, zone.top);
-    const height = this.getSizeBetweenHeaders("ROW", zone.top, zone.bottom);
-    return [x, y, width, height];
-  }
-
   // ---------------------------------------------------------------------------
   // Grid rendering
   // ---------------------------------------------------------------------------
@@ -235,7 +202,7 @@ export class RendererPlugin extends UIPlugin {
         continue;
       }
       const zone = { top, bottom, left: i, right: i };
-      const [x, , colWidth, colHeight] = this.getRect(zone, viewport);
+      const [x, , colWidth, colHeight] = this.getters.getRect(zone);
       ctx.moveTo(x + colWidth, 0);
       ctx.lineTo(
         x + colWidth,
@@ -249,7 +216,7 @@ export class RendererPlugin extends UIPlugin {
         continue;
       }
       const zone = { left, right, top: i, bottom: i };
-      const [, y, rowWidth, rowHeight] = this.getRect(zone, viewport);
+      const [, y, rowWidth, rowHeight] = this.getters.getRect(zone);
       ctx.moveTo(0, y + rowHeight);
       ctx.lineTo(
         Math.min(width, rowWidth + (this.getters.isDashboard() ? 0 : HEADER_WIDTH)),
@@ -436,7 +403,7 @@ export class RendererPlugin extends UIPlugin {
     for (let zone of selection) {
       const colZone = intersection(zone, { ...viewport, top: 0, bottom: numberOfRows - 1 });
       if (colZone) {
-        const [x, , width] = this.getRect(colZone, viewport);
+        const [x, , width] = this.getters.getRect(colZone);
         ctx.fillStyle = activeCols.has(zone.left)
           ? BACKGROUND_HEADER_ACTIVE_COLOR
           : BACKGROUND_HEADER_SELECTED_COLOR;
@@ -444,7 +411,7 @@ export class RendererPlugin extends UIPlugin {
       }
       const rowZone = intersection(zone, { ...viewport, left: 0, right: numberOfCols - 1 });
       if (rowZone) {
-        const [, y, , height] = this.getRect(rowZone, viewport);
+        const [, y, , height] = this.getters.getRect(rowZone);
         ctx.fillStyle = activeRows.has(zone.top)
           ? BACKGROUND_HEADER_ACTIVE_COLOR
           : BACKGROUND_HEADER_SELECTED_COLOR;
@@ -534,7 +501,7 @@ export class RendererPlugin extends UIPlugin {
     const row = zone.top;
     const cell = this.getters.getCell(sheetId, col, row);
     const showFormula = this.getters.shouldShowFormulas();
-    const [x, y, width, height] = this.getRect(zone, viewport);
+    const [x, y, width, height] = this.getters.getRect(zone);
 
     const box: Box = {
       x,
@@ -604,7 +571,7 @@ export class RendererPlugin extends UIPlugin {
       switch (align) {
         case "left": {
           const emptyZoneOnTheLeft = positionToZone({ col: nextColIndex, row });
-          const [x, y, width, height] = this.getRect(union(zone, emptyZoneOnTheLeft), viewport);
+          const [x, y, width, height] = this.getters.getRect(union(zone, emptyZoneOnTheLeft));
           if (width < textWidth || fontSizePX > height) {
             box.clipRect = [x, y, width, height];
           }
@@ -612,7 +579,7 @@ export class RendererPlugin extends UIPlugin {
         }
         case "right": {
           const emptyZoneOnTheRight = positionToZone({ col: previousColIndex, row });
-          const [x, y, width, height] = this.getRect(union(zone, emptyZoneOnTheRight), viewport);
+          const [x, y, width, height] = this.getters.getRect(union(zone, emptyZoneOnTheRight));
           if (width < textWidth || fontSizePX > height) {
             box.clipRect = [x, y, width, height];
           }
@@ -624,7 +591,7 @@ export class RendererPlugin extends UIPlugin {
             right: nextColIndex,
             left: previousColIndex,
           };
-          const [x, y, width, height] = this.getRect(emptyZone, viewport);
+          const [x, y, width, height] = this.getters.getRect(emptyZone);
           if (
             width < textWidth ||
             previousColIndex === col ||

@@ -1042,8 +1042,7 @@ describe("renderer", () => {
     ["normal" as Mode, [HEADER_WIDTH, HEADER_HEIGHT, DEFAULT_CELL_WIDTH, DEFAULT_CELL_HEIGHT]],
   ])("A1 starts at the upper left corner with mode %s", (mode, expectedRect) => {
     const model = new Model({}, { mode });
-    const viewport = model.getters.getActiveViewport();
-    const rect = model.getters.getRect(toZone("A1"), viewport);
+    const rect = model.getters.getRect(toZone("A1"));
     expect(rect).toEqual(expectedRect);
   });
 

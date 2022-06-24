@@ -1,4 +1,4 @@
-import { HEADER_HEIGHT, HEADER_WIDTH } from "../../constants";
+import { DEFAULT_VIEWPORT_SIZE, HEADER_HEIGHT, HEADER_WIDTH } from "../../constants";
 import { findCellInNewZone, isDefined } from "../../helpers";
 import { scrollDelay } from "../../helpers/index";
 import { Pane } from "../../helpers/pane";
@@ -10,9 +10,11 @@ import {
   EdgeScrollInfo,
   Figure,
   Position,
+  Rect,
   ScrollDirection,
   UID,
   Viewport,
+  Zone,
   ZoneDimension,
 } from "../../types/index";
 import { UIPlugin } from "../ui_plugin";
@@ -44,6 +46,7 @@ export class ViewportPlugin extends UIPlugin {
     "getEdgeScrollRow",
     "searchHeaderIndex",
     "getVisibleFigures",
+    "getRect",
   ] as const;
 
   readonly panes: Record<UID, SheetPanes> = {};
@@ -54,8 +57,8 @@ export class ViewportPlugin extends UIPlugin {
    * In the absence of a component (standalone model), is it mandatory to set reasonable default values
    * to ensure the correct operation of this plugin.
    */
-  private viewportWidth: number = 1000;
-  private viewportHeight: number = 1000;
+  private viewportWidth: number = DEFAULT_VIEWPORT_SIZE;
+  private viewportHeight: number = DEFAULT_VIEWPORT_SIZE;
 
   // ---------------------------------------------------------------------------
   // Command Handling
@@ -505,5 +508,48 @@ export class ViewportPlugin extends UIPlugin {
       result.push(figure);
     }
     return result;
+  }
+
+  /**
+   * Get the offset of a header (see getColRowOffset), adjusted with the header
+   * size (HEADER_HEIGHT and HEADER_WIDTH)
+   */
+  private getHeaderOffset(dimension: Dimension, start: number, index: number): number {
+    let size = this.getColRowOffset(dimension, start, index);
+    if (!this.getters.isDashboard()) {
+      size += dimension === "ROW" ? HEADER_HEIGHT : HEADER_WIDTH;
+    }
+    return size;
+  }
+
+  /**
+   * Get the actual size between two headers.
+   * The size from A to B is the distance between A.start and B.end
+   */
+  private getSizeBetweenHeaders(dimension: Dimension, from: number, to: number): number {
+    const sheetId = this.getters.getActiveSheetId();
+    let size = 0;
+    for (let i = from; i <= to; i++) {
+      if (this.getters.isHeaderHidden(sheetId, dimension, i)) {
+        continue;
+      }
+      size +=
+        dimension === "COL"
+          ? this.getters.getColSize(sheetId, i)
+          : this.getters.getRowSize(sheetId, i);
+    }
+    return size;
+  }
+
+  /**
+   * Computes the coordinates and size to draw the zone on the canvas
+   */
+  getRect(zone: Zone): Rect {
+    const { left, top } = this.getActiveViewport();
+    const x = this.getHeaderOffset("COL", left, zone.left);
+    const width = this.getSizeBetweenHeaders("COL", zone.left, zone.right);
+    const y = this.getHeaderOffset("ROW", top, zone.top);
+    const height = this.getSizeBetweenHeaders("ROW", zone.top, zone.bottom);
+    return [x, y, width, height];
   }
 }

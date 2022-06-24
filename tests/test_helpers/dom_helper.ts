@@ -34,8 +34,7 @@ export async function clickCell(
   extra: MouseEventInit = { bubbles: true }
 ) {
   const zone = toZone(xc);
-  const viewport = model.getters.getActiveViewport();
-  let [x, y, ,] = model.getters.getRect(zone, viewport);
+  let [x, y, ,] = model.getters.getRect(zone);
   if (model.getters.isDashboard()) {
     x += HEADER_WIDTH;
     y += HEADER_HEIGHT;
@@ -50,8 +49,7 @@ export async function gridMouseEvent(
   extra: MouseEventInit = { bubbles: true }
 ) {
   const zone = toZone(xc);
-  const viewport = model.getters.getActiveViewport();
-  let [x, y, ,] = model.getters.getRect(zone, viewport);
+  let [x, y, ,] = model.getters.getRect(zone);
   if (!model.getters.isDashboard()) {
     x -= HEADER_WIDTH;
     y -= HEADER_HEIGHT;

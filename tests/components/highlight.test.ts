@@ -4,6 +4,7 @@ import { Highlight } from "../../src/components/highlight/highlight/highlight";
 import {
   DEFAULT_CELL_HEIGHT,
   DEFAULT_CELL_WIDTH,
+  DEFAULT_VIEWPORT_SIZE,
   HEADER_HEIGHT,
   HEADER_WIDTH,
 } from "../../src/constants";
@@ -130,8 +131,8 @@ const genericBeforeEach = async () => {
   fixture = makeTestFixture();
   model = new Model();
   model.dispatch("RESIZE_VIEWPORT", {
-    width: 1000,
-    height: 1000,
+    width: DEFAULT_VIEWPORT_SIZE,
+    height: DEFAULT_VIEWPORT_SIZE,
   });
 };
 

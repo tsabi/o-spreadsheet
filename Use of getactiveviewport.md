@@ -15,3 +15,7 @@ Component Corner:get offsetX and Y to position corner in the viewport
 Component Border:get offsetX and Y to position corner in the viewport
 
 headers-overlay: needs to know the wnhole viewport displayed zone (left, right , top, bottom)
+
+clipboard : getRect
+
+find_and_replace : getRect

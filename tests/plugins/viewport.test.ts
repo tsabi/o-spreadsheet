@@ -2,6 +2,7 @@ import { CommandResult } from "../../src";
 import {
   DEFAULT_CELL_HEIGHT,
   DEFAULT_CELL_WIDTH,
+  DEFAULT_VIEWPORT_SIZE,
   HEADER_HEIGHT,
   HEADER_WIDTH,
 } from "../../src/constants";
@@ -235,7 +236,10 @@ describe("Viewport of Simple sheet", () => {
     expect(negativeOffsetResult).toBeCancelledBecause(CommandResult.InvalidOffset);
 
     // too large
-    model.dispatch("RESIZE_VIEWPORT", { height: 1000, width: 1000 });
+    model.dispatch("RESIZE_VIEWPORT", {
+      height: DEFAULT_VIEWPORT_SIZE,
+      width: DEFAULT_VIEWPORT_SIZE,
+    });
     const { maxOffsetY } = model.getters.getMaximumViewportOffset(model.getters.getActiveSheetId());
     const tooLargeOffsetResult = setViewportOffset(model, 0, maxOffsetY + 1);
 
@@ -531,8 +535,8 @@ describe("Viewport of Simple sheet", () => {
   test("Resizing the viewport impacts current Offset", () => {
     // set coherent size and offset limit
     model.dispatch("RESIZE_VIEWPORT", {
-      width: 1000,
-      height: 1000,
+      width: DEFAULT_VIEWPORT_SIZE,
+      height: DEFAULT_VIEWPORT_SIZE,
     });
     let { width: gridWidth, height: gridHeight } = model.getters.getMaxViewportSize(
       model.getters.getActiveSheetId()
@@ -842,7 +846,7 @@ describe("shift viewport up/down", () => {
     const { bottom } = model.getters.getActiveViewport();
     const sheetId = model.getters.getActiveSheetId();
     model.dispatch("RESIZE_VIEWPORT", {
-      width: 1000,
+      width: DEFAULT_VIEWPORT_SIZE,
       height: bottom * DEFAULT_CELL_HEIGHT,
     });
     deleteRows(model, range(bottom + 1, model.getters.getNumberRows(sheetId)));

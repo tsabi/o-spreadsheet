@@ -354,11 +354,12 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       cell.evaluated.type === CellValueType.error &&
       cell.evaluated.error.logLevel > CellErrorLevel.silent
     ) {
-      const viewport = this.env.model.getters.getActiveViewport();
-      const [x, y, width] = this.env.model.getters.getRect(
-        { left: col, top: row, right: col, bottom: row },
-        viewport
-      );
+      const [x, y, width] = this.env.model.getters.getRect({
+        left: col,
+        top: row,
+        right: col,
+        bottom: row,
+      });
       return {
         isOpen: true,
         position: {
@@ -407,11 +408,12 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       position.col,
       position.row
     );
-    const viewport = this.env.model.getters.getActiveViewport();
-    const [x, y, width, height] = this.env.model.getters.getRect(
-      { left: col, top: row, right: col, bottom: row },
-      viewport
-    );
+    const [x, y, width, height] = this.env.model.getters.getRect({
+      left: col,
+      top: row,
+      right: col,
+      bottom: row,
+    });
     return {
       position: {
         x: x + this.canvasPosition.x,
