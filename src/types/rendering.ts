@@ -88,8 +88,8 @@ export const enum LAYERS {
 
 export interface EdgeScrollInfo {
   canEdgeScroll: boolean;
-  direction: number;
+  direction: ScrollDirection;
   delay: number;
 }
 
-export type ScrollDirection = 1 | 0 | -1;
+export type ScrollDirection = 1 | 0 | -1 | "reset";

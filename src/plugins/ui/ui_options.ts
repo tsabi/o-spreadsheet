@@ -2,7 +2,7 @@ import { Command } from "../../types/index";
 import { UIPlugin } from "../ui_plugin";
 
 export class UIOptionsPlugin extends UIPlugin {
-  static getters = ["shouldShowFormulas"] as const;
+  static getters = ["shouldShowFormulas", "isFrozen"] as const;
   private showFormulas: boolean = false;
 
   // ---------------------------------------------------------------------------
@@ -23,5 +23,10 @@ export class UIOptionsPlugin extends UIPlugin {
 
   shouldShowFormulas(): boolean {
     return this.showFormulas;
+  }
+
+  isFrozen(): boolean {
+    const panes = this.getters.getPaneDivisions(this.getters.getActiveSheetId());
+    return panes.vertical > 0 || panes.horizontal > 0;
   }
 }

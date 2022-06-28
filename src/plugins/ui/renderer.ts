@@ -28,7 +28,6 @@ import {
   HeaderDimensions,
   LAYERS,
   UID,
-  Viewport,
   Zone,
 } from "../../types/index";
 import { UIPlugin } from "../ui_plugin";
@@ -41,12 +40,7 @@ export const CELL_BACKGROUND_GRIDLINE_STROKE_STYLE = "#111";
 
 export class RendererPlugin extends UIPlugin {
   static layers = [LAYERS.Background, LAYERS.Headers];
-  static getters = [
-    "getColDimensions",
-    "getColDimensionsInViewport",
-    "getRowDimensions",
-    "getRowDimensionsInViewport",
-  ] as const;
+  static getters = ["getColDimensionsInViewport", "getRowDimensionsInViewport"] as const;
 
   private boxes: Box[] = [];
 
@@ -55,46 +49,18 @@ export class RendererPlugin extends UIPlugin {
   // ---------------------------------------------------------------------------
 
   /**
-   * Returns the size, start and end coordinates of a column
-   */
-  getColDimensions(sheetId: UID, col: number): HeaderDimensions {
-    const start = this.getColRowOffset("COL", 0, col, sheetId);
-    const size = this.getters.getColSize(sheetId, col);
-    const isColHidden = this.getters.isColHidden(sheetId, col);
-    return {
-      start,
-      size,
-      end: start + (isColHidden ? 0 : size),
-    };
-  }
-
-  /**
    * Returns the size, start and end coordinates of a column relative to the left
    * column of the current viewport
    */
   getColDimensionsInViewport(sheetId: UID, col: number): HeaderDimensions {
-    const { left } = this.getters.getActiveViewport();
-    const start = this.getColRowOffset("COL", left, col, sheetId);
+    const { left } = this.getters.getFullViewport();
+    const start = this.getters.getColRowOffsetInViewPort("COL", left, col);
     const size = this.getters.getColSize(sheetId, col);
     const isColHidden = this.getters.isColHidden(sheetId, col);
     return {
       start,
       size: size,
       end: start + (isColHidden ? 0 : size),
-    };
-  }
-
-  /**
-   * Returns the size, start and end coordinates of a row
-   */
-  getRowDimensions(sheetId: UID, row: number): HeaderDimensions {
-    const start = this.getColRowOffset("ROW", 0, row, sheetId);
-    const size = this.getters.getRowSize(sheetId, row);
-    const isRowHidden = this.getters.isRowHidden(sheetId, row);
-    return {
-      start,
-      size: size,
-      end: start + (isRowHidden ? 0 : size),
     };
   }
 
@@ -103,8 +69,8 @@ export class RendererPlugin extends UIPlugin {
    * of the current viewport
    */
   getRowDimensionsInViewport(sheetId: UID, row: number): HeaderDimensions {
-    const { top } = this.getters.getActiveViewport();
-    const start = this.getColRowOffset("ROW", top, row, sheetId);
+    const { top } = this.getters.getFullViewport();
+    const start = this.getters.getColRowOffsetInViewPort("ROW", top, row);
     const size = this.getters.getRowSize(sheetId, row);
     const isRowHidden = this.getters.isRowHidden(sheetId, row);
     return {
@@ -115,38 +81,11 @@ export class RendererPlugin extends UIPlugin {
   }
 
   /**
-   * Returns the offset of a header (determined by the dimension) at the given index
-   * based on the referenceIndex given. If start === 0, this method will return
-   * the start attribute of the header.
-   */
-  private getColRowOffset(
-    dimension: Dimension,
-    referenceIndex: number,
-    index: number,
-    sheetId: UID = this.getters.getActiveSheetId()
-  ): number {
-    if (index < referenceIndex) {
-      return -this.getColRowOffset(dimension, index, referenceIndex);
-    }
-    let offset = 0;
-    for (let i = referenceIndex; i < index; i++) {
-      if (this.getters.isHeaderHidden(sheetId, dimension, i)) {
-        continue;
-      }
-      offset +=
-        dimension === "COL"
-          ? this.getters.getColSize(sheetId, i)
-          : this.getters.getRowSize(sheetId, i);
-    }
-    return offset;
-  }
-
-  /**
    * Get the offset of a header (see getColRowOffset), adjusted with the header
    * size (HEADER_HEIGHT and HEADER_WIDTH)
    */
   private getHeaderOffset(dimension: Dimension, start: number, index: number): number {
-    let size = this.getColRowOffset(dimension, start, index);
+    let size = this.getters.getColRowOffsetInViewPort(dimension, start, index);
     if (!this.getters.isDashboard()) {
       size += dimension === "ROW" ? HEADER_HEIGHT : HEADER_WIDTH;
     }
@@ -172,13 +111,14 @@ export class RendererPlugin extends UIPlugin {
           return;
         }
         this.drawHeaders(renderingContext);
+        this.drawFrozenPanes(renderingContext);
         break;
     }
   }
 
   private drawBackground(renderingContext: GridRenderingContext) {
     const { ctx, thinLineWidth } = renderingContext;
-    const viewport = this.getters.getActiveViewport();
+    const viewport = this.getters.getFullViewport();
     const { width, height } = this.getters.getViewportDimensionWithHeaders();
     const sheetId = this.getters.getActiveSheetId();
 
@@ -380,7 +320,7 @@ export class RendererPlugin extends UIPlugin {
 
   private drawHeaders(renderingContext: GridRenderingContext) {
     const { ctx, thinLineWidth } = renderingContext;
-    const viewport = this.getters.getActiveViewport();
+    const viewport = this.getters.getFullViewport();
     const { right, left, top, bottom } = viewport;
     const { width, height } = this.getters.getViewportDimensionWithHeaders();
     const selection = this.getters.getSelectedZones();
@@ -435,7 +375,8 @@ export class RendererPlugin extends UIPlugin {
     // column text + separator
     for (let i = left; i <= right; i++) {
       const colSize = this.getters.getColSize(sheetId, i);
-      const isColHidden = this.getters.isColHidden(sheetId, i);
+      const isColHidden =
+        this.getters.isColHidden(sheetId, i) || !this.getters.isVisibleInViewport(sheetId, i, top);
       if (isColHidden) {
         continue;
       }
@@ -449,7 +390,8 @@ export class RendererPlugin extends UIPlugin {
     // row text + separator
     for (let i = top; i <= bottom; i++) {
       const rowSize = this.getters.getRowSize(sheetId, i);
-      const isRowHidden = this.getters.isRowHidden(sheetId, i);
+      const isRowHidden =
+        this.getters.isRowHidden(sheetId, i) || !this.getters.isVisibleInViewport(sheetId, left, i);
       if (isRowHidden) {
         continue;
       }
@@ -461,6 +403,38 @@ export class RendererPlugin extends UIPlugin {
       ctx.lineTo(HEADER_WIDTH, rowStart + rowSize);
     }
 
+    ctx.stroke();
+  }
+
+  private drawFrozenPanes(renderingContext: GridRenderingContext) {
+    const { ctx, thinLineWidth } = renderingContext;
+
+    const { offsetCorrectionX, offsetCorrectionY } = this.getters.getViewportOffsetCorrection();
+
+    const { width, height } = this.getters.getViewportDimensionWithHeaders();
+    ctx.lineWidth = 12 * thinLineWidth;
+    ctx.strokeStyle = "#BCBCBC";
+    ctx.beginPath();
+    if (offsetCorrectionX) {
+      ctx.moveTo(HEADER_WIDTH + offsetCorrectionX, 0);
+      ctx.lineTo(HEADER_WIDTH + offsetCorrectionX, HEADER_HEIGHT);
+    }
+    if (offsetCorrectionY) {
+      ctx.moveTo(0, HEADER_HEIGHT + offsetCorrectionY);
+      ctx.lineTo(HEADER_WIDTH, HEADER_HEIGHT + offsetCorrectionY);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = "#DADFE8";
+    ctx.beginPath();
+    if (offsetCorrectionX) {
+      ctx.moveTo(HEADER_WIDTH + offsetCorrectionX, HEADER_HEIGHT);
+      ctx.lineTo(HEADER_WIDTH + offsetCorrectionX, height);
+    }
+    if (offsetCorrectionY) {
+      ctx.moveTo(HEADER_WIDTH, HEADER_HEIGHT + offsetCorrectionY);
+      ctx.lineTo(width, HEADER_HEIGHT + offsetCorrectionY);
+    }
     ctx.stroke();
   }
 
@@ -497,7 +471,7 @@ export class RendererPlugin extends UIPlugin {
     return align || cell.defaultAlign;
   }
 
-  private createZoneBox(sheetId: UID, zone: Zone, viewport: Viewport): Box {
+  private createZoneBox(sheetId: UID, zone: Zone, viewport: Zone): Box {
     const { right, left } = viewport;
     const col = zone.left;
     const row = zone.top;
@@ -617,10 +591,9 @@ export class RendererPlugin extends UIPlugin {
   private getGridBoxes(renderingContext: GridRenderingContext): Box[] {
     const boxes: Box[] = [];
 
-    const viewport = this.getters.getActiveViewport();
+    const viewport = this.getters.getFullViewport();
     const { right, left, top, bottom } = viewport;
-    const sheet = this.getters.getActiveSheet();
-    const { id: sheetId } = sheet;
+    const sheetId = this.getters.getActiveSheetId();
 
     for (let rowNumber = top; rowNumber <= bottom; rowNumber++) {
       if (this.getters.isRowHidden(sheetId, rowNumber)) {
@@ -631,6 +604,9 @@ export class RendererPlugin extends UIPlugin {
           continue;
         }
         if (this.getters.isInMerge(sheetId, colNumber, rowNumber)) {
+          continue;
+        }
+        if (!this.getters.isVisibleInViewport(sheetId, colNumber, rowNumber)) {
           continue;
         }
         boxes.push(

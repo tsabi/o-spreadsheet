@@ -1,9 +1,8 @@
 import { Component, useState, xml } from "@odoo/owl";
-import { AUTOFILL_EDGE_LENGTH, HEADER_HEIGHT, HEADER_WIDTH } from "../../constants";
-import { clip } from "../../helpers/misc";
+import { AUTOFILL_EDGE_LENGTH } from "../../constants";
 import { SpreadsheetChildEnv } from "../../types";
 import { css } from "../helpers/css";
-import { startDnd } from "../helpers/drag_and_drop";
+import { dragAndDropBeyondTheViewport } from "../helpers/drag_and_drop";
 
 // -----------------------------------------------------------------------------
 // Autofill
@@ -87,7 +86,7 @@ export class Autofill extends Component<Props, SpreadsheetChildEnv> {
   onMouseDown(ev: MouseEvent) {
     this.state.handler = true;
     this.state.position = { left: 0, top: 0 };
-    const { offsetY, offsetX } = this.env.model.getters.getActiveViewport();
+    const { offsetY, offsetX } = this.env.model.getters.getViewportOffsetInfo();
     const start = {
       left: ev.clientX + offsetX,
       top: ev.clientY + offsetY,
@@ -100,27 +99,17 @@ export class Autofill extends Component<Props, SpreadsheetChildEnv> {
       this.env.model.dispatch("AUTOFILL");
     };
 
-    const onMouseMove = (ev: MouseEvent) => {
-      const position = this.props.getGridBoundingClientRect();
-      const { offsetY, offsetX } = this.env.model.getters.getActiveViewport();
-      this.state.position = {
-        left: ev.clientX - start.left + offsetX,
-        top: ev.clientY - start.top + offsetY,
-      };
-      const col = this.env.model.getters.getColIndex(ev.clientX - position.left - HEADER_WIDTH);
-      const row = this.env.model.getters.getRowIndex(ev.clientY - position.top - HEADER_HEIGHT);
+    const onMouseMove = (col: number, row: number, ev: MouseEvent) => {
+      this.state.position = { left: ev.x - start.left, top: ev.y - start.top };
       if (lastCol !== col || lastRow !== row) {
-        const activeSheetId = this.env.model.getters.getActiveSheetId();
-        const numberOfCols = this.env.model.getters.getNumberCols(activeSheetId);
-        const numberOfRows = this.env.model.getters.getNumberRows(activeSheetId);
-        lastCol = col === -1 ? lastCol : clip(col, 0, numberOfCols);
-        lastRow = row === -1 ? lastRow : clip(row, 0, numberOfRows);
+        lastCol = col === -1 ? lastCol : col;
+        lastRow = row === -1 ? lastRow : row;
         if (lastCol !== undefined && lastRow !== undefined) {
           this.env.model.dispatch("AUTOFILL_SELECT", { col: lastCol, row: lastRow });
         }
       }
     };
-    startDnd(onMouseMove, onMouseUp);
+    dragAndDropBeyondTheViewport(this.env, onMouseMove, onMouseUp);
   }
 
   onDblClick() {

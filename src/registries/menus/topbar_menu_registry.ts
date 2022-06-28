@@ -185,21 +185,74 @@ topbarMenuRegistry
     action: ACTIONS.CREATE_SHEET_ACTION,
     separator: true,
   })
+  .addChild("freeze_panes", ["view"], {
+    name: _lt("Freeze"),
+    sequence: 5,
+    separator: true,
+  })
+  .addChild("freeze_no_row", ["view", "freeze_panes"], {
+    name: _lt("No rows"),
+    action: ACTIONS.FREEZE_NO_ROW,
+    isReadonlyAllowed: true,
+    sequence: 5,
+  })
+  .addChild("freeze_first_row", ["view", "freeze_panes"], {
+    name: _lt("1 row"),
+    action: ACTIONS.FREEZE_FIRST_ROW,
+    isReadonlyAllowed: true,
+    sequence: 10,
+  })
+  .addChild("freeze_second_row", ["view", "freeze_panes"], {
+    name: _lt("2 rows"),
+    action: ACTIONS.FREEZE_SECOND_ROW,
+    isReadonlyAllowed: true,
+    sequence: 15,
+  })
+  .addChild("freeze_current_row", ["view", "freeze_panes"], {
+    name: _lt("Up to current row"),
+    action: ACTIONS.FREEZE_ROW,
+    isReadonlyAllowed: true,
+    sequence: 20,
+    separator: true,
+  })
+  .addChild("freeze_no_col", ["view", "freeze_panes"], {
+    name: _lt("No columns"),
+    action: ACTIONS.FREEZE_NO_COL,
+    isReadonlyAllowed: true,
+    sequence: 25,
+  })
+  .addChild("freeze_first_col", ["view", "freeze_panes"], {
+    name: _lt("1 column"),
+    action: ACTIONS.FREEZE_FIRST_COL,
+    isReadonlyAllowed: true,
+    sequence: 30,
+  })
+  .addChild("freeze_second_col", ["view", "freeze_panes"], {
+    name: _lt("2 columns"),
+    action: ACTIONS.FREEZE_SECOND_COL,
+    isReadonlyAllowed: true,
+    sequence: 35,
+  })
+  .addChild("freeze_current_col", ["view", "freeze_panes"], {
+    name: _lt("Up to current column"),
+    action: ACTIONS.FREEZE_COL,
+    isReadonlyAllowed: true,
+    sequence: 40,
+  })
   .addChild("view_gridlines", ["view"], {
     name: (env: SpreadsheetChildEnv) =>
       env.model.getters.getGridLinesVisibility(env.model.getters.getActiveSheetId())
         ? _lt("Hide gridlines")
         : _lt("Show gridlines"),
     action: ACTIONS.SET_GRID_LINES_VISIBILITY_ACTION,
-    sequence: 5,
-    separator: true,
+    sequence: 10,
   })
   .addChild("view_formulas", ["view"], {
     name: (env: SpreadsheetChildEnv) =>
       env.model.getters.shouldShowFormulas() ? _lt("Hide formulas") : _lt("Show formulas"),
     action: ACTIONS.SET_FORMULA_VISIBILITY_ACTION,
     isReadonlyAllowed: true,
-    sequence: 10,
+    sequence: 15,
   })
   .addChild("format_number", ["format"], {
     name: _lt("Numbers"),

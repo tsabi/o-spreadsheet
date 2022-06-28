@@ -90,12 +90,7 @@ export class Highlight extends Component<Props, SpreadsheetChildEnv> {
       this.env.model.dispatch("STOP_COMPOSER_RANGE_SELECTION");
     };
 
-    dragAndDropBeyondTheViewport(
-      this.highlightRef.el!.parentElement!,
-      this.env,
-      mouseMove,
-      mouseUp
-    );
+    dragAndDropBeyondTheViewport(this.env, mouseMove, mouseUp);
   }
 
   onMoveHighlight(clientX: number, clientY: number) {
@@ -156,6 +151,6 @@ export class Highlight extends Component<Props, SpreadsheetChildEnv> {
       this.env.model.dispatch("STOP_COMPOSER_RANGE_SELECTION");
     };
 
-    dragAndDropBeyondTheViewport(parent, this.env, mouseMove, mouseUp);
+    dragAndDropBeyondTheViewport(this.env, mouseMove, mouseUp);
   }
 }

@@ -208,6 +208,10 @@ export class SheetPlugin extends CorePlugin<SheetState> implements SheetState {
         areGridLinesVisible:
           sheetData.areGridLinesVisible === undefined ? true : sheetData.areGridLinesVisible,
         isVisible: sheetData.isVisible,
+        panes: {
+          horizontal: 0,
+          vertical: 0,
+        },
       };
       this.orderedSheetIds.push(sheet.id);
       this.sheets[sheet.id] = sheet;
@@ -402,9 +406,9 @@ export class SheetPlugin extends CorePlugin<SheetState> implements SheetState {
       width: this.getNumberCols(sheetId),
     };
   }
-  
+
   getPaneDivisions(sheetId: UID): PaneDivision {
-    return { horizontal: 0, vertical: 0 };
+    return this.getSheet(sheetId).panes;
   }
 
   // ---------------------------------------------------------------------------
@@ -492,6 +496,10 @@ export class SheetPlugin extends CorePlugin<SheetState> implements SheetState {
       rows: createDefaultRows(rowNumber),
       areGridLinesVisible: true,
       isVisible: true,
+      panes: {
+        horizontal: 0,
+        vertical: 0,
+      },
     };
     const orderedSheetIds = this.orderedSheetIds.slice();
     orderedSheetIds.splice(position, 0, sheet.id);

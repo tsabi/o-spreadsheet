@@ -19,7 +19,7 @@ import {
 } from "../../types/index";
 import { ContextMenuType } from "../grid/grid";
 import { css } from "../helpers/css";
-import { startDnd } from "../helpers/drag_and_drop";
+import { dragAndDropBeyondTheViewport, startDnd } from "../helpers/drag_and_drop";
 
 // -----------------------------------------------------------------------------
 // Resizer component
@@ -208,39 +208,39 @@ abstract class AbstractResizer extends Component<ResizerProps, SpreadsheetChildE
     this.state.isMoving = true;
     const startDimensions = this._getDimensionsInViewport(this._getSelectedZoneStart());
     const endDimensions = this._getDimensionsInViewport(this._getSelectedZoneEnd());
-    const initialPosition = this._getClientPosition(ev);
     const defaultPosition = startDimensions.start;
     this.state.draggerLinePosition = defaultPosition;
     this.state.base = this._getSelectedZoneStart();
     this.state.draggerShadowPosition = defaultPosition;
     this.state.draggerShadowThickness = endDimensions.end - startDimensions.start;
-    const mouseMoveMovement = (elementIndex: number, currentEv: MouseEvent) => {
+    const mouseMoveMovement = (col: number, row: number) => {
+      let elementIndex = this._getType() == "COL" ? col : row;
       if (elementIndex >= 0) {
         // define draggerLinePosition
         const dimensions = this._getDimensionsInViewport(elementIndex);
         if (elementIndex <= this._getSelectedZoneStart()) {
           this.state.draggerLinePosition = dimensions.start;
+          this.state.draggerShadowPosition = dimensions.start;
           this.state.base = elementIndex;
         } else if (this._getSelectedZoneEnd() < elementIndex) {
           this.state.draggerLinePosition = dimensions.end;
+          this.state.draggerShadowPosition = dimensions.end - this.state.draggerShadowThickness;
           this.state.base = elementIndex + 1;
         } else {
           this.state.draggerLinePosition = startDimensions.start;
+          this.state.draggerShadowPosition = startDimensions.start;
           this.state.base = this._getSelectedZoneStart();
         }
-        // define draggerShadowPosition
-        const delta = this._getClientPosition(currentEv) - initialPosition;
-        this.state.draggerShadowPosition = Math.max(defaultPosition + delta, 0);
       }
     };
-    const mouseUpMovement = (finalEv: MouseEvent) => {
+    const mouseUpMovement = () => {
       this.state.isMoving = false;
       if (this.state.base !== this._getSelectedZoneStart()) {
         this._moveElements();
       }
-      this._computeGrabDisplay(finalEv);
+      this._computeGrabDisplay(ev);
     };
-    this.dragOverlayBeyondTheViewport(ev, mouseMoveMovement, mouseUpMovement);
+    dragAndDropBeyondTheViewport(this.env, mouseMoveMovement, mouseUpMovement);
   }
 
   private startSelection(ev: MouseEvent, index: number) {
@@ -252,10 +252,11 @@ abstract class AbstractResizer extends Component<ResizerProps, SpreadsheetChildE
     }
     this.lastSelectedElementIndex = index;
 
-    const mouseMoveSelect = (elementIndex: number, currentEv) => {
-      if (elementIndex !== this.lastSelectedElementIndex && elementIndex !== -1) {
-        this._increaseSelection(elementIndex);
-        this.lastSelectedElementIndex = elementIndex;
+    const mouseMoveSelect = (col: number, row: number) => {
+      let newIndex = this._getType() == "COL" ? col : row;
+      if (newIndex !== this.lastSelectedElementIndex && newIndex !== -1) {
+        this._increaseSelection(newIndex);
+        this.lastSelectedElementIndex = newIndex;
       }
     };
     const mouseUpSelect = () => {
@@ -267,54 +268,7 @@ abstract class AbstractResizer extends Component<ResizerProps, SpreadsheetChildE
       this._computeGrabDisplay(ev);
     };
 
-    this.dragOverlayBeyondTheViewport(ev, mouseMoveSelect, mouseUpSelect);
-  }
-
-  private dragOverlayBeyondTheViewport(
-    ev: MouseEvent,
-    cbMouseMove: (elementIndex: number, currentEv: MouseEvent) => void,
-    cbMouseUp: (finalEv: MouseEvent) => void
-  ) {
-    let timeOutId: any = null;
-    let currentEv: MouseEvent;
-    const initialPosition = this._getClientPosition(ev);
-    const initialOffset = this._getEvOffset(ev);
-
-    const onMouseMove = (ev: MouseEvent) => {
-      // currentEv.target can be any DOM element
-      currentEv = ev;
-      if (timeOutId) {
-        return;
-      }
-      const delta = this._getClientPosition(currentEv) - initialPosition;
-      const position = initialOffset + delta;
-      const EdgeScrollInfo = this._getEdgeScroll(position);
-      const { first, last } = this._getBoundaries();
-      let elementIndex;
-      if (EdgeScrollInfo.canEdgeScroll) {
-        elementIndex = EdgeScrollInfo.direction > 0 ? last : first - 1;
-      } else {
-        elementIndex = this._getElementIndex(position);
-      }
-
-      cbMouseMove(elementIndex, currentEv);
-
-      // adjust viewport if necessary
-      if (EdgeScrollInfo.canEdgeScroll) {
-        this._adjustViewport(EdgeScrollInfo.direction);
-        timeOutId = setTimeout(() => {
-          timeOutId = null;
-          onMouseMove(currentEv);
-        }, Math.round(EdgeScrollInfo.delay));
-      }
-    };
-
-    const onMouseUp = (finalEv: MouseEvent) => {
-      clearTimeout(timeOutId);
-      cbMouseUp(finalEv);
-    };
-
-    startDnd(onMouseMove, onMouseUp);
+    dragAndDropBeyondTheViewport(this.env, mouseMoveSelect, mouseUpSelect);
   }
 
   onMouseUp(ev: MouseEvent) {
@@ -432,7 +386,7 @@ export class ColResizer extends AbstractResizer {
   }
 
   _getEdgeScroll(position: number): EdgeScrollInfo {
-    return this.env.model.getters.getEdgeScrollCol(position);
+    return this.env.model.getters.getEdgeScrollCol(position, position, position);
   }
 
   _getBoundaries(): { first: number; last: number } {
@@ -643,7 +597,7 @@ export class RowResizer extends AbstractResizer {
   }
 
   _getEdgeScroll(position: number): EdgeScrollInfo {
-    return this.env.model.getters.getEdgeScrollRow(position);
+    return this.env.model.getters.getEdgeScrollRow(position, position, position);
   }
 
   _getBoundaries(): { first: number; last: number } {

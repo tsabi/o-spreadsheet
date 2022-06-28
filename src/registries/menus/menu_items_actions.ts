@@ -122,6 +122,30 @@ export const IS_NOT_CUT_OPERATION = (env: SpreadsheetChildEnv): boolean => {
   return !env.model.getters.isCutOperation();
 };
 
+export const FREEZE_NO_COL = (env: SpreadsheetChildEnv) =>
+  env.model.dispatch("FREEZE_COL", { col: 0 });
+
+export const FREEZE_FIRST_COL = (env: SpreadsheetChildEnv) =>
+  env.model.dispatch("FREEZE_COL", { col: 1 });
+
+export const FREEZE_SECOND_COL = (env: SpreadsheetChildEnv) =>
+  env.model.dispatch("FREEZE_COL", { col: 2 });
+
+export const FREEZE_COL = (env: SpreadsheetChildEnv) =>
+  env.model.dispatch("FREEZE_COL", { col: undefined });
+
+export const FREEZE_NO_ROW = (env: SpreadsheetChildEnv) =>
+  env.model.dispatch("FREEZE_ROW", { row: 0 });
+
+export const FREEZE_FIRST_ROW = (env: SpreadsheetChildEnv) =>
+  env.model.dispatch("FREEZE_ROW", { row: 1 });
+
+export const FREEZE_SECOND_ROW = (env: SpreadsheetChildEnv) =>
+  env.model.dispatch("FREEZE_ROW", { row: 2 });
+
+export const FREEZE_ROW = (env: SpreadsheetChildEnv) =>
+  env.model.dispatch("FREEZE_ROW", { row: undefined });
+
 //------------------------------------------------------------------------------
 // Grid manipulations
 //------------------------------------------------------------------------------
@@ -543,7 +567,8 @@ export const CREATE_SHEET_ACTION = (env: SpreadsheetChildEnv) => {
 //------------------------------------------------------------------------------
 
 export const CREATE_CHART = (env: SpreadsheetChildEnv) => {
-  const zone = env.model.getters.getSelectedZone();
+  const getters = env.model.getters;
+  const zone = getters.getSelectedZone();
   let dataSetZone = zone;
   const id = env.model.uuidGenerator.uuidv4();
   let labelRange: string | undefined;
@@ -551,19 +576,19 @@ export const CREATE_CHART = (env: SpreadsheetChildEnv) => {
     dataSetZone = { ...zone, left: zone.left + 1 };
   }
   const dataSets = [zoneToXc(dataSetZone)];
-  const sheetId = env.model.getters.getActiveSheetId();
-  const viewport = env.model.getters.getActiveViewport();
-  const left = env.model.getters.getColDimensions(sheetId, viewport.left).start;
-  const top = env.model.getters.getRowDimensions(sheetId, viewport.top).start;
-  const { width, height } = env.model.getters.getViewportDimension();
+  const sheetId = getters.getActiveSheetId();
+
+  const { offsetCorrectionX, offsetCorrectionY } = getters.getViewportOffsetCorrection();
+
+  const { width, height } = getters.getViewportDimension();
   const size = { width: DEFAULT_FIGURE_WIDTH, height: DEFAULT_FIGURE_HEIGHT };
   const position = {
-    x: left + Math.max(0, (width - DEFAULT_FIGURE_WIDTH) / 2),
-    y: top + Math.max(0, (height - DEFAULT_FIGURE_HEIGHT) / 2),
+    x: offsetCorrectionX + Math.max(0, (width - offsetCorrectionX - DEFAULT_FIGURE_WIDTH) / 2),
+    y: offsetCorrectionY + Math.max(0, (height - offsetCorrectionY - DEFAULT_FIGURE_HEIGHT) / 2),
   }; // Position at the center of the viewport
   let dataSetsHaveTitle = false;
   for (let x = dataSetZone.left; x <= dataSetZone.right; x++) {
-    const cell = env.model.getters.getCell(sheetId, x, zone.top);
+    const cell = getters.getCell(sheetId, x, zone.top);
     if (cell && cell.evaluated.type !== CellValueType.number) {
       dataSetsHaveTitle = true;
       break;

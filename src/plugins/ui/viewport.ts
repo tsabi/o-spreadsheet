@@ -44,10 +44,12 @@ export class ViewportPlugin extends UIPlugin {
     "isVisibleInViewport",
     "getEdgeScrollCol",
     "getEdgeScrollRow",
-    "searchHeaderIndex",
     "getVisibleFigures",
     "getRect",
-    "getSizeBetweenHeaders",
+    "getFullViewport",
+    "getColRowOffsetInViewPort",
+    "getViewportOffsetInfo",
+    "getViewportOffsetCorrection",
   ] as const;
 
   readonly panes: Record<UID, SheetPanes> = {};
@@ -142,6 +144,20 @@ export class ViewportPlugin extends UIPlugin {
       case "ACTIVATE_SHEET":
         this.refreshViewport(cmd.sheetIdTo);
         break;
+      case "FREEZE_ROW": {
+        const zone = this.getters.getSelectedZone();
+        this.getters.getActiveSheet().panes.vertical =
+          cmd.row !== undefined ? cmd.row : zone.top + 1;
+        this.resetPanes(this.getters.getActiveSheetId());
+        break;
+      }
+      case "FREEZE_COL": {
+        const zone = this.getters.getSelectedZone();
+        (this.getters.getActiveSheet().panes.horizontal =
+          cmd.col !== undefined ? cmd.col : zone.left + 1),
+          this.resetPanes(this.getters.getActiveSheetId());
+        break;
+      }
     }
   }
 
@@ -155,11 +171,8 @@ export class ViewportPlugin extends UIPlugin {
    * It returns -1 if no column is found.
    */
   getColIndex(x: number): number {
-    if (x < 0) {
-      return -1;
-    }
-    const viewport = this.getActiveViewport();
-    return this.searchHeaderIndex(this.getters.getActiveSheetId(), "COL", x, viewport.left);
+    const sheetId = this.getters.getActiveSheetId();
+    return Math.max(...this.getPanes(sheetId).map((pane) => pane.getColIndex(x)));
   }
 
   /**
@@ -168,11 +181,8 @@ export class ViewportPlugin extends UIPlugin {
    * It returns -1 if no row is found.
    */
   getRowIndex(y: number): number {
-    if (y < 0) {
-      return -1;
-    }
-    const viewport = this.getActiveViewport();
-    return this.searchHeaderIndex(this.getters.getActiveSheetId(), "ROW", y, viewport.top);
+    const sheetId = this.getters.getActiveSheetId();
+    return Math.max(...this.getPanes(sheetId).map((pane) => pane.getRowIndex(y)));
   }
 
   getViewportDimensionWithHeaders(): ZoneDimension {
@@ -194,60 +204,211 @@ export class ViewportPlugin extends UIPlugin {
     return this.getViewport(sheetId);
   }
 
+  getFullViewport(): Zone {
+    const sheetId = this.getters.getActiveSheetId();
+    return {
+      left: Math.min(...this.getPanes(sheetId).map((pane) => pane.left)),
+      right: Math.max(...this.getPanes(sheetId).map((pane) => pane.right)),
+      top: Math.min(...this.getPanes(sheetId).map((pane) => pane.top)),
+      bottom: Math.max(...this.getPanes(sheetId).map((pane) => pane.bottom)),
+    };
+  }
+
   /**
    * Return the maximum viewport size. That is the sheet dimension
    * with some bottom and right padding.
    */
-  getMaxViewportSize(sheetId: UID): ZoneDimension {
+  getMaxViewportSize(sheetId: UID) {
     this.getViewport(sheetId);
-    let width: number = this.panes[sheetId].bottomRight!.getMaxSize().width;
-    if (this.panes[sheetId].topRight) {
-      width += this.panes[sheetId].topRight!.getMaxSize().width;
-    }
-    let height: number = this.panes[sheetId].bottomRight!.getMaxSize().height;
-    if (this.panes[sheetId].bottomLeft) {
-      height += this.panes[sheetId].bottomLeft!.getMaxSize().height;
-    }
-    return { width, height };
+    const { vertical, horizontal } = this.getters.getPaneDivisions(sheetId);
+    let width: number = this.panes[sheetId].bottomRight.getMaxSize().width;
+    let height: number = this.panes[sheetId].bottomRight.getMaxSize().height;
+    const startX = this.getters.getColDimensions(sheetId, horizontal).start;
+    const startY = this.getters.getRowDimensions(sheetId, vertical).start;
+    return { startX, startY, width, height };
   }
 
   getMaximumViewportOffset(sheetId: UID): { maxOffsetX: number; maxOffsetY: number } {
     const { width, height } = this.getMaxViewportSize(sheetId);
+    this.getPanes(sheetId);
     return {
-      maxOffsetX: Math.max(0, width - this.viewportWidth + 1),
-      maxOffsetY: Math.max(0, height - this.viewportHeight + 1),
+      maxOffsetX: Math.max(0, width - this.panes[sheetId].bottomRight.viewportWidth + 1),
+      maxOffsetY: Math.max(0, height - this.panes[sheetId].bottomRight.viewportHeight + 1),
     };
+  }
+
+  // This is a copy from a function in renderer.ts. Maybe everything should moved here...
+  getColRowOffsetInViewPort(dimension: Dimension, referenceIndex: number, index: number): number {
+    const sheetId = this.getters.getActiveSheetId();
+    const { top, left } = this.getFullViewport();
+    if (index < referenceIndex) {
+      return -this.getColRowOffsetInViewPort(dimension, index, referenceIndex);
+    }
+    let offset = 0;
+    for (let i = referenceIndex; i < index; i++) {
+      const visibleInViewport =
+        dimension == "COL"
+          ? this.isVisibleInViewport(sheetId, i, top)
+          : this.isVisibleInViewport(sheetId, left, i);
+      if (this.getters.isHeaderHidden(sheetId, dimension, i) || !visibleInViewport) {
+        continue;
+      }
+      offset +=
+        dimension === "COL"
+          ? this.getters.getColSize(sheetId, i)
+          : this.getters.getRowSize(sheetId, i);
+    }
+    return offset;
+  }
+
+  /**
+   * Check if a given position is visible in the viewport.
+   */
+  isVisibleInViewport(sheetId: UID, col: number, row: number): boolean {
+    return this.getPanes(sheetId).some((pane) => pane.isVisible(col, row));
+  }
+
+  // => return s the new offset
+  getEdgeScrollCol(x: number, previousX: number, startingX: number): EdgeScrollInfo {
+    let canEdgeScroll = false;
+    let direction: ScrollDirection = 0;
+    let delay = 0;
+    /** 4 cas : voir photo
+     * 1. previous in XRight, > XLeft
+     * 3. previous in XRIght > outside
+     * 5. previous in Left > outside
+     * A. previous in Left > right
+     */
+    const { horizontal } = this.getters.getPaneDivisions(this.getters.getActiveSheetId());
+    const { width } = this.getViewportDimension();
+    const { offsetCorrectionX } = this.getViewportOffsetCorrection();
+    const currentOffsetX = this.getViewportOffsetInfo().offsetX;
+
+    if (x > width) {
+      // 3 & 5
+      canEdgeScroll = true;
+      delay = scrollDelay(x - width);
+      direction = 1;
+    } else if (x < offsetCorrectionX && startingX >= offsetCorrectionX && currentOffsetX > 0) {
+      // 1
+      canEdgeScroll = true;
+      delay = scrollDelay(offsetCorrectionX - x);
+      direction = -1;
+    } else if (horizontal && previousX < offsetCorrectionX && x > offsetCorrectionX) {
+      // A
+      canEdgeScroll = true;
+      delay = scrollDelay(x);
+      direction = "reset";
+    }
+    return { canEdgeScroll, direction, delay };
+  }
+
+  getEdgeScrollRow(y: number, previousY: number, tartingY: number): EdgeScrollInfo {
+    let canEdgeScroll = false;
+    let direction: ScrollDirection = 0;
+    let delay = 0;
+    /** 4 cas : voir photo
+     * 2. previous in XRight, > XLeft
+     * 4. previous in XRIght > outside
+     * 6. previous in Left > outside
+     * B. previous in Left > right
+     */
+    const { vertical } = this.getters.getPaneDivisions(this.getters.getActiveSheetId());
+
+    const { height } = this.getViewportDimension();
+    const { offsetCorrectionY } = this.getViewportOffsetCorrection();
+    const currentOffsetY = this.getViewportOffsetInfo().offsetY;
+
+    if (y > height) {
+      // 3 & 5
+      canEdgeScroll = true;
+      delay = scrollDelay(y - height);
+      direction = 1;
+    } else if (y < offsetCorrectionY && tartingY >= offsetCorrectionY && currentOffsetY > 0) {
+      // 1
+      canEdgeScroll = true;
+      delay = scrollDelay(offsetCorrectionY - y);
+      direction = -1;
+    } else if (vertical && previousY < offsetCorrectionY && y > offsetCorrectionY) {
+      // B
+      canEdgeScroll = true;
+      delay = scrollDelay(y);
+      direction = "reset";
+    }
+    return { canEdgeScroll, direction, delay };
+  }
+
+  getVisibleFigures(): Figure[] {
+    const sheetId = this.getters.getActiveSheetId();
+    const result: Figure[] = [];
+    const figures = this.getters.getFigures(sheetId);
+    const { offsetX, offsetY } = this.getters.getActiveViewport();
+    const { width, height } = this.getters.getViewportDimensionWithHeaders();
+    for (let figure of figures) {
+      if (figure.x >= offsetX + width || figure.x + figure.width <= offsetX) {
+        continue;
+      }
+      if (figure.y >= offsetY + height || figure.y + figure.height <= offsetY) {
+        continue;
+      }
+      result.push(figure);
+    }
+    return result;
+  }
+
+  /**
+   * Computes the coordinates and size to draw the zone on the canvas
+   */
+  getRect(zone: Zone): Rect {
+    const sheetId = this.getters.getActiveSheetId();
+    const paneRects = this.getPanes(sheetId)
+      .map((pane) => pane.getRect(zone))
+      .filter(isDefined);
+
+    if (paneRects.length === 0) {
+      return { x: 0, y: 0, width: 0, height: 0 };
+    }
+    const x = Math.min(...paneRects.map((rect) => rect.x));
+    const y = Math.min(...paneRects.map((rect) => rect.y));
+    const width = Math.max(...paneRects.map((rect) => rect.x + rect.width)) - x;
+    const height = Math.max(...paneRects.map((rect) => rect.y + rect.height)) - y;
+    return {
+      x: this.getters.isDashboard() ? x : x + HEADER_WIDTH,
+      y: this.getters.isDashboard() ? y : y + HEADER_HEIGHT,
+      width,
+      height,
+    };
+  }
+
+  getViewportOffsetInfo() {
+    const sheetId = this.getters.getActiveSheetId();
+    this.getPanes(sheetId);
+    const pane = this.panes[sheetId].bottomRight;
+    return {
+      offsetScrollbarX: pane.offsetScrollbarX,
+      offsetScrollbarY: pane.offsetScrollbarY,
+      offsetX: pane.offsetX,
+      offsetY: pane.offsetY,
+    };
+  }
+
+  getViewportOffsetCorrection() {
+    const sheetId = this.getters.getActiveSheetId();
+    const { horizontal, vertical } = this.getters.getPaneDivisions(sheetId);
+    const offsetCorrectionX = this.getters.getColDimensions(sheetId, horizontal).start;
+    const offsetCorrectionY = this.getters.getRowDimensions(sheetId, vertical).start;
+    return { offsetCorrectionX, offsetCorrectionY };
   }
 
   // ---------------------------------------------------------------------------
   // Private
   // ---------------------------------------------------------------------------
 
-  getPanes(sheetId: UID): Pane[] {
-    return Object.values(this.panes[sheetId]).filter(isDefined);
-  }
-
-  searchHeaderIndex(
-    sheetId: UID,
-    dimension: Dimension,
-    position: number,
-    startIndex: number = 0
-  ): number {
-    let size = 0;
-    const headers = this.getters.getNumberHeaders(sheetId, dimension);
-    for (let i = startIndex; i <= headers - 1; i++) {
-      if (this.getters.isHeaderHidden(sheetId, dimension, i)) {
-        continue;
-      }
-      size +=
-        dimension === "COL"
-          ? this.getters.getColSize(sheetId, i)
-          : this.getters.getRowSize(sheetId, i);
-      if (size > position) {
-        return i;
-      }
+  private getPanes(sheetId: UID): Pane[] {
+    if (!this.panes[sheetId]?.bottomRight) {
+      this.resetPanes(sheetId);
     }
-    return -1;
+    return Object.values(this.panes[sheetId]).filter(isDefined);
   }
 
   private checkOffsetValidity(offsetX: number, offsetY: number): CommandResult {
@@ -335,29 +496,6 @@ export class ViewportPlugin extends UIPlugin {
     return offsetY;
   }
 
-  // This is a copy from a function in renderer.ts. Maybe everything should moved here...
-  private getColRowOffset(
-    dimension: Dimension,
-    referenceIndex: number,
-    index: number,
-    sheetId: UID = this.getters.getActiveSheetId()
-  ): number {
-    if (index < referenceIndex) {
-      return -this.getColRowOffset(dimension, index, referenceIndex);
-    }
-    let offset = 0;
-    for (let i = referenceIndex; i < index; i++) {
-      if (this.getters.isHeaderHidden(sheetId, dimension, i)) {
-        continue;
-      }
-      offset +=
-        dimension === "COL"
-          ? this.getters.getColSize(sheetId, i)
-          : this.getters.getRowSize(sheetId, i);
-    }
-    return offset;
-  }
-
   private generateViewportState(sheetId: UID) {
     this.resetPanes(sheetId);
   }
@@ -373,8 +511,8 @@ export class ViewportPlugin extends UIPlugin {
     const { vertical, horizontal } = this.getters.getPaneDivisions(sheetId);
     const nCols = this.getters.getNumberCols(sheetId);
     const nRows = this.getters.getNumberRows(sheetId);
-    const colOffset = this.getColRowOffset("COL", 0, horizontal, sheetId);
-    const rowOffset = this.getColRowOffset("ROW", 0, vertical, sheetId);
+    const colOffset = this.getters.getColRowOffset("COL", 0, horizontal, sheetId);
+    const rowOffset = this.getters.getColRowOffset("ROW", 0, vertical, sheetId);
     this.panes[sheetId] = {
       topLeft:
         (vertical &&
@@ -430,11 +568,10 @@ export class ViewportPlugin extends UIPlugin {
   private refreshViewport(sheetId: UID, anchorPosition?: Position) {
     this.getViewport(sheetId);
 
-    Object.values(this.getPanes(sheetId)) // this.getViewport(sheetId)
-      .forEach((pane) => {
-        pane.adjustViewportZone();
-        pane.adjustPosition(anchorPosition);
-      });
+    Object.values(this.getPanes(sheetId)).forEach((pane) => {
+      pane.adjustViewportZone();
+      pane.adjustPosition(anchorPosition);
+    });
   }
 
   /**
@@ -448,109 +585,5 @@ export class ViewportPlugin extends UIPlugin {
     const { anchor } = this.getters.getSelection();
     const deltaRow = this.getActiveViewport().top - top;
     this.selection.selectCell(anchor.cell.col, anchor.cell.row + deltaRow);
-  }
-
-  /**
-   * Check if a given position is visible in the viewport.
-   */
-  isVisibleInViewport(col: number, row: number, viewport: Viewport): boolean {
-    const { right, left, top, bottom } = viewport;
-    return row <= bottom && row >= top && col >= left && col <= right;
-  }
-
-  getEdgeScrollCol(x: number): EdgeScrollInfo {
-    let canEdgeScroll = false;
-    let direction: ScrollDirection = 0;
-    let delay = 0;
-    const { width } = this.getViewportDimension();
-    const { width: gridWidth } = this.getMaxViewportSize(this.getters.getActiveSheet().id);
-    const { left, offsetX } = this.getActiveViewport();
-    if (x < 0 && left > 0) {
-      canEdgeScroll = true;
-      direction = -1;
-      delay = scrollDelay(-x);
-    } else if (x > width && offsetX < gridWidth - width) {
-      canEdgeScroll = true;
-      direction = +1;
-      delay = scrollDelay(x - width);
-    }
-    return { canEdgeScroll, direction, delay };
-  }
-
-  getEdgeScrollRow(y: number): EdgeScrollInfo {
-    let canEdgeScroll = false;
-    let direction: ScrollDirection = 0;
-    let delay = 0;
-    const { height } = this.getViewportDimension();
-    const { height: gridHeight } = this.getMaxViewportSize(this.getters.getActiveSheet().id);
-    const { top, offsetY } = this.getActiveViewport();
-    if (y < 0 && top > 0) {
-      canEdgeScroll = true;
-      direction = -1;
-      delay = scrollDelay(-y);
-    } else if (y > height && offsetY < gridHeight - height) {
-      canEdgeScroll = true;
-      direction = +1;
-      delay = scrollDelay(y - height);
-    }
-    return { canEdgeScroll, direction, delay };
-  }
-
-  getVisibleFigures(): Figure[] {
-    const sheetId = this.getters.getActiveSheetId();
-    const result: Figure[] = [];
-    const figures = this.getters.getFigures(sheetId);
-    const { offsetX, offsetY } = this.getters.getActiveViewport();
-    const { width, height } = this.getters.getViewportDimensionWithHeaders();
-    for (let figure of figures) {
-      if (figure.x >= offsetX + width || figure.x + figure.width <= offsetX) {
-        continue;
-      }
-      if (figure.y >= offsetY + height || figure.y + figure.height <= offsetY) {
-        continue;
-      }
-      result.push(figure);
-    }
-    return result;
-  }
-
-  /**
-   * Get the actual size between two headers.
-   * The size from A to B is the distance between A.start and B.end
-   */
-  getSizeBetweenHeaders(dimension: Dimension, from: number, to: number): number {
-    const sheetId = this.getters.getActiveSheetId();
-    let size = 0;
-    for (let i = from; i <= to; i++) {
-      if (this.getters.isHeaderHidden(sheetId, dimension, i)) {
-        continue;
-      }
-      size +=
-        dimension === "COL"
-          ? this.getters.getColSize(sheetId, i)
-          : this.getters.getRowSize(sheetId, i);
-    }
-    return size;
-  }
-
-  /**
-   * Computes the coordinates and size to draw the zone on the canvas
-   */
-  getRect(zone: Zone): Rect {
-    const sheetId = this.getters.getActiveSheetId();
-    const paneRects = this.getPanes(sheetId)
-      .map((pane) => pane.getRect(zone))
-      .filter(isDefined);
-
-    const x = Math.min(...paneRects.map((rect) => rect.x));
-    const y = Math.min(...paneRects.map((rect) => rect.y));
-    const width = Math.max(...paneRects.map((rect) => rect.x + rect.width)) - x;
-    const height = Math.max(...paneRects.map((rect) => rect.y + rect.height)) - y;
-    return {
-      x: this.getters.isDashboard() ? x : x + HEADER_WIDTH,
-      y: this.getters.isDashboard() ? y : y + HEADER_HEIGHT,
-      width,
-      height,
-    };
   }
 }

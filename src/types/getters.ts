@@ -26,6 +26,7 @@ import { SelectionMultiUserPlugin } from "../plugins/ui/selection_multiuser";
 import { SortPlugin } from "../plugins/ui/sort";
 import { UIOptionsPlugin } from "../plugins/ui/ui_options";
 import { SheetUIPlugin } from "../plugins/ui/ui_sheet";
+import { TrucPlugin } from "../plugins/ui/ui_truc";
 import { ViewportPlugin } from "../plugins/ui/viewport";
 // -----------------------------------------------------------------------------
 // Getters
@@ -125,6 +126,7 @@ type SelectionMultiUserGetters = Pick<
 type SortGetters = Pick<SortPlugin, GetterNames<typeof SortPlugin>>;
 type UIOptionsGetters = Pick<UIOptionsPlugin, GetterNames<typeof UIOptionsPlugin>>;
 type SheetUIGetters = Pick<SheetUIPlugin, GetterNames<typeof SheetUIPlugin>>;
+type TrucGetters = Pick<TrucPlugin, GetterNames<typeof TrucPlugin>>;
 type ViewportGetters = Pick<ViewportPlugin, GetterNames<typeof ViewportPlugin>>;
 type SessionGetters = {
   getClient: Session["getClient"];
@@ -150,4 +152,5 @@ export type Getters = CoreGetters &
   SortGetters &
   UIOptionsGetters &
   SheetUIGetters &
+  TrucGetters &
   ViewportGetters;

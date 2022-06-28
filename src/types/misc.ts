@@ -94,6 +94,7 @@ export interface Sheet {
   rows: Row[];
   areGridLinesVisible: boolean;
   isVisible: boolean;
+  panes: PaneDivision;
 }
 
 export interface CellPosition {

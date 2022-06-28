@@ -532,6 +532,16 @@ export interface ShowFormulaCommand {
   show: boolean;
 }
 
+export interface FreezeColCommand {
+  type: "FREEZE_COL";
+  col: number | undefined;
+}
+
+export interface FreezeRowCommand {
+  type: "FREEZE_ROW";
+  row: number | undefined;
+}
+
 export interface DeleteContentCommand {
   type: "DELETE_CONTENT";
   sheetId: UID;
@@ -871,6 +881,8 @@ export type LocalCommand =
   | AutofillCommand
   | AutofillSelectCommand
   | ShowFormulaCommand
+  | FreezeColCommand
+  | FreezeRowCommand
   | AutofillAutoCommand
   | SelectFigureCommand
   | UpdateSearchCommand
