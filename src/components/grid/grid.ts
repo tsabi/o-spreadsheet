@@ -16,7 +16,7 @@ import {
   HEADER_WIDTH,
   SCROLLBAR_WIDTH,
 } from "../../constants";
-import { findCellInNewZone, isInside, range } from "../../helpers/index";
+import { isInside, range } from "../../helpers/index";
 import { interactiveCut } from "../../helpers/ui/cut";
 import { interactivePaste } from "../../helpers/ui/paste";
 import { ComposerSelection } from "../../plugins/ui/edition";
@@ -782,31 +782,31 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       ArrowRight: { direction: "right", delta: [1, 0] },
       ArrowUp: { direction: "up", delta: [0, -1] },
     };
-    const { direction, delta } = arrowMap[ev.key];
+    const { direction } = arrowMap[ev.key];
     if (ev.shiftKey) {
-      const oldZone = this.env.model.getters.getSelectedZone();
+      // const oldZone = this.env.model.getters.getSelectedZone();
       this.env.model.selection.resizeAnchorZone(direction, ev.ctrlKey ? "end" : "one");
-      const newZone = this.env.model.getters.getSelectedZone();
-      const viewport = this.env.model.getters.getActiveViewport();
-      const sheetId = this.env.model.getters.getActiveSheetId();
-      let { col, row } = findCellInNewZone(oldZone, newZone);
-      col = Math.min(col, this.env.model.getters.getNumberCols(sheetId) - 1);
-      row = Math.min(row, this.env.model.getters.getNumberRows(sheetId) - 1);
-      const { left, right, top, bottom, offsetX, offsetY } = viewport;
-      const newOffsetX =
-        col < left || col > right - 1
-          ? this.env.model.getters.getColDimensions(sheetId, left + delta[0]).start
-          : offsetX;
-      const newOffsetY =
-        row < top || row > bottom - 1
-          ? this.env.model.getters.getRowDimensions(sheetId, top + delta[1]).start
-          : offsetY;
-      if (newOffsetX !== offsetX || newOffsetY !== offsetY) {
-        this.env.model.dispatch("SET_VIEWPORT_OFFSET", {
-          offsetX: newOffsetX,
-          offsetY: newOffsetY,
-        });
-      }
+      // const newZone = this.env.model.getters.getSelectedZone();
+      // const viewport = this.env.model.getters.getActiveViewport();
+      // const sheetId = this.env.model.getters.getActiveSheetId();
+      // let { col, row } = findCellInNewZone(oldZone, newZone);
+      // col = Math.min(col, this.env.model.getters.getNumberCols(sheetId) - 1);
+      // row = Math.min(row, this.env.model.getters.getNumberRows(sheetId) - 1);
+      // const { left, right, top, bottom, offsetX, offsetY } = viewport;
+      // const newOffsetX =
+      //   col < left || col > right - 1
+      //     ? this.env.model.getters.getColDimensions(sheetId, left + delta[0]).start
+      //     : offsetX;
+      // const newOffsetY =
+      //   row < top || row > bottom - 1
+      //     ? this.env.model.getters.getRowDimensions(sheetId, top + delta[1]).start
+      //     : offsetY;
+      // if (newOffsetX !== offsetX || newOffsetY !== offsetY) {
+      //   console.log(this.env.model.dispatch("SET_VIEWPORT_OFFSET", {
+      //     offsetX: newOffsetX,
+      //     offsetY: newOffsetY,
+      //   }));
+      // }
     } else {
       this.env.model.selection.moveAnchorCell(direction, ev.ctrlKey ? "end" : "one");
     }

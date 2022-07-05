@@ -81,7 +81,7 @@ export class RendererPlugin extends UIPlugin {
   }
 
   /**
-   * Get the offset of a header (see getColRowOffset), adjusted with the header
+   * Get the offset of a header (see getColRowOffsetInViewport), adjusted with the header
    * size (HEADER_HEIGHT and HEADER_WIDTH)
    */
   private getHeaderOffset(dimension: Dimension, start: number, index: number): number {
