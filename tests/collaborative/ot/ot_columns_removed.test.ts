@@ -6,17 +6,16 @@ import {
   AddMergeCommand,
   ClearCellCommand,
   ClearFormattingCommand,
-  CreateFilterCommand,
+  CreateFilterTableCommand,
   DeleteContentCommand,
   RemoveColumnsRowsCommand,
-  RemoveFilterCommand,
+  RemoveFilterTableCommand,
   RemoveMergeCommand,
   ResizeColumnsRowsCommand,
   SetBorderCommand,
   SetFormattingCommand,
   UpdateCellCommand,
   UpdateCellPositionCommand,
-  UpdateFilterCommand,
 } from "../../../src/types";
 import { createEqualCF, target, toRangesData } from "../../test_helpers/helpers";
 
@@ -52,14 +51,8 @@ describe("OT with REMOVE_COLUMN", () => {
     row: 1,
     border: { left: ["thin", "#000"] },
   };
-  const updateFilter: Omit<UpdateFilterCommand, "col"> = {
-    type: "UPDATE_FILTER",
-    sheetId,
-    row: 0,
-    values: [""],
-  };
 
-  describe.each([updateCell, updateCellPosition, clearCell, setBorder, updateFilter])(
+  describe.each([updateCell, updateCellPosition, clearCell, setBorder])(
     "single cell commands",
     (cmd) => {
       test(`remove columns before ${cmd.type}`, () => {
@@ -116,12 +109,12 @@ describe("OT with REMOVE_COLUMN", () => {
     sheetId,
     cf: createEqualCF("1", { fillColor: "#FF0000" }, "1"),
   };
-  const createFilters: Omit<CreateFilterCommand, "target"> = {
+  const createFilters: Omit<CreateFilterTableCommand, "target"> = {
     type: "CREATE_FILTER_TABLE",
     sheetId,
   };
 
-  const removeFilters: Omit<RemoveFilterCommand, "target"> = {
+  const removeFilters: Omit<RemoveFilterTableCommand, "target"> = {
     type: "REMOVE_FILTER_TABLE",
     sheetId,
   };

@@ -11,12 +11,13 @@ import {
   union,
   zoneToXc,
 } from "../../helpers";
-import { FilterData, FilterTable } from "../../types/filters";
+import { Filter, FilterTable } from "../../helpers/filters";
 import {
   AddColumnsRowsCommand,
   CommandResult,
   CoreCommand,
   ExcelWorkbookData,
+  FilterId,
   RemoveColumnsRowsCommand,
   UID,
   UpdateCellCommand,
@@ -24,10 +25,31 @@ import {
   Zone,
 } from "../../types/index";
 import { CorePlugin } from "../core_plugin";
-import { Filter } from "./../../types/filters";
 
+/**
+ * There is 2 components in filters : FilterTables and filters.
+ * Tables are 100% core.
+ * Filters are kinda only UI, the filter values aren't shared/saved.
+ *
+ * Handle filters 100% in UI plugin :
+ *  - The filters are linked to the tables (1 filter per col of the table)
+ *      - cannot just handle add/remove cols in the local plugin, because we have no way to handle undo/redo
+ *      - the core plugin could dispatch commands when columns are added or removed, and the UI plugin react to these commands
+ *        - but not really, also because of uno/redo
+ *
+ * So I don't think I can handle the filters 100% in an UI plugin. Which kinda sucks because filter do nothing in Core, except
+ * being created and deleted when the table is resized.
+ *
+ * Idea that work (but I don't like it that much):
+ *  - Have filters in core
+ *    - They contain a position and an ID
+ *  - The UI plugin contain mapping filterId/filter values
+ *  - And the core plugin know mapping filterId/position
+ */
+
+type FilterTableId = UID;
 interface FiltersState {
-  filters: Record<UID, Record<UID, FilterTable>>;
+  tables: Record<UID, Record<FilterTableId, FilterTable>>;
 }
 
 export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersState {
@@ -37,22 +59,17 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
     "getFilterTable",
     "getFilterTables",
     "getFilterTablesInZone",
-    "isFilterActive",
     "isZonesContainFilter",
+    "getFilterId",
   ] as const;
 
-  filters: Record<UID, Record<UID, FilterTable>> = {};
+  tables: Record<UID, Record<FilterId, FilterTable>> = {};
 
   // ---------------------------------------------------------------------------
   // Command Handling
   // ---------------------------------------------------------------------------
 
   allowDispatch(cmd: CoreCommand): CommandResult {
-    // check only one target for create filter
-    // check overlapping filters
-    // sheetId/col/row is inside a filter ?
-    // add merge : not across filter border, not vertically inside filter
-
     switch (cmd.type) {
       case "CREATE_FILTER_TABLE":
         if (!areZonesContinuous(...cmd.target)) {
@@ -70,11 +87,6 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
         }
 
         break;
-      case "UPDATE_FILTER":
-        if (!this.getFilter(cmd.sheetId, cmd.col, cmd.row)) {
-          return CommandResult.FilterNotFound;
-        }
-        break;
       case "ADD_MERGE":
         for (let merge of cmd.target) {
           for (let filterTable of this.getFilterTables(cmd.sheetId)) {
@@ -91,15 +103,15 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
   handle(cmd: CoreCommand) {
     switch (cmd.type) {
       case "CREATE_SHEET":
-        this.history.update("filters", cmd.sheetId, {});
+        this.history.update("tables", cmd.sheetId, {});
         break;
       case "DELETE_SHEET":
-        const filterTables = { ...this.filters };
+        const filterTables = { ...this.tables };
         delete filterTables[cmd.sheetId];
-        this.history.update("filters", filterTables);
+        this.history.update("tables", filterTables);
         break;
       case "DUPLICATE_SHEET":
-        this.history.update("filters", cmd.sheetIdTo, deepCopy(this.filters[cmd.sheetId]));
+        this.history.update("tables", cmd.sheetIdTo, deepCopy(this.tables[cmd.sheetId]));
         break;
       case "ADD_COLUMNS_ROWS":
         this.onAddColumnsRows(cmd);
@@ -111,35 +123,19 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
         const zone = union(...cmd.target);
         const filterId = this.uuidGenerator.uuidv4();
         const newFilter = this.createFilterTable(zone);
-        this.history.update("filters", cmd.sheetId, filterId, newFilter);
+        this.history.update("tables", cmd.sheetId, filterId, newFilter);
 
         break;
       }
       case "REMOVE_FILTER_TABLE": {
         const tables: Record<UID, FilterTable> = {};
         for (const filterTableId of this.getFilterTablesIds(cmd.sheetId)) {
-          const filterTable = this.filters[cmd.sheetId][filterTableId];
+          const filterTable = this.tables[cmd.sheetId][filterTableId];
           if (cmd.target.every((zone) => !intersection(zone, filterTable.zone))) {
             tables[filterTableId] = filterTable;
           }
         }
-        this.history.update("filters", cmd.sheetId, tables);
-        break;
-      }
-      case "UPDATE_FILTER": {
-        const { filterTableId, filterId } = this.getFilterId(cmd.sheetId, cmd.col, cmd.row);
-        if (filterTableId === undefined || filterId === undefined) {
-          return;
-        }
-        this.history.update(
-          "filters",
-          cmd.sheetId,
-          filterTableId,
-          "filters",
-          filterId,
-          "filteredValues",
-          cmd.values
-        );
+        this.history.update("tables", cmd.sheetId, tables);
         break;
       }
       case "UPDATE_CELL": {
@@ -161,7 +157,7 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
   }
 
   getFilterTables(sheetId: UID): FilterTable[] {
-    return this.filters[sheetId] ? Object.values(this.filters[sheetId]) : [];
+    return this.tables[sheetId] ? Object.values(this.tables[sheetId]) : [];
   }
 
   getFilter(sheetId: UID, col: number, row: number): Filter | undefined {
@@ -175,6 +171,10 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
       }
     }
     return undefined;
+  }
+
+  getFilterId(sheetId: UID, col: number, row: number): FilterId | undefined {
+    return this.getFilter(sheetId, col, row)?.id;
   }
 
   getFilterTable(sheetId: UID, col: number, row: number): FilterTable | undefined {
@@ -197,11 +197,6 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
     return tables;
   }
 
-  isFilterActive(sheetId: UID, col: number, row: number): boolean {
-    const filter = this.getFilter(sheetId, col, row);
-    return Boolean(filter && filter.filteredValues.length);
-  }
-
   isZonesContainFilter(sheetId: UID, zones: Zone[]): boolean {
     for (const zone of zones) {
       for (const filterTable of this.getFilterTables(sheetId)) {
@@ -215,7 +210,7 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
 
   private onAddColumnsRows(cmd: AddColumnsRowsCommand) {
     for (let tableId of this.getFilterTablesIds(cmd.sheetId)) {
-      const filterTable = this.filters[cmd.sheetId][tableId];
+      const filterTable = this.tables[cmd.sheetId][tableId];
       if (!filterTable) {
         return;
       }
@@ -238,27 +233,29 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
             cmd.quantity,
             true
           );
-          filters.push(new Filter(filterZone, filter.filteredValues));
+          filters.push(new Filter(filter.id, filterZone));
         }
 
         // Add filters for new columns
         if (filters.length < zone.right - zone.left + 1) {
           for (let col = zone.left; col <= zone.right; col++) {
             if (!filters.find((filter) => filter.col === col)) {
-              filters.push(new Filter({ ...zone, left: col, right: col }, []));
+              filters.push(
+                new Filter(this.uuidGenerator.uuidv4(), { ...zone, left: col, right: col })
+              );
             }
           }
           filters.sort((f1, f2) => f1.col - f2.col);
         }
-        this.history.update("filters", cmd.sheetId, tableId, "zone", zone);
-        this.history.update("filters", cmd.sheetId, tableId, "filters", filters);
+        this.history.update("tables", cmd.sheetId, tableId, "zone", zone);
+        this.history.update("tables", cmd.sheetId, tableId, "filters", filters);
       }
     }
   }
 
   private onDeleteColumnsRows(cmd: RemoveColumnsRowsCommand) {
     for (let tableId of this.getFilterTablesIds(cmd.sheetId)) {
-      const table = this.filters[cmd.sheetId][tableId];
+      const table = this.tables[cmd.sheetId][tableId];
       if (!table) {
         return;
       }
@@ -268,9 +265,9 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
         cmd.elements
       );
       if (!zone) {
-        const tables = { ...this.filters[cmd.sheetId] };
+        const tables = { ...this.tables[cmd.sheetId] };
         delete tables[tableId];
-        this.history.update("filters", cmd.sheetId, tables);
+        this.history.update("tables", cmd.sheetId, tables);
       } else {
         if (zoneToXc(zone) !== zoneToXc(table.zone)) {
           const filters: Filter[] = [];
@@ -282,41 +279,18 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
               cmd.elements
             );
             if (newFilterZone) {
-              filters.push(new Filter(newFilterZone, filter.filteredValues));
+              filters.push(new Filter(filter.id, newFilterZone));
             }
           }
-          this.history.update("filters", cmd.sheetId, tableId, "zone", zone);
-          this.history.update("filters", cmd.sheetId, tableId, "filters", filters);
+          this.history.update("tables", cmd.sheetId, tableId, "zone", zone);
+          this.history.update("tables", cmd.sheetId, tableId, "filters", filters);
         }
       }
     }
   }
 
-  private getFilterTableId(sheetId: UID, col: number, row: number): UID | undefined {
-    for (let tableId of this.getFilterTablesIds(sheetId)) {
-      const filterTable = this.filters[sheetId][tableId];
-      if (isInside(col, row, filterTable.zone)) {
-        return tableId;
-      }
-    }
-    return undefined;
-  }
-
   private getFilterTablesIds(sheetId: UID): UID[] {
-    return this.filters[sheetId] ? Object.keys(this.filters[sheetId]) : [];
-  }
-
-  private getFilterId(
-    sheetId: UID,
-    col: number,
-    row: number
-  ): { filterTableId?: UID; filterId?: number } {
-    const filterTableId = this.getFilterTableId(sheetId, col, row);
-    if (filterTableId === undefined) {
-      return {};
-    }
-    const filterId = this.filters[sheetId][filterTableId].getFilterId(col);
-    return { filterId, filterTableId };
+    return this.tables[sheetId] ? Object.keys(this.tables[sheetId]) : [];
   }
 
   private createFilterTable(zone: Zone): FilterTable {
@@ -329,11 +303,11 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
   ) {
     if (oldCellContent === undefined && cellContent !== undefined) {
       for (let tableId of this.getFilterTablesIds(sheetId)) {
-        const table = this.filters[sheetId][tableId];
+        const table = this.tables[sheetId][tableId];
         const zone = table.zone;
         if (zone.bottom + 1 === row && col >= zone.left && col <= zone.right) {
           const newZone = { ...zone, bottom: zone.bottom + 1 };
-          this.history.update("filters", sheetId, tableId, "zone", newZone);
+          this.history.update("tables", sheetId, tableId, "zone", newZone);
           for (let filterId = 0; filterId < table.filters.length; filterId++) {
             const filter = table.filters[filterId];
             const newFilterZone = {
@@ -341,7 +315,7 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
               bottom: filter.zoneWithHeaders.bottom + 1,
             };
             this.history.update(
-              "filters",
+              "tables",
               sheetId,
               tableId,
               "filters",
@@ -360,48 +334,24 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
   // ---------------------------------------------------------------------------
 
   import(data: WorkbookData) {
-    this.filters = {};
+    this.tables = {};
     for (let sheet of data.sheets) {
       const filterTables: Record<UID, FilterTable> = {};
       for (let filterTableData of sheet.filterTables || []) {
         const table = this.createFilterTable(toZone(filterTableData.range));
         const tableId = this.uuidGenerator.uuidv4();
         filterTables[tableId] = table;
-        for (let filterData of filterTableData.filters) {
-          const filter = table.filters.find((f) => f.col === filterData.col);
-          if (!filter) {
-            console.warn("Error when loading a filter");
-            continue;
-          }
-          filter.filteredValues = filterData.filteredValues;
-        }
       }
 
-      this.filters[sheet.id] = filterTables;
+      this.tables[sheet.id] = filterTables;
     }
   }
 
   export(data: WorkbookData) {
     for (let sheet of data.sheets) {
       for (let filterTable of this.getFilterTables(sheet.id)) {
-        const filtersData: FilterData[] = [];
-        for (let filter of filterTable.filters) {
-          // Only export filtered values that are still in the sheet at the time of export
-          let valuesInSheet: string[] = [];
-          if (filter.filteredZone) {
-            valuesInSheet = this.getters
-              .getCellsInZone(sheet.id, filter.filteredZone)
-              .map((cell) => cell?.evaluated.value)
-              .map((val) => (val !== undefined && val !== null ? String(val) : ""));
-          }
-          filtersData.push({
-            col: filter.col,
-            filteredValues: filter.filteredValues.filter((val) => valuesInSheet.includes(val)),
-          });
-        }
         sheet.filterTables.push({
           range: zoneToXc(filterTable.zone),
-          filters: filtersData,
         });
       }
     }

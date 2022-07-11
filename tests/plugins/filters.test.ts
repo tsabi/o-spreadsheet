@@ -1,4 +1,3 @@
-import { deepStrictEqual } from "assert";
 import { CommandResult, Model } from "../../src";
 import { toZone, zoneToXc } from "../../src/helpers";
 import { ClipboardOptions, UID } from "../../src/types";
@@ -19,10 +18,11 @@ import {
   updateFilter,
 } from "../test_helpers/commands_helpers";
 
-function getFilterValues(model, sheetId = model.getters.getActiveSheetId()) {
-  return model.getters.getFilterTables(sheetId)[0].filters.map((filter) => ({
+function getFilterValues(model: Model, sheetId = model.getters.getActiveSheetId()) {
+  const table = model.getters.getFilterTables(sheetId)[0];
+  return table.filters.map((filter) => ({
     zone: zoneToXc(filter.zoneWithHeaders),
-    value: filter.filteredValues,
+    value: model.getters.getFilterValues(sheetId, filter.col, table.zone.top),
   }));
 }
 
@@ -101,16 +101,14 @@ describe("Filters plugin", () => {
 
       expect(model.getters.getFilter(sheetId, 0, 0)).toEqual({
         zoneWithHeaders: toZone("A1:A5"),
-        filteredValues: [],
+        id: expect.any(String),
       });
     });
 
     test("Can update  a filter", () => {
       createFilter(model, "A1:A5");
       updateFilter(model, "A1", ["2", "A"]);
-      expect(model.getters.getFilters(sheetId)).toEqual([
-        { zoneWithHeaders: toZone("A1:A5"), filteredValues: ["2", "A"] },
-      ]);
+      expect(model.getters.getFilterValues(sheetId, 0, 0)).toEqual(["2", "A"]);
     });
 
     test("Create a filter with multiple target create a single filter of the union of the targets", () => {
@@ -127,16 +125,11 @@ describe("Filters plugin", () => {
         sheetId: sheetId,
         sheetIdTo: sheet2Id,
       });
+      expect(getFilterValues(model, sheet2Id)).toMatchObject([{ zone: "A1:A3", value: ["C"] }]);
       updateFilter(model, "A1", ["D"], sheet2Id);
 
-      expect(model.getters.getFilter(sheetId, 0, 0)).toMatchObject({
-        zoneWithHeaders: toZone("A1:A3"),
-        filteredValues: ["C"],
-      });
-      expect(model.getters.getFilter(sheet2Id, 0, 0)).toMatchObject({
-        zoneWithHeaders: toZone("A1:A3"),
-        filteredValues: ["D"],
-      });
+      expect(getFilterValues(model, sheetId)).toMatchObject([{ zone: "A1:A3", value: ["C"] }]);
+      expect(getFilterValues(model, sheet2Id)).toMatchObject([{ zone: "A1:A3", value: ["D"] }]);
     });
   });
 
@@ -464,23 +457,9 @@ describe("Filters plugin", () => {
       redo(model);
       expect(model.getters.getFilter(sheetId, 0, 0)).toBeFalsy();
     });
-
-    test("Can undo/redo update a filter", () => {
-      const model = new Model();
-      createFilter(model, "A1:A4");
-      updateFilter(model, "A1", ["Value"]);
-      const sheetId = model.getters.getActiveSheetId();
-      expect(model.getters.getFilter(sheetId, 0, 0)!.filteredValues).toEqual(["Value"]);
-      updateFilter(model, "A1", ["Modified"]);
-      expect(model.getters.getFilter(sheetId, 0, 0)!.filteredValues).toEqual(["Modified"]);
-      undo(model);
-      expect(model.getters.getFilter(sheetId, 0, 0)!.filteredValues).toEqual(["Value"]);
-      redo(model);
-      expect(model.getters.getFilter(sheetId, 0, 0)!.filteredValues).toEqual(["Modified"]);
-    });
   });
 
-  describe("Cop/Cut/Paste filters", () => {
+  describe("Copy/Cut/Paste filters", () => {
     beforeEach(() => {
       createFilter(model, "A1:B4");
       updateFilter(model, "A1", ["thisIsAValue"]);
@@ -493,7 +472,9 @@ describe("Filters plugin", () => {
       expect(model.getters.getFilterTable(sheetId, 0, 0)).toBeTruthy();
       const copiedTable = model.getters.getFilterTable(sheetId, 0, 4);
       expect(copiedTable).toBeTruthy();
-      expect(copiedTable?.filters[0].filteredValues).toEqual(["thisIsAValue"]);
+      expect(
+        model.getters.getFilterValues(sheetId, copiedTable!.zone.left, copiedTable!.zone.top)
+      ).toEqual(["thisIsAValue"]);
     });
 
     test("Can cut and paste a filter table", () => {
@@ -502,7 +483,9 @@ describe("Filters plugin", () => {
       expect(model.getters.getFilterTable(sheetId, 0, 0)).toBeFalsy();
       const copiedTable = model.getters.getFilterTable(sheetId, 0, 4);
       expect(copiedTable).toBeTruthy();
-      expect(copiedTable?.filters[0].filteredValues).toEqual(["thisIsAValue"]);
+      expect(
+        model.getters.getFilterValues(sheetId, copiedTable!.zone.left, copiedTable!.zone.top)
+      ).toEqual(["thisIsAValue"]);
     });
 
     test("Can cut and paste multiple filter tables", () => {
@@ -513,7 +496,9 @@ describe("Filters plugin", () => {
 
       const copiedTable = model.getters.getFilterTable(sheetId, 0, 4);
       expect(copiedTable).toBeTruthy();
-      expect(copiedTable?.filters[0].filteredValues).toEqual(["thisIsAValue"]);
+      expect(
+        model.getters.getFilterValues(sheetId, copiedTable!.zone.left, copiedTable!.zone.top)
+      ).toEqual(["thisIsAValue"]);
       expect(model.getters.getFilterTable(sheetId, 3, 8)).toBeTruthy();
     });
 
@@ -546,55 +531,14 @@ describe("Filters plugin", () => {
 
       const exported = model.exportData();
       expect(exported.sheets[0].filterTables).toMatchObject([
-        {
-          range: "A1:B5",
-          filters: [
-            {
-              col: 0,
-              filteredValues: ["5"],
-            },
-            {
-              col: 1,
-              filteredValues: ["8", "hey"],
-            },
-          ],
-        },
-        {
-          range: "C5:C9",
-          filters: [
-            {
-              col: 2,
-              filteredValues: [],
-            },
-          ],
-        },
+        { range: "A1:B5" },
+        { range: "C5:C9" },
       ]);
 
-      const imported = new Model(exported);
-
-      // Stringify/Parse to transform classes to POJOs
-      deepStrictEqual(
-        JSON.parse(JSON.stringify(imported.getters.getFilterTables(sheetId))),
-        JSON.parse(JSON.stringify(model.getters.getFilterTables(sheetId))),
-        "Expected original filters and imported filters to be equal"
-      );
-    });
-
-    test("Filtered values that don't filter any row are dropped at export", () => {
-      // This happens if we have for example B1 = 5, A1=B1, we filter 5 in the col A, but then we change B1 to 9
-      createFilter(model, "A1:A3");
-      const filteredValues = ["a", "b", "c", "d", "e", "f"];
-      updateFilter(model, "A1", filteredValues);
-      expect(model.getters.getFilter(sheetId, 0, 0)!.filteredValues).toEqual(filteredValues);
-
-      setCellContent(model, "A1", "a");
-      setCellContent(model, "A2", "b");
-      setCellContent(model, "A3", "e");
-
-      // "a" isn't filtered because it's the header of the filter
-      expect(model.exportData().sheets[0].filterTables[0].filters[0].filteredValues).toEqual([
-        "b",
-        "e",
+      const imported = new Model(exported).exportData();
+      expect(imported.sheets[0].filterTables).toMatchObject([
+        { range: "A1:B5" },
+        { range: "C5:C9" },
       ]);
     });
   });

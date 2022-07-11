@@ -4,9 +4,9 @@ import {
   formatValue,
   mergeOverlappingZones,
   positions,
+  range,
   union,
 } from "../../helpers/index";
-import { FilterTable } from "../../types/filters";
 import {
   CellPosition,
   ClipboardCell,
@@ -26,6 +26,11 @@ import { UIPlugin } from "../ui_plugin";
 
 type ClipboardOperation = "CUT" | "COPY";
 
+interface CopiedTable {
+  zone: Zone;
+  filtersValues: Array<string[]>;
+}
+
 interface InsertDeleteCellsTargets {
   cut: Zone[];
   paste: Zone[];
@@ -34,7 +39,7 @@ interface InsertDeleteCellsTargets {
 interface ClipboardState {
   cells: ClipboardCell[][];
   merges: Zone[];
-  tables: FilterTable[];
+  tables: CopiedTable[];
   operation: ClipboardOperation;
   zones: Zone[];
   sheetId: UID;
@@ -369,9 +374,15 @@ export class ClipboardPlugin extends UIPlugin {
       cellsInClipboard.push(cellsInRow);
     }
 
-    const tables: FilterTable[] = [];
-    for (let zone of zones) {
-      tables.push(...this.getters.getFilterTablesInZone(sheetId, zone));
+    const tables: CopiedTable[] = [];
+    for (const zone of zones) {
+      for (const table of this.getters.getFilterTablesInZone(sheetId, zone)) {
+        const values: Array<string[]> = [];
+        for (const col of range(table.zone.left, table.zone.right + 1)) {
+          values.push(this.getters.getFilterValues(sheetId, col, table.zone.top));
+        }
+        tables.push({ filtersValues: values, zone: table.zone });
+      }
     }
 
     return {
@@ -526,16 +537,15 @@ export class ClipboardPlugin extends UIPlugin {
       selection.left - cutZone.left,
       selection.top - cutZone.top,
     ];
-    for (let filterTable of state.tables) {
-      const newTableZone = createAdaptedZone(filterTable.zone, "both", "MOVE", cutOffset);
+    for (let table of state.tables) {
+      const newTableZone = createAdaptedZone(table.zone, "both", "MOVE", cutOffset);
       this.dispatch("CREATE_FILTER_TABLE", { sheetId, target: [newTableZone] });
-      for (let filter of filterTable.filters) {
-        const index = filter.col - filterTable.zone.left;
+      for (const i of range(0, table.filtersValues.length)) {
         this.dispatch("UPDATE_FILTER", {
           sheetId,
-          col: newTableZone.left + index,
+          col: newTableZone.left + i,
           row: newTableZone.top,
-          values: filter.filteredValues,
+          values: table.filtersValues[i],
         });
       }
     }

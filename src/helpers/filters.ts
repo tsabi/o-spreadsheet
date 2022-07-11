@@ -1,4 +1,5 @@
-import { Cloneable, Zone } from "./misc";
+import { range, UuidGenerator } from ".";
+import { Cloneable, UID, Zone } from "../types/misc";
 
 export class FilterTable implements Cloneable<FilterTable> {
   zone: Zone;
@@ -7,11 +8,13 @@ export class FilterTable implements Cloneable<FilterTable> {
   constructor(zone: Zone) {
     this.filters = [];
     this.zone = zone;
-    for (let i = this.zone.left; i <= this.zone.right; i++) {
+    const uuid = new UuidGenerator();
+    for (const i of range(zone.left, zone.right + 1)) {
       const filterZone = { ...this.zone, left: i, right: i };
-      this.filters.push(new Filter(filterZone, []));
+      this.filters.push(new Filter(uuid.uuidv4(), filterZone));
     }
   }
+
   /** Get zone of the table without the headers */
   get contentZone(): Zone | undefined {
     if (this.zone.bottom === this.zone.top) {
@@ -20,10 +23,10 @@ export class FilterTable implements Cloneable<FilterTable> {
     return { ...this.zone, top: this.zone.top + 1 };
   }
 
-  getFilterId(col: number): number | undefined {
+  getFilterId(col: number): string | undefined {
     for (let i = 0; i < this.filters.length; i++) {
       if (this.filters[i].col === col) {
-        return i;
+        return this.filters[i].id;
       }
     }
     return undefined;
@@ -37,15 +40,15 @@ export class FilterTable implements Cloneable<FilterTable> {
 }
 
 export class Filter implements Cloneable<Filter> {
+  id: UID;
   zoneWithHeaders: Zone;
-  filteredValues: string[];
 
-  constructor(zone: Zone, filterValues: string[]) {
+  constructor(id: UID, zone: Zone) {
     if (zone.left !== zone.right) {
       throw new Error("Can only define a filter on a single column");
     }
+    this.id = id;
     this.zoneWithHeaders = zone;
-    this.filteredValues = filterValues;
   }
 
   get col() {
@@ -62,16 +65,6 @@ export class Filter implements Cloneable<Filter> {
   }
 
   clone(): Filter {
-    return new Filter(this.zoneWithHeaders, this.filteredValues);
+    return new Filter(this.id, this.zoneWithHeaders);
   }
-}
-
-export interface FilterTableData {
-  range: string;
-  filters: FilterData[];
-}
-
-export interface FilterData {
-  col: number;
-  filteredValues: string[];
 }

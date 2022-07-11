@@ -1,18 +1,34 @@
 import { DEFAULT_FILTER_BORDER_DESC } from "../../constants";
-import { isInside, range, toLowerCase } from "../../helpers";
-import { Border, Command, Position, UID } from "../../types";
+import { deepCopy, isInside, range, toLowerCase } from "../../helpers";
+import { Border, Command, CommandResult, FilterId, Position, UID } from "../../types";
 import { UIPlugin } from "../ui_plugin";
+import { UpdateFilterCommand } from "./../../types/commands";
 
 export class FilterEvaluationPlugin extends UIPlugin {
   static getters = [
     "getFilterBorder",
     "getFilterHeaders",
+    "getFilterValues",
     "isFilterHeader",
     "isRowFiltered",
+    "isFilterActive",
   ] as const;
+
+  private filterValues: Record<UID, Record<FilterId, string[]>> = {};
 
   hiddenRows: Set<number> = new Set();
   isEvaluationDirty = false;
+
+  allowDispatch(cmd: Command) {
+    switch (cmd.type) {
+      case "UPDATE_FILTER":
+        if (!this.getters.getFilterId(cmd.sheetId, cmd.col, cmd.row)) {
+          return CommandResult.FilterNotFound;
+        }
+        break;
+    }
+    return CommandResult.Success;
+  }
 
   handle(cmd: Command) {
     switch (cmd.type) {
@@ -25,8 +41,14 @@ export class FilterEvaluationPlugin extends UIPlugin {
         this.isEvaluationDirty = true;
         break;
       case "UPDATE_FILTER":
+        this.updateFilter(cmd);
         this.updateHiddenRows();
         break;
+      case "DUPLICATE_SHEET":
+        this.filterValues[cmd.sheetIdTo] = deepCopy(this.filterValues[cmd.sheetId]);
+        break;
+      // If we don't handle DELETE_SHEET, one one hand we will have some unneeded data, on the other hand we keep the data
+      // on DELETE_SHEET followed by undo
     }
   }
 
@@ -90,9 +112,27 @@ export class FilterEvaluationPlugin extends UIPlugin {
     return headers;
   }
 
+  getFilterValues(sheetId: UID, col: number, row: number): string[] {
+    const id = this.getters.getFilterId(sheetId, col, row);
+    if (!id || !this.filterValues[sheetId]) return [];
+    return this.filterValues[sheetId][id] || [];
+  }
+
   isFilterHeader(sheetId: UID, col: number, row: number): boolean {
     const headers = this.getFilterHeaders(sheetId);
     return headers.some((header) => header.col === col && header.row === row);
+  }
+
+  isFilterActive(sheetId: UID, col: number, row: number): boolean {
+    const id = this.getters.getFilterId(sheetId, col, row);
+    return Boolean(id && this.filterValues[sheetId]?.[id]?.length);
+  }
+
+  private updateFilter({ col, row, values, sheetId }: UpdateFilterCommand) {
+    const id = this.getters.getFilterId(sheetId, col, row);
+    if (!id) return;
+    if (!this.filterValues[sheetId]) this.filterValues[sheetId] = {};
+    this.filterValues[sheetId][id] = values;
   }
 
   private updateHiddenRows() {
@@ -101,8 +141,8 @@ export class FilterEvaluationPlugin extends UIPlugin {
 
     const hiddenRows = new Set<number>();
     for (let filter of filters) {
-      const filteredValues = filter.filteredValues.map(toLowerCase);
-      if (!filter.filteredZone) continue;
+      const filteredValues = this.filterValues[sheetId]?.[filter.id]?.map(toLowerCase);
+      if (!filteredValues || !filter.filteredZone) continue;
       for (let row = filter.filteredZone.top; row <= filter.filteredZone.bottom; row++) {
         const value = this.getCellValueAsString(sheetId, filter.col, row);
         if (filteredValues.includes(value)) {

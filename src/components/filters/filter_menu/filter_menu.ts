@@ -161,8 +161,9 @@ export class FilterMenu extends Component<Props, SpreadsheetChildEnv> {
 
   setup() {
     const sheetId = this.env.model.getters.getActiveSheetId();
+    const filterPosition = this.props.filterPosition;
     const filter = this.filter;
-    if (!filter) {
+    if (!filter || !filterPosition) {
       this.state = useState({ values: [], textFilter: "", selectedValue: undefined });
       return;
     }
@@ -171,8 +172,14 @@ export class FilterMenu extends Component<Props, SpreadsheetChildEnv> {
       .filter(({ row }) => !this.env.model.getters.isRowHidden(sheetId, row))
       .map(({ col, row }) => this.env.model.getters.getCell(sheetId, col, row)?.formattedValue);
 
-    const strValues = [...cellValues, ...filter.filteredValues];
-    const filteredValuesLowerCase = filter.filteredValues.map(toLowerCase);
+    const filterValues = this.env.model.getters.getFilterValues(
+      sheetId,
+      filterPosition.col,
+      filterPosition.row
+    );
+
+    const strValues = [...cellValues, ...filterValues];
+    const filteredValuesLowerCase = filterValues.map(toLowerCase);
     const values = [...new Set([...strValues.map(toLowerCase)])]
       .map((val) => {
         const string = val !== undefined ? String(val).toLowerCase() : "";
@@ -302,17 +309,16 @@ export class FilterMenu extends Component<Props, SpreadsheetChildEnv> {
   }
 
   sortFilterZone(sortDirection: SortDirection) {
-    const filter = this.filter;
+    const filterPosition = this.props.filterPosition;
     const filterTable = this.filterTable;
-    if (!filter || !filterTable || !filterTable.contentZone) {
+    if (!filterPosition || !filterTable || !filterTable.contentZone) {
       return;
     }
     const sheetId = this.env.model.getters.getActiveSheetId();
-    const sortAnchor = { col: filter.col, row: filterTable.contentZone.top };
     this.env.model.dispatch("SORT_CELLS", {
       sheetId,
-      col: sortAnchor.col,
-      row: sortAnchor.row,
+      col: filterPosition.col,
+      row: filterTable.contentZone.top,
       zone: filterTable.contentZone,
       sortDirection,
       sortOptions: { emptyCellAsZero: true, hasNoHeader: true },

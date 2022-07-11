@@ -176,7 +176,6 @@ export const coreTypes = new Set<CoreCommandTypes>([
   /** FILTERS */
   "CREATE_FILTER_TABLE",
   "REMOVE_FILTER_TABLE",
-  "UPDATE_FILTER",
 ]);
 
 export function isCoreCommand(cmd: Command): cmd is CoreCommand {
@@ -385,11 +384,11 @@ export interface RefreshChartCommand {
 // Filters
 //------------------------------------------------------------------------------
 
-export interface CreateFilterCommand extends TargetDependentCommand {
+export interface CreateFilterTableCommand extends TargetDependentCommand {
   type: "CREATE_FILTER_TABLE";
 }
 
-export interface RemoveFilterCommand extends TargetDependentCommand {
+export interface RemoveFilterTableCommand extends TargetDependentCommand {
   type: "REMOVE_FILTER_TABLE";
 }
 
@@ -876,8 +875,8 @@ export type CoreCommand =
   | UpdateChartCommand
 
   /** FILTERS */
-  | CreateFilterCommand
-  | RemoveFilterCommand
+  | CreateFilterTableCommand
+  | RemoveFilterTableCommand
   | UpdateFilterCommand;
 
 export type LocalCommand =

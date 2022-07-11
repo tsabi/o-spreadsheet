@@ -10,7 +10,6 @@ import {
   clearCell,
   copy,
   createChart,
-  createFilter,
   createSheet,
   deleteColumns,
   deleteRows,
@@ -21,7 +20,6 @@ import {
   selectCell,
   setCellContent,
   undo,
-  updateFilter,
 } from "../test_helpers/commands_helpers";
 import { getBorder, getCell, getCellContent } from "../test_helpers/getters_helpers";
 import { createEqualCF, target, toRangesData } from "../test_helpers/helpers";
@@ -811,26 +809,6 @@ describe("Multi users synchronisation", () => {
     expect([alice, bob]).toHaveSynchronizedValue(
       (user) => user.getters.getConditionalStyle(col, row),
       { fillColor: "#FF0000" }
-    );
-  });
-
-  test("Filters are correctly shared and applied", () => {
-    setCellContent(alice, "A2", "1");
-    setCellContent(alice, "A3", "2");
-    createFilter(alice, "A1:A3");
-    const sheetId = alice.getters.getActiveSheetId();
-    expect([alice, bob, charlie]).toHaveSynchronizedValue(
-      (user) => user.getters.getFilter(sheetId, 0, 0) !== undefined,
-      true
-    );
-    updateFilter(alice, "A1", ["1"]);
-    expect([alice, bob, charlie]).toHaveSynchronizedValue(
-      (user) => user.getters.isRowHidden(sheetId, 1),
-      true
-    );
-    expect([alice, bob, charlie]).toHaveSynchronizedValue(
-      (user) => user.getters.isRowHidden(sheetId, 2),
-      false
     );
   });
 });

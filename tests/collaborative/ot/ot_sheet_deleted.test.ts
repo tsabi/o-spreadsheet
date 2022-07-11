@@ -8,7 +8,7 @@ import {
   ClearFormattingCommand,
   CreateChartCommand,
   CreateFigureCommand,
-  CreateFilterCommand,
+  CreateFilterTableCommand,
   DeleteContentCommand,
   DeleteSheetCommand,
   DuplicateSheetCommand,
@@ -18,7 +18,7 @@ import {
   MoveSheetCommand,
   RemoveColumnsRowsCommand,
   RemoveConditionalFormatCommand,
-  RemoveFilterCommand,
+  RemoveFilterTableCommand,
   RemoveMergeCommand,
   RenameSheetCommand,
   ResizeColumnsRowsCommand,
@@ -27,7 +27,6 @@ import {
   ShowSheetCommand,
   UpdateCellCommand,
   UpdateCellPositionCommand,
-  UpdateFilterCommand,
 } from "../../../src/types";
 import { createEqualCF, target, toRangesData } from "../../test_helpers/helpers";
 
@@ -137,21 +136,14 @@ describe("OT with DELETE_SHEET", () => {
     target: [toZone("A1")],
   };
 
-  const createFilters: Omit<CreateFilterCommand, "sheetId"> = {
+  const createFilters: Omit<CreateFilterTableCommand, "sheetId"> = {
     type: "CREATE_FILTER_TABLE",
     target: [toZone("A1:A5")],
   };
 
-  const removeFilters: Omit<RemoveFilterCommand, "sheetId"> = {
+  const removeFilters: Omit<RemoveFilterTableCommand, "sheetId"> = {
     type: "REMOVE_FILTER_TABLE",
     target: [toZone("A1:A5")],
-  };
-
-  const updateFilter: Omit<UpdateFilterCommand, "sheetId"> = {
-    type: "UPDATE_FILTER",
-    col: 0,
-    row: 0,
-    values: [""],
   };
 
   describe.each([
@@ -182,7 +174,6 @@ describe("OT with DELETE_SHEET", () => {
     moveRanges,
     createFilters,
     removeFilters,
-    updateFilter,
   ])("Delete sheet", (cmd) => {
     test("Delete the sheet on which the command is triggered", () => {
       const result = transform({ ...cmd, sheetId: deletedSheetId }, deleteSheet);

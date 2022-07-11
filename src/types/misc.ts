@@ -24,6 +24,7 @@ export type Pixel = number & Alias;
 export type UID = string & Alias;
 
 export type SetDecimalStep = 1 | -1;
+export type FilterId = UID & Alias;
 
 /**
  * CSS style color string
