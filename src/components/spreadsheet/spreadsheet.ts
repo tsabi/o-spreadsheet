@@ -156,7 +156,18 @@ export class Spreadsheet extends Component<SpreadsheetProps, SpreadsheetChildEnv
   private onNotifyUI(payload: NotifyUIEvent) {
     switch (payload.type) {
       case "NOTIFICATION":
-        this.env.notifyUser(payload.text);
+        switch (payload.notificationType) {
+          case "ERROR":
+            this.env.notifyUser({ type: payload.notificationType, text: payload.text });
+            break;
+          case "INFORMATION":
+            this.env.notifyUser({
+              type: payload.notificationType,
+              text: payload.text,
+              tag: payload.tag,
+            });
+            break;
+        }
         break;
     }
   }

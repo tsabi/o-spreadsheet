@@ -298,8 +298,8 @@ describe("Composer interactions", () => {
     const model = new Model();
     const { app } = await mountSpreadsheet(fixture, { model: model }, { notifyUser: notifyUser });
     await app.mount(fixture);
-    model["config"].notifyUI({ type: "NOTIFICATION", text: "hello" });
-    expect(notifyUser).toHaveBeenCalledWith("hello");
+    model["config"].notifyUI({ type: "NOTIFICATION", text: "hello", notificationType: "ERROR" });
+    expect(notifyUser).toHaveBeenCalledWith({ type: "ERROR", text: "hello" });
     fixture.remove();
     app.destroy();
   });

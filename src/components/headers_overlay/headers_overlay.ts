@@ -483,9 +483,10 @@ export class ColResizer extends AbstractResizer {
       elements,
     });
     if (!result.isSuccessful && result.reasons.includes(CommandResult.WillRemoveExistingMerge)) {
-      this.env.notifyUser(
-        _lt("Merged cells are preventing this operation. Unmerge those cells and try again.")
-      );
+      this.env.notifyUser({
+        type: "ERROR",
+        text: _lt("Merged cells are preventing this operation. Unmerge those cells and try again."),
+      });
     }
   }
 
@@ -694,9 +695,10 @@ export class RowResizer extends AbstractResizer {
       elements,
     });
     if (!result.isSuccessful && result.reasons.includes(CommandResult.WillRemoveExistingMerge)) {
-      this.env.notifyUser(
-        _lt("Merged cells are preventing this operation. Unmerge those cells and try again.")
-      );
+      this.env.notifyUser({
+        type: "ERROR",
+        text: _lt("Merged cells are preventing this operation. Unmerge those cells and try again."),
+      });
     }
   }
 

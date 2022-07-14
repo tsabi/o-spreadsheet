@@ -203,6 +203,7 @@ export class EditionPlugin extends UIPlugin {
           this.ui.notifyUI({
             type: "NOTIFICATION",
             text: CELL_DELETED_MESSAGE,
+            notificationType: "ERROR",
           });
         }
         break;
@@ -312,6 +313,7 @@ export class EditionPlugin extends UIPlugin {
       this.ui.notifyUI({
         type: "NOTIFICATION",
         text: CELL_DELETED_MESSAGE,
+        notificationType: "ERROR",
       });
       return;
     }
@@ -330,6 +332,7 @@ export class EditionPlugin extends UIPlugin {
       this.ui.notifyUI({
         type: "NOTIFICATION",
         text: CELL_DELETED_MESSAGE,
+        notificationType: "ERROR",
       });
       return;
     }
