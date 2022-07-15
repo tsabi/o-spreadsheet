@@ -1,5 +1,5 @@
 import { parseDateTime } from "../../src/helpers";
-import { formatValue, isDateTimeFormat } from "../../src/helpers/format";
+import { exportStrings, formatValue, isDateTimeFormat } from "../../src/helpers/format";
 
 describe("formatValue on number", () => {
   test("apply default format ", () => {
@@ -444,6 +444,91 @@ describe("formatValue on date and time", () => {
         const parsedDateTime = parseDateTime(value)!;
         expect(formatValue(parsedDateTime.value, parsedDateTime.format)).toBe(result);
       });
+    });
+  });
+
+  describe("format strings", () => {
+    test.each([
+      [1, `0"A"`, `1A`],
+      [1, `"A"0"`, `A1`],
+      [1, `"A"`, `A`],
+      [1, `#,##"A"0`, `A1`],
+      [1000, `#,##"A"0`, `1,00A0`],
+      [1000, `#"A",##0`, `1A,000`],
+      [1000, `#,"A"##0`, `1,A000`],
+      [1, `#"A",##0`, `A1`],
+      [1, `#,"A"##0`, `A1`],
+      [1000000, `#"A",##0`, `1,000A,000`],
+      [1, `#"A",##0`, `A1`],
+      [1, `"A"0"B"`, `A1B`],
+      [1, `0"A".0`, `1A.0`],
+      [1, `0.0"A"`, `1.0A`],
+      [1, `0."A"0`, `1.A0`],
+      [1, `0.#"A"`, `1.A`],
+      [1.2, `0.#"A"`, `1.2A`],
+      [1, `0 "A"`, `1A`],
+      [1, `0" A"`, `1 A`],
+      [1, `0 "[$$]"`, `1[$$]`],
+      [1, `0 [$$]"A"`, `1$A`],
+    ])("String in format", (value, format, result) => {
+      expect(formatValue(value, format)).toBe(result);
+    });
+
+    test("poubelle", () => {
+      expect(exportStrings(`"B"#"A",##0`)).toEqual([
+        `#,##0`,
+        [
+          {
+            value: "B",
+            position: 6,
+          },
+          {
+            value: "A",
+            position: 4,
+          },
+        ],
+      ]);
+      expect(exportStrings(`"B"#"A",##0."C"0"D"`)).toEqual([
+        `#,##0.0`,
+        [
+          {
+            value: "B",
+            position: 6,
+          },
+          {
+            value: "A",
+            position: 4,
+          },
+          {
+            value: "C",
+            position: 0,
+          },
+          {
+            value: "D",
+            position: -2,
+          },
+        ],
+      ]);
+    });
+  });
+
+  describe.skip("formatValue on large numbers", () => {
+    const format = `#,##0, "k"`;
+    test.each([
+      ["1", "0k"],
+      ["10", "0k"],
+      ["100", "0k"],
+      ["499", "0k"],
+      ["501", "1k"],
+      ["1000", "1k"],
+      ["1499", "1k"],
+      ["1501", "2k"],
+      ["10000", "10k"],
+      ["100000", "100k"],
+      ["1000000", "1,000k"],
+      ["10000000", "10,000k"],
+    ])("Format with k", (value, result) => {
+      expect(formatValue(value, format)).toBe(result);
     });
   });
 

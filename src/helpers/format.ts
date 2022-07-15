@@ -1,6 +1,7 @@
 import { DATETIME_FORMAT } from "../constants";
 import { CellValue, Format, FormattedValue } from "../types";
 import { INITIAL_1900_DAY, numberToJsDate } from "./dates";
+import { removeStringQuotes } from "./misc";
 
 /**
  *  Constant used to indicate the maximum of digits that is possible to display
@@ -38,8 +39,13 @@ type InternalFormat = (
   | { type: "NUMBER"; format: InternalNumberFormat }
   | { type: "CURRENCY"; format: string }
   | { type: "DATE"; format: string }
+  | { type: "STRING"; format: InternalStringFormat }
 )[];
 
+interface InternalStringFormat {
+  readonly value: string;
+  readonly position: number; // Number of '#', ',' and '0' from the '.'
+}
 interface InternalNumberFormat {
   readonly integerPart: string;
   readonly isPercent: boolean;
@@ -342,6 +348,49 @@ function changeInternalNumberFormatDecimalPlaces(
 // MANAGING FORMAT
 // -----------------------------------------------------------------------------
 
+// TODO unexport
+export function exportStrings(format: Format): [Format, InternalStringFormat[]] {
+  // TODO check number of " is pair
+  const strings: InternalStringFormat[] = [];
+  let [left, right] = format.split(".");
+
+  let matches = left.match(/".*?"/g);
+  if (matches) {
+    for (let i = 0; i < matches.length; i++) {
+      const match = matches[i];
+      const endIndex = left.indexOf(match) + match.length;
+      const numberOfStringsAfter = matches.length - i - 1;
+      const length = left.length - endIndex - numberOfStringsAfter * 2;
+      left = left.replace(match, "");
+      strings.push({
+        position: length,
+        value: removeStringQuotes(match),
+      });
+    }
+  }
+  if (right) {
+    matches = right.match(/".*?"/g);
+    let length = 0;
+    if (matches) {
+      for (let i = 0; i < matches.length; i++) {
+        const match = matches[i];
+        const startIndex = right.indexOf(match) - 1;
+        length += match.length - 2; // -2 to remove quotes
+        const position = 0 - startIndex - length;
+        right = right.replace(match, "");
+        strings.push({
+          position,
+          value: removeStringQuotes(match),
+        });
+      }
+    }
+  }
+  let string = left;
+  if (right !== undefined) {
+    string += `.${right}`;
+  }
+  return [string, strings];
+}
 /**
  * Validates the provided format string and returns an InternalFormat Object.
  */
@@ -350,27 +399,32 @@ function convertFormatToInternalFormat(format: Format): InternalFormat {
     throw new Error("A format cannot be empty");
   }
   let currentIndex = 0;
-  let result: InternalFormat = [];
-  while (currentIndex < format.length) {
+  const [unStringedFormat, strings] = exportStrings(format);
+  let result: InternalFormat = strings.map((str) => ({
+    type: "STRING",
+    format: str,
+  }));
+
+  while (currentIndex < unStringedFormat.length) {
     let closingIndex: number;
-    if (format.charAt(currentIndex) === "[") {
-      if (format.charAt(currentIndex + 1) !== "$") {
-        throw new Error(`Currency formats have to be prefixed by a $: ${format}`);
+    if (unStringedFormat.charAt(currentIndex) === "[") {
+      if (unStringedFormat.charAt(currentIndex + 1) !== "$") {
+        throw new Error(`Currency formats have to be prefixed by a $: ${unStringedFormat}`);
       }
       // manage brackets/customStrings
-      closingIndex = format.substring(currentIndex).lastIndexOf("]") + currentIndex + 1;
+      closingIndex = unStringedFormat.substring(currentIndex).lastIndexOf("]") + currentIndex + 1;
       if (closingIndex === 0) {
-        throw new Error(`Invalid currency brackets format: ${format}`);
+        throw new Error(`Invalid currency brackets format: ${unStringedFormat}`);
       }
       result.push({
         type: "CURRENCY",
-        format: format.substring(currentIndex + 2, closingIndex - 1),
+        format: unStringedFormat.substring(currentIndex + 2, closingIndex - 1),
       }); // remove leading "[$"" and ending "]".
     } else {
       // rest of the time
-      const nextPartIndex = format.substring(currentIndex).indexOf("[");
-      closingIndex = nextPartIndex > -1 ? nextPartIndex + currentIndex : format.length;
-      const subFormat = format.substring(currentIndex, closingIndex);
+      const nextPartIndex = unStringedFormat.substring(currentIndex).indexOf("[");
+      closingIndex = nextPartIndex > -1 ? nextPartIndex + currentIndex : unStringedFormat.length;
+      const subFormat = unStringedFormat.substring(currentIndex, closingIndex);
       if (subFormat.match(DATETIME_FORMAT)) {
         result.push({ type: "DATE", format: subFormat });
       } else {
@@ -443,6 +497,10 @@ function convertInternalFormatToFormat(internalFormat: InternalFormat): Format {
         break;
       case "DATE":
         currentFormat = part.format;
+        break;
+      case "STRING":
+        // TODO make this work
+        currentFormat = `"${part.format.value}"`;
         break;
     }
     format += currentFormat;
