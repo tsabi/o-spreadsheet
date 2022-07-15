@@ -273,8 +273,20 @@ function getLineConfiguration(chart: LineChart, labels: string[]): ChartConfigur
   const fontColor = chartFontColor(chart.background);
   const config: ChartConfiguration = getDefaultChartJsRuntime(chart, labels, fontColor);
   const legend: ChartLegendOptions = {
-    labels: { fontColor },
+    labels: {
+      generateLabels: (chart) => {
+        var _a;
+        return (_a = chart.data.datasets) === null || _a === void 0
+          ? void 0
+          : _a.map((dataset) => ({
+              text: dataset.label,
+              fillStyle: dataset.borderColor,
+              fontColor,
+            }));
+      },
+    },
   };
+
   if ((!chart.labelRange && chart.dataSets.length === 1) || chart.legendPosition === "none") {
     legend.display = false;
   } else {
@@ -334,7 +346,6 @@ function createLineChartRuntime(chart: LineChart, getters: Getters): LineChartRu
   }
 
   const colors = new ChartColors();
-
   for (let { label, data } of dataSetsValues) {
     if (["linear", "time"].includes(axisType)) {
       // Replace empty string labels by undefined to make sure chartJS doesn't decide that "" is the same as 0
@@ -347,7 +358,7 @@ function createLineChartRuntime(chart: LineChart, getters: Getters): LineChartRu
       data,
       lineTension: 0, // 0 -> render straight lines, which is much faster
       borderColor: color,
-      backgroundColor: color,
+      backgroundColor: color.replace(/\)/i, ",0.4)"),
     };
     config.data!.datasets!.push(dataset);
   }
