@@ -1,8 +1,8 @@
 import {
   Component,
   onMounted,
-  onPatched,
   onWillUnmount,
+  useEffect,
   useExternalListener,
   useRef,
   useState,
@@ -192,10 +192,6 @@ function useTouchMove(handler: (deltaX: number, deltaY: number) => void, canMove
 // -----------------------------------------------------------------------------
 css/* scss */ `
   .o-grid {
-    width: 83.33%;
-    height: 83.33%;
-    transform-origin: 0 0;
-    transform: scale(1.2, 1.2);
     position: relative;
     overflow: hidden;
     background-color: ${BACKGROUND_GRAY_COLOR};
@@ -317,7 +313,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     useExternalListener(document.body, "paste", this.paste);
     useTouchMove(this.moveCanvas.bind(this), () => this.vScrollbar.scroll > 0);
     onMounted(() => this.initGrid());
-    onPatched(() => {
+    useEffect(() => {
       this.drawGrid();
       this.resizeGrid();
     });
@@ -328,8 +324,8 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     this.vScrollbar.el = this.vScrollbarRef.el!;
     this.hScrollbar.el = this.hScrollbarRef.el!;
     this.focus();
-    this.resizeGrid();
-    this.drawGrid();
+    // this.resizeGrid();
+    // this.drawGrid();
   }
 
   get gridOverlayStyle() {
@@ -431,6 +427,17 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       cellWidth: width,
       cellHeight: height,
     };
+  }
+
+  get autoZoomStyle() {
+    const zoomFactor = this.env.model.getters.getAutoZoomFactor();
+    console.log("zoom", zoomFactor);
+    return `
+      width: ${Math.round(10000 / zoomFactor) / 100}%;
+      height: ${Math.round(10000 / zoomFactor) / 100}%;
+      transform-origin: 0 0;
+      transform: scale(${zoomFactor}, ${zoomFactor});
+    `;
   }
 
   // this map will handle most of the actions that should happen on key down. The arrow keys are managed in the key
@@ -560,11 +567,13 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   }
 
   resizeGrid() {
+    const zoom = this.env.model.getters.getAutoZoomFactor();
     const currentHeight = this.gridEl.clientHeight - SCROLLBAR_WIDTH;
     const currentWidth = this.gridEl.clientWidth - SCROLLBAR_WIDTH;
+    console.log(currentWidth);
     const { height: viewportHeight, width: viewportWidth } =
       this.env.model.getters.getViewportDimensionWithHeaders();
-    if (currentHeight != viewportHeight || currentWidth !== viewportWidth) {
+    if (currentHeight * zoom != viewportHeight || currentWidth * zoom !== viewportWidth) {
       this.env.model.dispatch("RESIZE_VIEWPORT", {
         height: currentHeight - (this.env.isDashboard() ? 0 : HEADER_HEIGHT),
         width: currentWidth - (this.env.isDashboard() ? 0 : HEADER_WIDTH),
@@ -624,11 +633,12 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     const { width, height } = this.env.model.getters.getViewportDimensionWithHeaders();
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
-    canvas.width = width * dpr * 1.2;
-    canvas.height = height * dpr * 1.2;
+    const zoomFactor = this.env.model.getters.getAutoZoomFactor();
+    canvas.width = width * dpr * zoomFactor;
+    canvas.height = height * dpr * zoomFactor;
     canvas.setAttribute("style", `width:${width}px;height:${height}px;`);
     ctx.translate(-0.5, -0.5);
-    ctx.scale(dpr * 1.2, dpr * 1.2);
+    ctx.scale(dpr * zoomFactor, dpr * zoomFactor);
     this.env.model.drawGrid(renderingContext);
   }
 

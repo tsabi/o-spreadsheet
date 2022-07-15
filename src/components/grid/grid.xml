@@ -6,6 +6,7 @@
       t-on-click="focus"
       t-on-keydown="onKeydown"
       t-on-wheel="onMouseWheel"
+      t-att-style="autoZoomStyle"
       t-ref="grid">
       <!-- tabindex="-1" is necessary to keep the focus on composer while selecting a cell -->
       <div
