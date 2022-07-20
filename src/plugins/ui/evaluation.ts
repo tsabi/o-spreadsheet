@@ -1,6 +1,6 @@
 import { compile } from "../../formulas/index";
 import { functionRegistry } from "../../functions/index";
-import { intersection, isZoneValid, toXC, zoneToXc } from "../../helpers/index";
+import { intersection, isZoneValid, overlap, visitZone, zoneToXc } from "../../helpers/index";
 import { ModelConfig } from "../../model";
 import { SelectionStreamProcessor } from "../../selection_stream/selection_stream_processor";
 import { StateObserver } from "../../state_observer";
@@ -11,9 +11,11 @@ import {
   CircularDependencyError,
   EvaluationError,
   InvalidReferenceError,
+  OverwriteDataError,
 } from "../../types/errors";
 import {
   Cell,
+  CellPosition,
   CellValue,
   CellValueType,
   Command,
@@ -26,10 +28,12 @@ import {
   Getters,
   invalidateEvaluationCommands,
   MatrixArg,
+  Position,
   PrimitiveArg,
   Range,
   ReferenceDenormalizer,
   UID,
+  Zone,
 } from "../../types/index";
 import { UIPlugin } from "../ui_plugin";
 
@@ -133,10 +137,180 @@ export class EvaluationPlugin extends UIPlugin {
   private evaluate(sheetId: UID) {
     const cells = this.getters.getCells(sheetId);
     const compilationParameters = this.getCompilationParameters(computeCell);
-    const visited: { [cellId: string]: boolean | null } = {};
+    // a computed cell is a cell for wich we know its evaluated value
+    const computedCells: { [cellId: string]: true | "waitingRefEvaluation" } = {};
 
+    // Flag 1: main loop
     for (let cell of Object.values(cells)) {
+      compilationParameters[2].__originCellPosition = undefined;
       computeCell(cell);
+    } // Flag 1 end
+
+    function computeCell(cell) {
+      if (computedCells[cell.id] === true) {
+        return;
+      }
+      if (cell.isEmpty()) {
+        // in this case, the content of the cell is empty but since a formule can
+        // spread values on several cells, the value can be infered from evaluation
+        // of previous cells. So we need to evaluate previous cells to make sure
+        // to know the current cell final value.
+        computePreviousCells(cell);
+      } else if (cell.isFormula()) {
+        computeFormulaCell(cell);
+      }
+      computedCells[cell.id] = true;
+    }
+
+    function computePreviousCells(cell: Cell) {
+      // in this function we want evaluate cells before the input cell
+      // --> we want at the end of this function that the previous cells return
+      // true if we interrogate each one with computedCells
+
+      // Note that it's not necessary to execute directly this fonction if we are
+      // in the main loop (see Flag 1). Indeed, in this loop, all previous cells
+      // are supposed to be already evaluated.
+
+      const originCellPosition = compilationParameters[2].__originCellPosition?.();
+      if (originCellPosition) {
+        // have originCellPosition not undefine
+        // --> mean that we are in the process evaluation of a cell
+        // --> mean precisely that we compute previousCells after an empty ref
+        // --> mean precisely that we are not executing 'computePreviousCells' directly
+        // in the main loop (Flag 1)
+        const cellPosition = compilationParameters[2].getters.getCellPosition(cell.id);
+        _computePreviousCells(cellPosition, originCellPosition);
+      }
+    }
+
+    function _computePreviousCells(cellPosition: CellPosition, originCellPosition: CellPosition) {
+      const sameSheet = cellPosition.sheetId === originCellPosition.sheetId;
+      const startCol = cellPosition.col;
+      const startRow = cellPosition.row;
+
+      // this is the limit position to not evaluate the cells before:
+      // When the cell originCell has the reference to the empty cell, all the cells
+      // located before originCell will not be able to influence the evaluation
+      // of the cells preceding the empty cell. It is therefore not necessary to
+      // evaluate them.
+      const positionLimit: Position =
+        sameSheet &&
+        originCellPosition.col < cellPosition.col &&
+        originCellPosition.row < cellPosition.row
+          ? { col: originCellPosition.col, row: originCellPosition.row }
+          : { col: -1, row: -1 };
+
+      let endRow = -1;
+
+      // run the loop "for" in the opposite direction for performance reasons
+      for (let col = startCol; col > -1; col--) {
+        for (let row = startRow; row > endRow; row--) {
+          // don't check the last cell (it's the evaluating cell)
+          if (col === startCol && row === startRow) continue;
+
+          if (col <= positionLimit.col) {
+            endRow = positionLimit.row;
+          }
+
+          const cellToCompute = compilationParameters[2].getters.getCell(
+            cellPosition.sheetId,
+            col,
+            row
+          );
+
+          if (computedCells[cellToCompute.id] === true) {
+            positionLimit.col = col;
+            positionLimit.row = row;
+          } else {
+            computeCell(cellToCompute);
+          }
+        }
+      }
+    }
+
+    function computeFormulaCell(cell) {
+      if (computedCells[cell.id] === "waitingRefEvaluation") {
+        cell.assignError(CellErrorType.CircularDependency, new CircularDependencyError());
+      }
+      computedCells[cell.id] = "waitingRefEvaluation";
+
+      try {
+        compilationParameters[2].__originCellPosition = () => {
+          // compute the value lazily for performance reasons
+          return compilationParameters[2].getters.getCellPosition(cell.id);
+        };
+
+        const computedCell = cell.compiledFormula.execute(
+          cell.dependencies,
+          ...compilationParameters
+        );
+
+        if (Array.isArray(computedCell.value)) {
+          if (compilationParameters[2].__lastFnCalled === undefined) {
+            // if a value returns an array (like =A1:A3)
+            throw new Error(_lt("This formula depends on invalid values"));
+          }
+          asignResultArray(cell, computedCell);
+        } else {
+          cell.assignEvaluation(computedCell.value, cell.format || computedCell.format);
+        }
+      } catch (e) {
+        handleError(e, cell);
+      }
+    }
+
+    function asignResultArray(cell, resultArray) {
+      const position = compilationParameters[2].getters.getCellPosition(cell.id);
+      const zoneToFill: Zone = {
+        left: position.col,
+        right: position.col + resultArray.value[0].length,
+        top: position.row,
+        bottom: position.row + resultArray.value.length,
+      };
+
+      // assert no ("content" or "evaluated value") present in the result zone
+      // note that evaluated value could be an empty value come from other result array
+      visitZone(zoneToFill, (col, row) => {
+        // don't check the first cell
+        if (col === zoneToFill.left && row === zoneToFill.top) return;
+
+        const cellToFill = compilationParameters[2].getters.getCell(position.sheetId, col, row);
+        if (!cellToFill === undefined && computedCells[cellToFill.id] === true) {
+          cell.assignError(CellErrorType.OverwriteData, new OverwriteDataError());
+        }
+        // what's happening if computedCells[cellToFill.id] === "waiting" ?
+        // if === "waiting" --> case 1: cell has content --> !computedCells.isEmpty() matching --> return error
+        // if === "waiting" --> case 2: cell is empty ---> cell waiting value from other cells --> we give it the value in the next visitZone
+      });
+
+      // assert deep dependency references arn't present in the result zone
+      visitDeepDependencies(cell, (dependency) => {
+        if (dependency.sheetId === position.sheetId && overlap(dependency.zone, zoneToFill)) {
+          cell.assignError(CellErrorType.CircularDependency, new CircularDependencyError());
+        }
+      });
+
+      // fill the zoneToFill with the resultArray values
+      visitZone(zoneToFill, (col, row) => {
+        const cellToFill = compilationParameters[2].getters.getCell(position.sheetId, col, row);
+        const value = resultArray.value[col - zoneToFill.left][row - zoneToFill.top];
+        const format =
+          cellToFill?.format || resultArray.format?.[col - zoneToFill.left][row - zoneToFill.top];
+
+        cellToFill.assignEvaluation(value, format);
+        computedCells[cellToFill.id] = true;
+      });
+    }
+
+    function visitDeepDependencies(cell, cb: (dependency: Range) => void) {
+      for (let dependency of cell.dependencies) {
+        cb(dependency);
+
+        visitZone(dependency.zone, (col, row) => {
+          const deepCell = compilationParameters[2].getters.getCell(dependency.sheetId, col, row);
+          visitDeepDependencies(deepCell, cb);
+        });
+      }
     }
 
     function handleError(e: Error | any, cell: FormulaCell) {
@@ -158,39 +332,11 @@ export class EvaluationPlugin extends UIPlugin {
       }
     }
 
-    function computeCell(cell: Cell) {
-      if (!cell.isFormula()) {
-        return;
-      }
-      const cellId = cell.id;
-      if (cellId in visited) {
-        if (visited[cellId] === null) {
-          cell.assignError(CellErrorType.CircularDependency, new CircularDependencyError());
-        }
-        return;
-      }
-      visited[cellId] = null;
-      try {
-        compilationParameters[2].__originCellXC = () => {
-          // compute the value lazily for performance reasons
-          const position = compilationParameters[2].getters.getCellPosition(cellId);
-          return toXC(position.col, position.row);
-        };
-
-        const computedCell = cell.compiledFormula.execute(
-          cell.dependencies,
-          ...compilationParameters
-        );
-        cell.assignEvaluation(computedCell.value, cell.format || computedCell.format);
-        if (Array.isArray(cell.evaluated.value)) {
-          // if a value returns an array (like =A1:A3)
-          throw new Error(_lt("This formula depends on invalid values"));
-        }
-      } catch (e) {
-        handleError(e, cell);
-      }
-      visited[cellId] = true;
-    }
+    // REF visit zone helper
+    // REF visitCells --> computedCells  /   type boolean | null --> true | "waitingRefEvaluation"
+    // REF change __originCellXC to __originCellPosition
+    // REF compilationParameters could retourn a dict
+    // REF FormulaCell --> IFormulaCell
   }
 
   /**

@@ -163,7 +163,7 @@ export type MatrixArgValue = (CellValue | undefined)[][];
 export type PrimitiveArgValue = string | number | boolean | null;
 
 export type FunctionReturn = { value: ReturnValue; format?: Format };
-export type ReturnValue = string | number | boolean;
+export type ReturnValue = string | number | boolean | (string | number | boolean | undefined)[][];
 
 export interface ClipboardCell {
   cell?: Cell;

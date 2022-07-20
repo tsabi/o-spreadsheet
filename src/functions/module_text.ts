@@ -408,3 +408,18 @@ export const TEXT: AddFunctionDescription = {
   },
   isExported: true,
 };
+
+// -----------------------------------------------------------------------------
+// RESULTARRAY FORMULA TEST
+// -----------------------------------------------------------------------------
+
+export const RESULT_ARRAY: AddFunctionDescription = {
+  description: _lt("Return a matrix n*n fill by the value"),
+  args: args(`n (number) ${_lt("The value to fill the matrix")}`),
+  returns: ["RANGE<NUMBER>"],
+  compute: function (n: PrimitiveArgValue): number[][] {
+    const _n = toNumber(n);
+    return Array.from({ length: _n }, (_, i) => Array.from({ length: _n }, (_, j) => j + i + 1));
+  },
+  isExported: true,
+};

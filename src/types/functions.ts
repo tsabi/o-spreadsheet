@@ -1,5 +1,5 @@
 import { Format } from "./format";
-import { Arg, ArgValue, ReturnValue } from "./misc";
+import { Arg, ArgValue, CellPosition, ReturnValue } from "./misc";
 
 export type ArgType =
   | "ANY"
@@ -47,6 +47,6 @@ export interface FunctionDescription extends AddFunctionDescription {
 
 export type EvalContext = {
   __lastFnCalled?: string;
-  __originCellXC?: () => string;
+  __originCellPosition?: () => CellPosition;
   [key: string]: any;
 };

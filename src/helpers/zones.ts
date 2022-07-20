@@ -645,3 +645,11 @@ function isFullCol(zone: UnboundedZone): boolean {
 export function getZoneArea(zone: Zone) {
   return (zone.bottom - zone.top + 1) * (zone.right - zone.left + 1);
 }
+
+export function visitZone(zone, cb: (col: number, row: number) => void): void {
+  for (let col = zone.left; col <= zone.right; col++) {
+    for (let row = zone.top; row <= zone.bottom; row++) {
+      cb(col, row);
+    }
+  }
+}

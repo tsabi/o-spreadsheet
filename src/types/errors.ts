@@ -3,6 +3,7 @@ import { _lt } from "../translation";
 export enum CellErrorType {
   NotAvailable = "#N/A",
   InvalidReference = "#REF",
+  OverwriteData = "#REF",
   BadExpression = "#BAD_EXPR",
   CircularDependency = "#CYCLE",
   GenericError = "#ERROR",
@@ -38,6 +39,12 @@ export class CircularDependencyError extends EvaluationError {
 export class InvalidReferenceError extends EvaluationError {
   constructor() {
     super(CellErrorType.InvalidReference, _lt("Invalid reference"));
+  }
+}
+
+export class OverwriteDataError extends EvaluationError {
+  constructor() {
+    super(CellErrorType.InvalidReference, _lt("Overwrite data"));
   }
 }
 

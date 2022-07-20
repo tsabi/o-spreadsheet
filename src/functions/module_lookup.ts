@@ -1,4 +1,4 @@
-import { toZone } from "../helpers/index";
+import { toXC, toZone } from "../helpers/index";
 import { _lt } from "../translation";
 import {
   AddFunctionDescription,
@@ -53,12 +53,15 @@ export const COLUMN: AddFunctionDescription = {
   ),
   returns: ["NUMBER"],
   compute: function (cellReference: string): number {
-    const _cellReference = cellReference || this.__originCellXC?.();
-    assert(
-      () => !!_cellReference,
-      "In this context, the function [[FUNCTION_NAME]] needs to have a cell or range in parameter."
-    );
-    const zone = toZone(_cellReference!);
+    if (cellReference === undefined) {
+      const cellPosition = this.__originCellPosition?.();
+      assert(
+        () => !!cellPosition,
+        "In this context, the function [[FUNCTION_NAME]] needs to have a cell or range in parameter."
+      );
+      cellReference = toXC(cellPosition!.col, cellPosition!.row);
+    }
+    const zone = toZone(cellReference!);
     return zone.left + 1;
   },
   isExported: true,
@@ -258,11 +261,14 @@ export const ROW: AddFunctionDescription = {
   ),
   returns: ["NUMBER"],
   compute: function (cellReference?: string): number {
-    cellReference = cellReference || this.__originCellXC?.();
-    assert(
-      () => !!cellReference,
-      "In this context, the function [[FUNCTION_NAME]] needs to have a cell or range in parameter."
-    );
+    if (cellReference === undefined) {
+      const cellPosition = this.__originCellPosition?.();
+      assert(
+        () => !!cellPosition,
+        "In this context, the function [[FUNCTION_NAME]] needs to have a cell or range in parameter."
+      );
+      cellReference = toXC(cellPosition!.col, cellPosition!.row);
+    }
     const zone = toZone(cellReference!);
     return zone.top + 1;
   },
