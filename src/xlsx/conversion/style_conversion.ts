@@ -134,6 +134,7 @@ export function convertXlsxFormat(
   formats: XLSXNumFormat[],
   warningManager: XLSXImportWarningManager
 ): string | undefined {
+  console.log("Converting format " + formats[0]?.format);
   if (numFmtId === 0) {
     return undefined;
   }
@@ -144,7 +145,9 @@ export function convertXlsxFormat(
   if (format) {
     try {
       let convertedFormat = format.replace(/(.*?);.*/, "$1"); // only take first part of multi-part format
+      console.log(convertedFormat);
       convertedFormat = convertedFormat.replace(/\[(.*)-[A-Z0-9]{3}\]/g, "[$1]"); // remove currency and locale/date system/number system info (ECMA §18.8.31)
+      console.log(convertedFormat);
       convertedFormat = convertedFormat.replace(/\[\$\]/g, ""); // remove empty bocks
 
       // Quotes in format escape sequences of characters. ATM we only support [$...] blocks to escape characters, and only one of them per format
@@ -154,15 +157,23 @@ export function convertXlsxFormat(
         throw new Error("Multiple escaped blocks in format");
       }
       convertedFormat = convertedFormat.replace(/"(.*)"/g, "[$$$1]"); // replace '"..."' by '[$...]'
+      console.log(convertedFormat);
 
       convertedFormat = convertedFormat.replace(/_.{1}/g, ""); // _ == ignore with of next char for align purposes. Not supported ATM
+      console.log(convertedFormat);
       convertedFormat = convertedFormat.replace(/\*.{1}/g, ""); // * == repeat next character enough to fill the line. Not supported ATM
+      console.log(convertedFormat);
 
       convertedFormat = convertedFormat.replace(/\\ /g, " "); // unescape spaces
+      console.log(convertedFormat);
 
       formatValue(0, convertedFormat);
+      console.log(convertedFormat);
+
       return convertedFormat;
-    } catch (e) {}
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   warningManager.generateNotSupportedWarning(
