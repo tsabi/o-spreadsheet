@@ -644,7 +644,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   }
 
   onMouseDown(ev: MouseEvent) {
-    if (ev.button > 0 || this.env.isDashboard()) {
+    if (ev.button > 0) {
       // not main button, probably a context menu
       return;
     }
@@ -652,10 +652,24 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     if (col < 0 || row < 0) {
       return;
     }
+    const sheetId = this.env.model.getters.getActiveSheetId();
+
+    if (this.env.model.getters.isDashboard()) {
+      const cell = this.env.model.getters.getCell(sheetId, col, row);
+      if (cell !== undefined) {
+        if (cell.content.startsWith("=ODOO.LIST(")) {
+          this.env.model.dispatch("SEE_RECORD_LIST", {
+            id: cell.id,
+            content: cell.content,
+          });
+        }
+      }
+      return;
+    }
+
     this.clickedCol = col;
     this.clickedRow = row;
 
-    const sheetId = this.env.model.getters.getActiveSheetId();
     this.closeOpenedPopover();
     if (this.env.model.getters.getEditionMode() === "editing") {
       this.env.model.dispatch("STOP_EDITION");

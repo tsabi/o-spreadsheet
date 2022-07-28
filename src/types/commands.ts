@@ -119,6 +119,8 @@ export const readonlyAllowedCommands = new Set<CommandTypes>([
   "SET_CURRENT_CONTENT",
 
   "SET_FORMULA_VISIBILITY",
+
+  "SEE_RECORD_LIST",
 ]);
 
 export const coreTypes = new Set<CoreCommandTypes>([
@@ -796,6 +798,12 @@ export interface CloseCellPopoverCommand {
   type: "CLOSE_CELL_POPOVER";
 }
 
+export interface SeeRecordListCommand {
+  type: "SEE_RECORD_LIST";
+  id: UID;
+  content: String;
+}
+
 export type CoreCommand =
   // /** History */
   // | SelectiveUndoCommand
@@ -913,7 +921,8 @@ export type LocalCommand =
   | OpenCellPopoverCommand
   | CloseCellPopoverCommand
   | ActivateNextSheetCommand
-  | ActivatePreviousSheetCommand;
+  | ActivatePreviousSheetCommand
+  | SeeRecordListCommand;
 
 export type Command = CoreCommand | LocalCommand;
 
