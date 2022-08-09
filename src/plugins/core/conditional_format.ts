@@ -41,7 +41,7 @@ type ThresholdValidation = (
 type InflectionPointValidation = (threshold: IconThreshold, thresholdName: string) => CommandResult;
 
 interface ConditionalFormatState {
-  readonly cfRules: { [sheet: string]: ConditionalFormatInternal[] };
+  readonly cfRules: { [sheet: string]: ConditionalFormatInternal[] | undefined };
 }
 
 export class ConditionalFormatPlugin
@@ -50,10 +50,10 @@ export class ConditionalFormatPlugin
 {
   static getters = ["getConditionalFormats", "getRulesSelection", "getRulesByCell"] as const;
 
-  readonly cfRules: { [sheet: string]: ConditionalFormatInternal[] } = {};
+  readonly cfRules: { [sheet: string]: ConditionalFormatInternal[] | undefined } = {};
 
   loopThroughRangesOfSheet(sheetId: UID, applyChange: ApplyRangeChange) {
-    for (const rule of this.cfRules[sheetId]) {
+    for (const rule of this.getInternalCFs(sheetId)) {
       for (const range of rule.ranges) {
         const change = applyChange(range);
         switch (change.changeType) {
@@ -64,7 +64,7 @@ export class ConditionalFormatPlugin
               this.history.update(
                 "cfRules",
                 sheetId,
-                this.cfRules[sheetId].indexOf(rule),
+                this.getInternalCFs(sheetId).indexOf(rule),
                 "ranges",
                 copy
               );
@@ -79,7 +79,7 @@ export class ConditionalFormatPlugin
             this.history.update(
               "cfRules",
               sheetId,
-              this.cfRules[sheetId].indexOf(rule),
+              this.getInternalCFs(sheetId).indexOf(rule),
               "ranges",
               rule.ranges.indexOf(range),
               change.range
@@ -160,7 +160,7 @@ export class ConditionalFormatPlugin
     if (data.sheets) {
       for (let sheet of data.sheets) {
         if (this.cfRules[sheet.id]) {
-          sheet.conditionalFormats = this.cfRules[sheet.id].map((rule) =>
+          sheet.conditionalFormats = this.getInternalCFs(sheet.id).map((rule) =>
             this.mapToConditionalFormat(sheet.id, rule)
           );
         }
@@ -180,7 +180,7 @@ export class ConditionalFormatPlugin
    * Returns all the conditional format rules defined for the current sheet to display the user
    */
   getConditionalFormats(sheetId: UID): ConditionalFormat[] {
-    return this.cfRules[sheetId].map((cf) => this.mapToConditionalFormat(sheetId, cf)) || [];
+    return this.getInternalCFs(sheetId).map((cf) => this.mapToConditionalFormat(sheetId, cf));
   }
 
   getRulesSelection(sheetId: UID, selection: Zone[]): UID[] {
@@ -209,7 +209,7 @@ export class ConditionalFormatPlugin
 
   getRulesByCell(sheetId: UID, cellCol: number, cellRow: number): Set<ConditionalFormat> {
     const rules: ConditionalFormatInternal[] = [];
-    for (let cf of this.cfRules[sheetId]) {
+    for (let cf of this.getInternalCFs(sheetId)) {
       for (let range of cf.ranges) {
         if (isInside(cellCol, cellRow, range.zone)) {
           rules.push(cf);
@@ -227,6 +227,10 @@ export class ConditionalFormatPlugin
   // ---------------------------------------------------------------------------
   // Private
   // ---------------------------------------------------------------------------
+
+  private getInternalCFs(sheetId: UID): ConditionalFormatInternal[] {
+    return this.cfRules[sheetId] || [];
+  }
 
   private mapToConditionalFormat(sheetId: UID, cf: ConditionalFormatInternal): ConditionalFormat {
     return {
@@ -254,7 +258,7 @@ export class ConditionalFormatPlugin
    * Add or replace a conditional format rule
    */
   private addConditionalFormatting(cf: ConditionalFormat, sheet: string) {
-    const currentCF = this.cfRules[sheet].slice();
+    const currentCF = this.getInternalCFs(sheet).slice();
     const replaceIndex = currentCF.findIndex((c) => c.id === cf.id);
     const newCF = this.mapToConditionalFormatInternal(sheet, cf);
     if (replaceIndex > -1) {
@@ -267,11 +271,11 @@ export class ConditionalFormatPlugin
 
   private checkValidReordering(cfId: string, direction: string, sheetId: string) {
     if (!this.cfRules[sheetId]) return CommandResult.InvalidSheetId;
-    const ruleIndex = this.cfRules[sheetId].findIndex((cf) => cf.id === cfId);
+    const ruleIndex = this.getInternalCFs(sheetId).findIndex((cf) => cf.id === cfId);
     if (ruleIndex === -1) return CommandResult.InvalidConditionalFormatId;
 
     const cfIndex2 = direction === "up" ? ruleIndex - 1 : ruleIndex + 1;
-    if (cfIndex2 < 0 || cfIndex2 >= this.cfRules[sheetId].length) {
+    if (cfIndex2 < 0 || cfIndex2 >= this.getInternalCFs(sheetId).length) {
       return CommandResult.InvalidConditionalFormatId;
     }
 
@@ -472,21 +476,23 @@ export class ConditionalFormatPlugin
   }
 
   private removeConditionalFormatting(id: string, sheet: string) {
-    const cfIndex = this.cfRules[sheet].findIndex((s) => s.id === id);
+    const CFs = this.getInternalCFs(sheet);
+    const cfIndex = CFs.findIndex((s) => s.id === id);
     if (cfIndex !== -1) {
-      const currentCF = this.cfRules[sheet].slice();
+      const currentCF = CFs.slice();
       currentCF.splice(cfIndex, 1);
       this.history.update("cfRules", sheet, currentCF);
     }
   }
 
   private reorderConditionalFormatting(cfId: UID, direction: UpDown, sheetId: UID) {
-    const cfIndex1 = this.cfRules[sheetId].findIndex((s) => s.id === cfId);
+    const CFs = this.getInternalCFs(sheetId);
+    const cfIndex1 = CFs.findIndex((s) => s.id === cfId);
     const cfIndex2 = direction === "up" ? cfIndex1 - 1 : cfIndex1 + 1;
-    if (cfIndex2 < 0 || cfIndex2 >= this.cfRules[sheetId].length) return;
+    if (cfIndex2 < 0 || cfIndex2 >= CFs.length) return;
 
     if (cfIndex1 !== -1 && cfIndex2 !== -1) {
-      const currentCF = [...this.cfRules[sheetId]];
+      const currentCF = [...CFs];
       const tmp = currentCF[cfIndex1];
       currentCF[cfIndex1] = currentCF[cfIndex2];
       currentCF[cfIndex2] = tmp;
