@@ -370,7 +370,7 @@ export class GridSelectionPlugin extends UIPlugin {
 
   getCurrentStyle(): Style {
     const cell = this.getters.getActiveCell();
-    return cell ? this.getters.getCellStyle(cell) : {};
+    return cell ? this.getters.getEvaluatedCellStyle(cell) : {};
   }
 
   getSelectedZones(): Zone[] {

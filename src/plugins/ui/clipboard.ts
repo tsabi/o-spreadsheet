@@ -6,8 +6,8 @@ import {
   ClipboardOptions,
   Command,
   CommandResult,
+  CompiledFormulaCell,
   Dimension,
-  FormulaCell,
   GridRenderingContext,
   HeaderIndex,
   isCoreCommand,
@@ -652,19 +652,19 @@ export class ClipboardPlugin extends UIPlugin {
         this.dispatch("UPDATE_CELL", {
           ...target,
           style: origin.cell.style,
-          format: origin.cell.evaluated.format || origin.cell.format,
+          format: this.getters.getCellEvaluation(origin.cell)?.format || origin.cell.format,
         });
         return;
       }
 
       if (pasteOption === "onlyValue") {
-        const content = formatValue(origin.cell.evaluated.value);
+        const content = formatValue(this.getters.getCellEvaluation(origin.cell)?.value || "");
         this.dispatch("UPDATE_CELL", { ...target, content });
         return;
       }
       let content = origin.cell.content;
 
-      if (origin.cell.isFormula() && operation === "COPY") {
+      if ("compiledFormula" in origin.cell && operation === "COPY") {
         const offsetX = col - origin.position.col;
         const offsetY = row - origin.position.row;
         content = this.getUpdatedContent(sheetId, origin.cell, offsetX, offsetY, operation);
@@ -691,7 +691,7 @@ export class ClipboardPlugin extends UIPlugin {
    */
   private getUpdatedContent(
     sheetId: UID,
-    cell: FormulaCell,
+    cell: CompiledFormulaCell,
     offsetX: number,
     offsetY: number,
     operation: ClipboardOperation

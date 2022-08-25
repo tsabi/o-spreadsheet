@@ -47,12 +47,12 @@ import {
   autofillRulesRegistry,
   cellMenuRegistry,
   cellPopoverRegistry,
-  cellRegistry,
   chartComponentRegistry,
   chartRegistry,
   colMenuRegistry,
   createFullMenuItem,
   dashboardMenuRegistry,
+  evaluatedCellRegistry,
   figureRegistry,
   inverseCommandRegistry,
   linkMenuRegistry,
@@ -135,7 +135,7 @@ export const registries = {
   topbarComponentRegistry,
   otRegistry,
   inverseCommandRegistry,
-  cellRegistry,
+  cellRegistry: evaluatedCellRegistry,
   cellPopoverRegistry,
 };
 export const helpers = {

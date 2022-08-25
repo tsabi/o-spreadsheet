@@ -1,11 +1,14 @@
+import { LINK_COLOR } from "../../constants";
 import { compile } from "../../formulas/index";
 import { functionRegistry } from "../../functions/index";
-import { intersection, isZoneValid, toXC, zoneToXc } from "../../helpers/index";
+import { EvaluatedCellBadFormula, evaluatedCellFactory } from "../../helpers/evaluated_cells";
+import { deepCopy, intersection, isZoneValid, toXC, zoneToXc } from "../../helpers/index";
 import { ModelConfig } from "../../model";
 import { SelectionStreamProcessor } from "../../selection_stream/selection_stream_processor";
 import { StateObserver } from "../../state_observer";
 import { _lt } from "../../translation";
 import {
+  BadExpressionError,
   CellErrorLevel,
   CellErrorType,
   CircularDependencyError,
@@ -20,15 +23,16 @@ import {
   CommandDispatcher,
   EnsureRange,
   EvalContext,
+  EvaluatedCell,
   Format,
   FormattedValue,
-  FormulaCell,
   Getters,
   invalidateEvaluationCommands,
   MatrixArg,
   PrimitiveArg,
   Range,
   ReferenceDenormalizer,
+  Style,
   UID,
 } from "../../types/index";
 import { UIPlugin } from "../ui_plugin";
@@ -38,10 +42,19 @@ const functionMap = functionRegistry.mapping;
 type CompilationParameters = [ReferenceDenormalizer, EnsureRange, EvalContext];
 
 export class EvaluationPlugin extends UIPlugin {
-  static getters = ["evaluateFormula", "getRangeFormattedValues", "getRangeValues"] as const;
+  static getters = [
+    "evaluateFormula",
+    "getRangeFormattedValues",
+    "getRangeValues",
+    "getEvaluatedCell",
+    "getCellStyle",
+    "getEvaluatedCellStyle",
+  ] as const;
 
   private isUpToDate: Set<UID> = new Set(); // Set<sheetIds>
+  private evaluatedCells: { [cellId: UID]: EvaluatedCell } = {};
   private readonly evalContext: EvalContext;
+  private readonly createEvaluatedCell = evaluatedCellFactory();
 
   constructor(
     getters: Getters,
@@ -114,7 +127,7 @@ export class EvaluationPlugin extends UIPlugin {
     if (sheet === undefined) return [];
     return this.getters
       .getCellsInZone(sheet.id, range.zone)
-      .map((cell) => cell?.formattedValue || "");
+      .map((cell) => (cell && this.evaluatedCells[cell.id]?.formattedValue) || "");
   }
 
   /**
@@ -123,7 +136,26 @@ export class EvaluationPlugin extends UIPlugin {
   getRangeValues(range: Range): (CellValue | undefined)[] {
     const sheet = this.getters.tryGetSheet(range.sheetId);
     if (sheet === undefined) return [];
-    return this.getters.getCellsInZone(sheet.id, range.zone).map((cell) => cell?.evaluated.value);
+    return this.getters
+      .getCellsInZone(sheet.id, range.zone)
+      .map((cell) => (cell && this.evaluatedCells[cell.id]?.evaluation.value) || undefined);
+  }
+
+  getEvaluatedCell(cell: Cell): EvaluatedCell | undefined {
+    return this.evaluatedCells[cell.id];
+  }
+
+  getEvaluatedCellStyle(cell?: Cell): Style {
+    if (!cell) {
+      return {};
+    }
+
+    const style = deepCopy(cell.style) || {};
+    const evaluatedCell = this.evaluatedCells[cell.id];
+    if (style.textColor === undefined && evaluatedCell && evaluatedCell.url !== undefined) {
+      style.textColor = LINK_COLOR;
+    }
+    return style;
   }
 
   // ---------------------------------------------------------------------------
@@ -133,21 +165,22 @@ export class EvaluationPlugin extends UIPlugin {
   private evaluate(sheetId: UID) {
     const cells = this.getters.getCells(sheetId);
     const compilationParameters = this.getCompilationParameters(computeCell);
-    const visited: { [cellId: string]: boolean | null } = {};
+    const computedCells: { [cellId: string]: EvaluatedCell | null } = {};
 
     for (let cell of Object.values(cells)) {
-      computeCell(cell);
+      computeCell(cell, this.createEvaluatedCell);
+      this.evaluatedCells[cell.id] = computedCells[cell.id]!;
     }
 
-    function handleError(e: Error | any, cell: FormulaCell) {
+    function handleError(e: Error | any, cell: Cell) {
       if (!(e instanceof Error)) {
         e = new Error(e);
       }
       const msg = e?.errorType || CellErrorType.GenericError;
       // apply function name
       const __lastFnCalled = compilationParameters[2].__lastFnCalled || "";
-      cell.assignError(
-        msg,
+
+      computedCells[cell.id] = new EvaluatedCellBadFormula(
         new EvaluationError(
           msg,
           e.message.replace("[[FUNCTION_NAME]]", __lastFnCalled),
@@ -156,38 +189,57 @@ export class EvaluationPlugin extends UIPlugin {
       );
     }
 
-    function computeCell(cell: Cell) {
-      if (!cell.isFormula()) {
-        return;
+    function computeFormulaCell(
+      cell: Cell,
+      createEvaluatedCell: (content, format) => EvaluatedCell
+    ) {
+      if (!("compiledFormula" in cell)) {
+        throw new BadExpressionError();
       }
-      const cellId = cell.id;
-      if (cellId in visited) {
-        if (visited[cellId] === null) {
-          cell.assignError(CellErrorType.CircularDependency, new CircularDependencyError());
-        }
-        return;
-      }
-      visited[cellId] = null;
-      try {
-        compilationParameters[2].__originCellXC = () => {
-          // compute the value lazily for performance reasons
-          const position = compilationParameters[2].getters.getCellPosition(cellId);
-          return toXC(position.col, position.row);
-        };
 
-        const computedCell = cell.compiledFormula.execute(
-          cell.dependencies,
-          ...compilationParameters
-        );
-        cell.assignEvaluation(computedCell.value, cell.format || computedCell.format);
-        if (Array.isArray(cell.evaluated.value)) {
-          // if a value returns an array (like =A1:A3)
-          throw new Error(_lt("This formula depends on invalid values"));
+      computedCells[cell.id] = null;
+
+      compilationParameters[2].__originCellXC = () => {
+        // compute the value lazily for performance reasons
+        const position = compilationParameters[2].getters.getCellPosition(cell.id);
+        return toXC(position.col, position.row);
+      };
+
+      const computedCell = cell.compiledFormula.execute(
+        cell.dependencies,
+        ...compilationParameters
+      );
+
+      if (Array.isArray(computedCell.value)) {
+        // if a value returns an array (like =A1:A3)
+        throw new Error(_lt("This formula depends on invalid values"));
+      }
+
+      computedCells[cell.id] = createEvaluatedCell(
+        computedCell.value,
+        cell.format || computedCell.format
+      );
+    }
+
+    function computeCell(cell: Cell, createEvaluatedCell: (content, format) => EvaluatedCell) {
+      try {
+        const currentEvaluation = computedCells[cell.id];
+
+        if (currentEvaluation !== undefined) {
+          if (currentEvaluation === null) {
+            throw new CircularDependencyError();
+          }
+          return;
+        }
+
+        if (cell.isFormula) {
+          computeFormulaCell(cell, createEvaluatedCell);
+        } else {
+          computedCells[cell.id] = createEvaluatedCell(cell.content, cell.format);
         }
       } catch (e) {
         handleError(e, cell);
       }
-      visited[cellId] = true;
     }
   }
 
@@ -197,7 +249,9 @@ export class EvaluationPlugin extends UIPlugin {
    * - a range function to convert any reference to a proper value array
    * - an evaluation context
    */
-  private getCompilationParameters(computeCell: (cell: Cell) => void): CompilationParameters {
+  private getCompilationParameters(
+    computeCell: (cell: Cell, createEvaluatedCell: (content, format) => EvaluatedCell) => void
+  ): CompilationParameters {
     const evalContext = Object.assign(Object.create(functionMap), this.evalContext, {
       getters: this.getters,
     });
@@ -209,7 +263,7 @@ export class EvaluationPlugin extends UIPlugin {
         throw new Error(_lt("Invalid sheet name"));
       }
       cell = getters.getCell(range.sheetId, range.zone.left, range.zone.top);
-      if (!cell || cell.isEmpty()) {
+      if (!cell || cell.content === "") {
         // magic "empty" value
         // Returning {value: null} instead of undefined will ensure that we don't
         // fall back on the default value of the argument provided to the formula's compute function
@@ -218,16 +272,19 @@ export class EvaluationPlugin extends UIPlugin {
       return getEvaluatedCell(cell);
     }
 
+    const createEvaluatedCell = this.createEvaluatedCell;
+
     function getEvaluatedCell(cell: Cell): { value: CellValue; format?: Format } {
-      computeCell(cell);
-      if (cell.evaluated.type === CellValueType.error) {
+      computeCell(cell, createEvaluatedCell);
+      const evaluatedCell = getters.getEvaluatedCell(cell)!;
+      if (evaluatedCell.evaluation.type === CellValueType.error) {
         throw new EvaluationError(
-          cell.evaluated.value,
-          cell.evaluated.error.message,
-          cell.evaluated.error.logLevel
+          evaluatedCell.evaluation.value,
+          evaluatedCell.evaluation.error.message,
+          evaluatedCell.evaluation.error.logLevel
         );
       }
-      return cell.evaluated;
+      return evaluatedCell.evaluation;
     }
 
     /**

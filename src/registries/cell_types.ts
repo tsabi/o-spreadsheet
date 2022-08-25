@@ -1,32 +1,24 @@
 import { Registry } from "../registry";
-import { Cell, CellDisplayProperties, CoreGetters, Format, UID } from "../types";
+import { EvaluatedCell, Format } from "../types";
 
 //------------------------------------------------------------------------------
-// Cell Registry
+// Evaluated Cell Registry
 //------------------------------------------------------------------------------
 
 /**
- * Instanciate a cell object based on a raw string content.
+ * Instanciate an evaluated cell object based on the raw string content of a cell.
  */
-interface CellBuilder {
+interface EvaluatedCellBuilder {
   sequence: number;
   /**
    * Check if this factory should be used
    */
-  match: (content: string, format: Format | undefined) => boolean;
-  createCell: (
-    id: UID,
-    content: string,
-    label: string,
-    properties: CellDisplayProperties,
-    url: string | undefined,
-    sheetId: UID,
-    getters: CoreGetters
-  ) => Cell;
+  match: (label: string, format?: Format) => boolean;
+  createEvaluatedCell: (label: string, format?: string, url?: string) => EvaluatedCell;
 }
 
 /**
  * This registry is intended to map a cell content (raw string) to
  * an instance of a cell.
  */
-export const cellRegistry = new Registry<CellBuilder>();
+export const evaluatedCellRegistry = new Registry<EvaluatedCellBuilder>();

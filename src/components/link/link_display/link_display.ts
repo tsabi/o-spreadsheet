@@ -99,6 +99,7 @@ export class LinkDisplay extends Component<LinkDisplayProps, SpreadsheetChildEnv
   unlink() {
     const sheetId = this.env.model.getters.getActiveSheetId();
     const { col, row } = this.props.cellPosition;
+    const evaluatedCell = this.env.model.getters.getCellEvaluation(this.getHoveredCell());
     this.env.model.dispatch("UPDATE_CELL", {
       col,
       row,

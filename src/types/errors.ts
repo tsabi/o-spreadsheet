@@ -1,3 +1,4 @@
+import { DEFAULT_ERROR_MESSAGE } from "../constants";
 import { _lt } from "../translation";
 
 export enum CellErrorType {
@@ -24,8 +25,8 @@ export class EvaluationError extends Error {
 }
 
 export class BadExpressionError extends EvaluationError {
-  constructor(errorMessage: string) {
-    super(CellErrorType.BadExpression, errorMessage);
+  constructor() {
+    super(CellErrorType.BadExpression, DEFAULT_ERROR_MESSAGE);
   }
 }
 

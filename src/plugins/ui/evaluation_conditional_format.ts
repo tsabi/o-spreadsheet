@@ -1,4 +1,4 @@
-import { parsePrimitiveContent } from "../../helpers/cells";
+import { parsePrimitiveContent } from "../../helpers/evaluated_cells";
 import { colorNumberString, isInside, recomputeZones, toXC } from "../../helpers/index";
 import { clip, isDefined } from "../../helpers/misc";
 import { _lt } from "../../translation";

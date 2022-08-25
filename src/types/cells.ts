@@ -1,53 +1,47 @@
 import { EvaluationError } from "./errors";
 import { Format, FormattedValue } from "./format";
-import { CompiledFormula, ReturnValue, Style, UID } from "./misc";
+import { CompiledFormula, Style, UID } from "./misc";
 import { Range } from "./range";
 
-export type Cell = ICell | FormulaCell;
-export interface ICell {
+export type Cell = BasicCell | CompiledFormulaCell;
+export interface BasicCell {
   readonly id: UID;
   /**
    * Raw cell content
    */
   readonly content: string;
-  /**
-   * Cell content displayed in the composer. It defaults to the cell content
-   * for most cell types.
-   */
-  readonly composerContent: string;
-  /**
-   * Evaluated cell content
-   */
-  readonly evaluated: CellEvaluation;
-  readonly url?: string;
-  /**
-   * Cell value formatted based on the format
-   */
-  readonly formattedValue: FormattedValue;
   readonly style?: Style;
   readonly format?: Format;
-  readonly defaultAlign: "right" | "center" | "left";
-  /**
-   * Can the cell appear in an automatic sum zone.
-   */
-  readonly isAutoSummable: boolean;
-  isFormula(): this is FormulaCell;
-  isEmpty(): boolean;
+  readonly isFormula: boolean;
 }
 
-export interface FormulaCell extends ICell {
-  assignEvaluation: (value: ReturnValue, format?: Format) => void;
-  assignError: (value: string, error: EvaluationError) => void;
+export interface CompiledFormulaCell extends BasicCell {
   readonly compiledFormula: CompiledFormula;
   readonly dependencies: Range[];
 }
 
-export type CellValue = string | number | boolean;
-
-export interface CellDisplayProperties {
-  style?: Style;
-  format?: Format;
+export interface EvaluatedCell {
+  /**
+   * Evaluated cell content
+   */
+  readonly evaluation: CellEvaluation;
+  /**
+   * Evaluated cell displayed in the composer.
+   */
+  readonly composerContent: string;
+  readonly url?: string;
+  /**
+   * Evaluated cell formatted based on the format
+   */
+  readonly formattedValue: FormattedValue;
+  readonly defaultAlign: "right" | "center" | "left";
+  /**
+   * Can the evaluated cell appear in an automatic sum zone.
+   */
+  readonly isAutoSummable: boolean;
 }
+
+export type CellValue = string | number | boolean;
 
 export type CellEvaluation =
   | NumberEvaluation

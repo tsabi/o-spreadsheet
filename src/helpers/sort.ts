@@ -22,6 +22,7 @@ const SORT_TYPES: CellValueType[] = [
 ];
 
 function convertCell(cell: Cell | undefined, index: number): CellWithIndex {
+  const cellEvaluation = this.getters;
   return {
     index,
     type: cell ? cell.evaluated.type : CellValueType.empty,

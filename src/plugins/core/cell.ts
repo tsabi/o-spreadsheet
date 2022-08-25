@@ -1,25 +1,16 @@
-import { LINK_COLOR, NULL_FORMAT } from "../../constants";
-import { cellFactory } from "../../helpers/cells/cell_factory";
-import {
-  concat,
-  deepCopy,
-  getItemId,
-  isInside,
-  range,
-  toCartesian,
-  toXC,
-} from "../../helpers/index";
+import { NULL_FORMAT } from "../../constants";
+import { compile } from "../../formulas";
+import { concat, getItemId, isInside, range, toCartesian, toXC } from "../../helpers/index";
 import {
   AddColumnsRowsCommand,
   ApplyRangeChange,
   Cell,
   CellData,
-  CellValueType,
   CommandResult,
+  CompiledFormulaCell,
   CoreCommand,
   ExcelWorkbookData,
   Format,
-  FormulaCell,
   HeaderIndex,
   Range,
   RangePart,
@@ -49,18 +40,16 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
     "zoneToXC",
     "getCells",
     "getFormulaCellContent",
-    "getCellStyle",
     "buildFormulaContent",
     "getCellById",
   ] as const;
 
   public readonly cells: { [sheetId: string]: { [id: string]: Cell } } = {};
-  private createCell = cellFactory(this.getters);
 
   adaptRanges(applyChange: ApplyRangeChange, sheetId?: UID) {
     for (const sheet of Object.keys(this.cells)) {
       for (const cell of Object.values(this.cells[sheet] || {})) {
-        if (cell.isFormula()) {
+        if ("dependencies" in cell) {
           for (const range of cell.dependencies) {
             if (!sheetId || range.sheetId === sheetId) {
               const change = applyChange(range);
@@ -246,8 +235,7 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
     const style = (cellData.style && normalizedStyles[cellData.style]) || undefined;
     const format = (cellData.format && normalizedFormats[cellData.format]) || undefined;
     const cellId = this.uuidGenerator.uuidv4();
-    const properties = { format, style };
-    return this.createCell(cellId, cellData?.content || "", properties, sheetId);
+    return this.createCell(cellId, sheetId, cellData?.content || "", style, format);
   }
 
   exportForExcel(data: ExcelWorkbookData) {
@@ -257,8 +245,8 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
         const { col, row } = toCartesian(xc);
         const cell = this.getters.getCell(sheet.id, col, row)!;
         const exportedCellData = sheet.cells[xc]!;
-        exportedCellData.value = cell.evaluated.value;
-        exportedCellData.isFormula = cell.isFormula();
+        exportedCellData.value = this.getters.evaluatedCell(cell).evaluation.value || cell.content;
+        exportedCellData.isFormula = "compiledFormula" in cell;
       }
     }
   }
@@ -286,7 +274,7 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
   /*
    * Reconstructs the original formula string based on a normalized form and its dependencies
    */
-  buildFormulaContent(sheetId: UID, cell: FormulaCell, dependencies?: Range[]): string {
+  buildFormulaContent(sheetId: UID, cell: CompiledFormulaCell, dependencies?: Range[]): string {
     const ranges = dependencies || [...cell.dependencies];
     return concat(
       cell.compiledFormula.tokens.map((token) => {
@@ -299,25 +287,8 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
     );
   }
 
-  getFormulaCellContent(sheetId: UID, cell: FormulaCell): string {
+  getFormulaCellContent(sheetId: UID, cell: CompiledFormulaCell): string {
     return this.buildFormulaContent(sheetId, cell);
-  }
-
-  getCellStyle(cell?: Cell): Style {
-    if (cell) {
-      const style = deepCopy(cell.style) || {};
-
-      if (cell.url !== undefined) {
-        if (style.underline === undefined) {
-          style.underline = true;
-        }
-        if (style.textColor === undefined) {
-          style.textColor = LINK_COLOR;
-        }
-      }
-      return style;
-    }
-    return {};
   }
 
   /**
@@ -449,7 +420,7 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
      *  */
     if (
       ((hasContent && !afterContent && !after.formula) ||
-        (!hasContent && (!before || before.isEmpty()))) &&
+        (!hasContent && (!before || before.content === ""))) &&
       !style &&
       !format
     ) {
@@ -466,21 +437,35 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
     }
 
     const cellId = before?.id || this.uuidGenerator.uuidv4();
-    const didContentChange = hasContent;
-    const properties = { format, style };
-    const cell = this.createCell(cellId, afterContent, properties, sheetId);
-    if (before && !didContentChange && cell.isFormula()) {
-      // content is not re-evaluated if the content did not change => reassign the value manually
-      // TODO this plugin should not care about evaluation
-      // and evaluation should not depend on implementation details here.
-      // Task 2813749
-      cell.assignEvaluation(before.evaluated.value, before.evaluated.format);
-      if (before.evaluated.type === CellValueType.error) {
-        cell.assignError(before.evaluated.value, before.evaluated.error);
-      }
-    }
+    const cell = this.createCell(cellId, sheetId, afterContent, style, format);
     this.history.update("cells", sheetId, cell.id, cell);
     this.dispatch("UPDATE_CELL_POSITION", { cellId: cell.id, col, row, sheetId });
+  }
+
+  private createCell(id: UID, sheetId: UID, content: string, style?: Style, format?: string): Cell {
+    try {
+      const compiledFormula = compile(content);
+      const dependencies = compiledFormula.dependencies.map((xc) =>
+        this.getters.getRangeFromSheetXC(sheetId, xc)
+      );
+      return {
+        id,
+        content,
+        style,
+        format,
+        compiledFormula,
+        dependencies,
+        isFormula: true,
+      };
+    } finally {
+      return {
+        id,
+        content,
+        style,
+        format,
+        isFormula: content.startsWith("="),
+      };
+    }
   }
 
   private checkCellOutOfSheet(sheetId: UID, col: HeaderIndex, row: HeaderIndex): CommandResult {

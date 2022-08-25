@@ -561,7 +561,7 @@ export class RendererPlugin extends UIPlugin {
   private hasContent(col: HeaderIndex, row: HeaderIndex): boolean {
     const sheetId = this.getters.getActiveSheetId();
     const cell = this.getters.getCell(sheetId, col, row);
-    return (cell && !cell.isEmpty()) || this.getters.isInMerge(sheetId, col, row);
+    return (cell && cell.content === "") || this.getters.isInMerge(sheetId, col, row);
   }
 
   private findNextEmptyCol(base: HeaderIndex, max: HeaderIndex, row: HeaderIndex): HeaderIndex {
@@ -581,14 +581,15 @@ export class RendererPlugin extends UIPlugin {
   }
 
   private computeCellAlignment(cell: Cell, isOverflowing: boolean): Align {
-    if (cell.isFormula() && this.getters.shouldShowFormulas()) {
+    if (cell.isFormula && this.getters.shouldShowFormulas()) {
       return "left";
     }
-    const { align } = this.getters.getCellStyle(cell);
-    if (isOverflowing && cell.evaluated.type === CellValueType.number) {
+    const { align } = this.getters.getEvaluatedCellStyle(cell);
+    const evaluatedCell = this.getters.getEvaluatedCell(cell);
+    if (isOverflowing && evaluatedCell && evaluatedCell.evaluation.type === CellValueType.number) {
       return align !== "center" ? "left" : align;
     }
-    return align || cell.defaultAlign;
+    return align || evaluatedCell?.defaultAlign;
   }
 
   private createZoneBox(sheetId: UID, zone: Zone, viewport: Viewport): Box {
@@ -606,7 +607,7 @@ export class RendererPlugin extends UIPlugin {
       height,
       border: this.getters.getCellBorder(sheetId, col, row) || undefined,
       style: {
-        ...this.getters.getCellStyle(cell),
+        ...this.getters.getEvaluatedCellStyle(cell),
         ...this.getters.getConditionalStyle(col, row),
       },
     };
@@ -640,11 +641,13 @@ export class RendererPlugin extends UIPlugin {
     };
 
     /** Error */
+    const evaluatedCell = this.getters.getEvaluatedCell(cell);
     if (
-      cell.evaluated.type === CellValueType.error &&
-      cell.evaluated.error.logLevel > CellErrorLevel.silent
+      evaluatedCell &&
+      evaluatedCell.evaluation.type === CellValueType.error &&
+      evaluatedCell.evaluation.error.logLevel > CellErrorLevel.silent
     ) {
-      box.error = cell.evaluated.error.message;
+      box.error = evaluatedCell.evaluation.error.message;
     }
 
     /** ClipRect */

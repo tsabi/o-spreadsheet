@@ -4,10 +4,10 @@ import { toNumber } from "../../functions/helpers";
 import {
   AddColumnsRowsCommand,
   ApplyRangeChange,
-  Cell,
   Color,
   CommandResult,
   CoreGetters,
+  EvaluatedCell,
   Range,
   RemoveColumnsRowsCommand,
   UID,
@@ -357,32 +357,34 @@ export function checkLabelRange(
 // ---------------------------------------------------------------------------
 
 export function getBaselineText(
-  baseline: Cell | undefined,
+  evaluatedBaseline: EvaluatedCell | undefined,
   keyValue: string,
   baselineMode: BaselineMode
 ): string {
-  if (!baseline) {
+  if (!evaluatedBaseline) {
     return "";
-  } else if (
+  }
+
+  if (
     baselineMode === "text" ||
     !isNumber(keyValue) ||
-    baseline.evaluated.type !== "number"
+    evaluatedBaseline.evaluation.type !== "number"
   ) {
-    return baseline.formattedValue;
-  } else {
-    let diff = toNumber(keyValue) - toNumber(baseline.evaluated.value);
-    if (baselineMode === "percentage") {
-      diff = (diff / toNumber(baseline.evaluated.value)) * 100;
-    }
-    const baselineValue = Math.abs(parseFloat(diff.toFixed(2)));
-    let baselineStr = baselineValue.toLocaleString();
-    if (baselineMode === "percentage") {
-      baselineStr += "%";
-    } else if (baseline.format) {
-      baselineStr = formatValue(baselineValue, baseline.format);
-    }
-    return baselineStr;
+    return evaluatedBaseline.formattedValue;
   }
+
+  let diff = toNumber(keyValue) - toNumber(evaluatedBaseline.evaluation.value);
+  if (baselineMode === "percentage") {
+    diff = (diff / toNumber(evaluatedBaseline.evaluation.value)) * 100;
+  }
+  const baselineValue = Math.abs(parseFloat(diff.toFixed(2)));
+  let baselineStr = baselineValue.toLocaleString();
+  if (baselineMode === "percentage") {
+    baselineStr += "%";
+  } else if (evaluatedBaseline.evaluation.format) {
+    baselineStr = formatValue(baselineValue, evaluatedBaseline.evaluation.format);
+  }
+  return baselineStr;
 }
 
 export function getBaselineColor(

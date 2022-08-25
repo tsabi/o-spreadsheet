@@ -155,7 +155,7 @@ export function getChartDatasetValues(getters: Getters, dataSets: DataSet[]): Da
         : undefined;
       label =
         cell && labelRange
-          ? truncateLabel(cell.formattedValue)
+          ? truncateLabel(getters.getEvaluatedCell(cell)?.evaluation.value.toString())
           : (label = `${ChartTerms.Series} ${parseInt(dsIndex) + 1}`);
     } else {
       label = label = `${ChartTerms.Series} ${parseInt(dsIndex) + 1}`;

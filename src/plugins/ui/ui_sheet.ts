@@ -1,5 +1,5 @@
 import { computeIconWidth, computeTextWidth } from "../../helpers/index";
-import { Cell, CellValueType, Command, CommandResult, UID } from "../../types";
+import { Cell, Command, CommandResult, UID } from "../../types";
 import { HeaderIndex, Pixel } from "../../types/misc";
 import { UIPlugin } from "../ui_plugin";
 import { PADDING_AUTORESIZE_HORIZONTAL } from "./../../constants";
@@ -64,22 +64,26 @@ export class SheetUIPlugin extends UIPlugin {
     const cellPosition = this.getters.getCellPosition(cell.id);
     const icon = this.getters.getConditionalIcon(cellPosition.col, cellPosition.row);
     if (icon) {
-      width += computeIconWidth(this.ctx, this.getters.getCellStyle(cell));
+      width += computeIconWidth(this.ctx, this.getters.getEvaluatedCellStyle(cell));
     }
     return width;
   }
 
   getTextWidth(cell: Cell): number {
     const text = this.getters.getCellText(cell, this.getters.shouldShowFormulas());
-    return computeTextWidth(this.ctx, text, this.getters.getCellStyle(cell));
+    return computeTextWidth(this.ctx, text, this.getters.getEvaluatedCellStyle(cell));
   }
 
   getCellText(cell: Cell, showFormula: boolean = false): string {
-    if (showFormula && (cell.isFormula() || cell.evaluated.type === CellValueType.error)) {
+    if (showFormula && cell.isFormula) {
       return cell.content;
-    } else {
-      return cell.formattedValue;
     }
+
+    const evaluatedCell = this.getters.getEvaluatedCell(cell);
+    if (!evaluatedCell) {
+      return "LOADING";
+    }
+    return evaluatedCell.formattedValue;
   }
 
   // ---------------------------------------------------------------------------
