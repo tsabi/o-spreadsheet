@@ -581,7 +581,7 @@ export class RendererPlugin extends UIPlugin {
   }
 
   private computeCellAlignment(cell: Cell, isOverflowing: boolean): Align {
-    if (cell.isFormula() && this.getters.shouldShowFormulas()) {
+    if (cell.isFormula && this.getters.shouldShowFormulas()) {
       return "left";
     }
     const { align } = this.getters.getCellStyle(cell);

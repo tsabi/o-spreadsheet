@@ -6,11 +6,11 @@ import {
   CommandDispatcher,
   CommandResult,
   Dimension,
-  FormulaCell,
   Getters,
   GridRenderingContext,
   HeaderIndex,
   UID,
+  ValidFormulaCell,
   Zone,
 } from "../../types";
 import { ClipboardOperation, ClipboardOptions } from "../../types/clipboard";
@@ -334,7 +334,7 @@ export class ClipboardCellsState extends ClipboardCellsAbstractState {
       }
       let content = origin.cell.content;
 
-      if (origin.cell.isFormula() && operation === "COPY") {
+      if (origin.cell.isValidFormula && operation === "COPY") {
         const offsetX = col - origin.position.col;
         const offsetY = row - origin.position.row;
         content = this.getUpdatedContent(sheetId, origin.cell, offsetX, offsetY, operation);
@@ -361,7 +361,7 @@ export class ClipboardCellsState extends ClipboardCellsAbstractState {
    */
   private getUpdatedContent(
     sheetId: UID,
-    cell: FormulaCell,
+    cell: ValidFormulaCell,
     offsetX: number,
     offsetY: number,
     operation: ClipboardOperation
