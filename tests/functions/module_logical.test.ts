@@ -362,3 +362,27 @@ describe("XOR formula", () => {
     expect(evaluateCell("A1", { A1: "=XOR(A2:A5)", A3: '="42"' })).toBe("#ERROR"); // @compatibility: on google sheets, return #VALUE!
   });
 });
+
+describe("TRUE formula", () => {
+  test("functional tests on simple arguments", () => {
+    expect(evaluateCell("A1", { A1: "=TRUE()" })).toBe(true);
+    expect(evaluateCell("A1", { A1: "=TRUE(2)" })).toBe("#BAD_EXPR");
+    expect(evaluateCell("A1", { A1: '=TRUE("")' })).toBe("#BAD_EXPR");
+  });
+
+  test("functional tests on cell arguments", () => {
+    expect(evaluateCell("A1", { A1: "=TRUE(A2)" })).toBe("#BAD_EXPR");
+  });
+});
+
+describe("FALSE formula", () => {
+  test("functional tests on simple arguments", () => {
+    expect(evaluateCell("A1", { A1: "=FALSE()" })).toBe(false);
+    expect(evaluateCell("A1", { A1: "=FALSE(2)" })).toBe("#BAD_EXPR");
+    expect(evaluateCell("A1", { A1: '=FALSE("")' })).toBe("#BAD_EXPR");
+  });
+
+  test("functional tests on cell arguments", () => {
+    expect(evaluateCell("A1", { A1: "=FALSE(A2)" })).toBe("#BAD_EXPR");
+  });
+});

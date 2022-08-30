@@ -193,3 +193,25 @@ export const XOR: AddFunctionDescription = {
   },
   isExported: true,
 };
+
+// -----------------------------------------------------------------------------
+// TRUE
+// -----------------------------------------------------------------------------
+export const TRUE: AddFunctionDescription = {
+  description: _lt("Logical value true."),
+  args: args(``),
+  returns: ["BOOLEAN"],
+  compute: () => true,
+  isExported: true,
+};
+
+// -----------------------------------------------------------------------------
+// FALSE
+// -----------------------------------------------------------------------------
+export const FALSE: AddFunctionDescription = {
+  description: _lt("Logical value false."),
+  args: args(``),
+  returns: ["BOOLEAN"],
+  compute: () => false,
+  isExported: true,
+};
