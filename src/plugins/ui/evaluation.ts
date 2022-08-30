@@ -1,6 +1,6 @@
 import { compile } from "../../formulas/index";
 import { functionRegistry } from "../../functions/index";
-import { intersection, isZoneValid, toXC, zoneToXc } from "../../helpers/index";
+import { intersection, isZoneValid, toXC, zoneToXcWithSheetPrefix } from "../../helpers/index";
 import { ModelConfig } from "../../model";
 import { SelectionStreamProcessor } from "../../selection_stream/selection_stream_processor";
 import { StateObserver } from "../../state_observer";
@@ -283,8 +283,9 @@ export class EvaluationPlugin extends UIPlugin {
       paramNumber?: number
     ): PrimitiveArg {
       if (isMeta) {
+        const sheetName = getters.getSheetName(range.sheetId);
         // Use zoneToXc of zone instead of getRangeString to avoid sending unbounded ranges
-        return { value: zoneToXc(range.zone) };
+        return { value: zoneToXcWithSheetPrefix(range.zone, sheetName) };
       }
 
       if (!isZoneValid(range.zone)) {

@@ -188,6 +188,19 @@ export function zoneToXc(zone: Zone | UnboundedZone): string {
   throw new Error(_lt("Bad zone format"));
 }
 
+export function zoneToXcWithSheetPrefix(zone: Zone | UnboundedZone, sheetName: string) {
+  return sheetName + "!" + zoneToXc(zone);
+}
+
+export function getSheetNameFromXc(xc: string): string {
+  const split = xc.split("!");
+  if (split.length !== 2) {
+    throw new Error(_lt("Cannot get sheet name from given xc"));
+  }
+
+  return split[0];
+}
+
 /**
  * Expand a zone after inserting columns or rows.
  */

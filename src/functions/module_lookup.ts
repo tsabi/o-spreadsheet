@@ -1,4 +1,4 @@
-import { toZone } from "../helpers/index";
+import { getSheetNameFromXc, getZoneArea, toZone } from "../helpers/index";
 import { _lt } from "../translation";
 import {
   AddFunctionDescription,
@@ -241,6 +241,29 @@ export const MATCH: AddFunctionDescription = {
     );
 
     return index + 1;
+  },
+  isExported: true,
+};
+
+// -----------------------------------------------------------------------------
+// OFFSET
+// -----------------------------------------------------------------------------
+
+export const OFFSET: AddFunctionDescription = {
+  description: _lt("A range reference offset relative to a cell."),
+  args: args(`
+    cell_reference  (meta) ${_lt(
+      "The starting point from which to count the offset rows and columns."
+    )}
+    offset_rows (number) ${_lt("The number of rows to shift by.")}
+    offset_columns (number) ${_lt("The number of columns to shift by.")}
+    `),
+  returns: ["ANY"],
+  compute: function (cellReference: string, offsetRows: number, offsetCols: number): number {
+    const zone = toZone(cellReference);
+    assert(() => getZoneArea(zone) === 1, _lt("The range must be a single cell."));
+    const sheetName = getSheetNameFromXc(cellReference);
+    return zone.left + 1;
   },
   isExported: true,
 };
