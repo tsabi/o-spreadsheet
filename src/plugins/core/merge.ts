@@ -133,16 +133,16 @@ export class MergePlugin extends CorePlugin<MergeState> implements MergeState {
 
   getMergesInZone(sheetId: UID, zone: Zone): Merge[] {
     const sheetMap = this.mergeCellMap[sheetId];
+    if (!sheetMap) return [];
     const mergeIds = new Set<number>();
-    const { left, right, top, bottom } = zone;
-    for (let row = top; row <= bottom; row++) {
-      for (let col = left; col <= right; col++) {
-        const mergeId = sheetMap ? col in sheetMap && sheetMap[col]?.[row] : undefined;
-        if (mergeId) {
-          mergeIds.add(mergeId);
-        }
+
+    for (const { col, row } of positions(zone)) {
+      const mergeId = sheetMap[col]?.[row];
+      if (mergeId) {
+        mergeIds.add(mergeId);
       }
     }
+
     return Array.from(mergeIds)
       .map((mergeId) => this.getMergeById(sheetId, mergeId))
       .filter(isDefined);
