@@ -8,7 +8,6 @@ import {
   MIN_CELL_TEXT_MARGIN,
   MIN_CF_ICON_MARGIN,
 } from "../constants";
-import { fontSizeMap } from "../fonts";
 import { ConsecutiveIndexes, Lazy, Style, UID } from "../types";
 import { Cloneable } from "./../types/misc";
 import { parseDateTime } from "./dates";
@@ -119,6 +118,10 @@ export function computeTextWidth(context: CanvasRenderingContext2D, text: string
   return textWidth;
 }
 
+export function fontSizeInPixels(fontSize: number) {
+  return Math.round(10 * ((fontSize * 96) / 72)) / 10;
+}
+
 export function computeTextFont(style: Style): string {
   const italic = style.italic ? "italic " : "";
   const weight = style.bold ? "bold" : DEFAULT_FONT_WEIGHT;
@@ -126,12 +129,9 @@ export function computeTextFont(style: Style): string {
   return `${italic}${weight} ${size}px ${DEFAULT_FONT}`;
 }
 
-export function computeTextFontSizeInPixels(style?: Style): number {
+export function computeTextFontSizeInPixels(style: Style | undefined): number {
   const sizeInPt = style?.fontSize || DEFAULT_FONT_SIZE;
-  if (!fontSizeMap[sizeInPt]) {
-    throw new Error("Size of the font is not supported");
-  }
-  return fontSizeMap[sizeInPt];
+  return fontSizeInPixels(sizeInPt);
 }
 
 /**

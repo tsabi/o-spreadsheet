@@ -4,7 +4,7 @@ import {
   NumberColor,
   tokenColor,
 } from "../../src/components/composer/composer/composer";
-import { fontSizes } from "../../src/fonts";
+import { FONT_SIZES } from "../../src/constants";
 import { colors, toHex, toZone } from "../../src/helpers/index";
 import { Model } from "../../src/model";
 import { Highlight } from "../../src/types";
@@ -987,15 +987,15 @@ describe("composer", () => {
     });
 
     test("with font size", async () => {
-      const fontSize = fontSizes[0];
+      const fontSize = FONT_SIZES[0];
       model.dispatch("SET_FORMATTING", {
         sheetId: model.getters.getActiveSheetId(),
         target: [toZone("A1")],
-        style: { fontSize: fontSize.pt },
+        style: { fontSize: fontSize },
       });
       await typeInComposerGrid("Hello");
       const gridComposer = fixture.querySelector(".o-grid-composer")! as HTMLElement;
-      expect(gridComposer.style.fontSize).toBe("10px");
+      expect(gridComposer.style.fontSize).toBe("8px");
     });
 
     test("with font weight", async () => {
@@ -1116,15 +1116,15 @@ describe("composer", () => {
     });
 
     test("with font size", async () => {
-      const fontSize = fontSizes[0];
+      const fontSize = FONT_SIZES[0];
       model.dispatch("SET_FORMATTING", {
         sheetId: model.getters.getActiveSheetId(),
         target: [toZone("A1")],
-        style: { fontSize: fontSize.pt },
+        style: { fontSize: fontSize },
       });
       await typeInComposerGrid("=");
       const gridComposer = fixture.querySelector(".o-grid-composer")! as HTMLElement;
-      expect(gridComposer.style.fontSize).toBe("13px");
+      expect(gridComposer.style.fontSize).toBe("13.3px");
     });
 
     test("with font weight", async () => {

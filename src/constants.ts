@@ -207,3 +207,5 @@ export enum ComponentsImportance {
 export const DEFAULT_SHEETVIEW_SIZE = 1000;
 
 export const MAXIMAL_FREEZABLE_RATIO = 0.85;
+
+export const FONT_SIZES: number[] = [6, 7, 8, 9, 10, 11, 12, 14, 18, 24, 36];

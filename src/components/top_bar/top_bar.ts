@@ -5,8 +5,7 @@ import {
   useExternalListener,
   useState,
 } from "@odoo/owl";
-import { BACKGROUND_HEADER_COLOR, ComponentsImportance, DEFAULT_FONT_SIZE } from "../../constants";
-import { fontSizes } from "../../fonts";
+import { BACKGROUND_HEADER_COLOR, ComponentsImportance } from "../../constants";
 import { areZonesContinuous, isEqual, positionToZone } from "../../helpers/index";
 import { interactiveAddFilter } from "../../helpers/ui/filter_interactive";
 import { interactiveAddMerge } from "../../helpers/ui/merge_interactive";
@@ -25,19 +24,13 @@ import {
 } from "../../types/index";
 import { ColorPicker } from "../color_picker/color_picker";
 import { Composer } from "../composer/composer/composer";
+import { FontEditor } from "../font_editor/font_editor";
 import { css } from "../helpers/css";
 import { Menu, MenuState } from "../menu/menu";
 import { ComposerFocusType } from "../spreadsheet/spreadsheet";
 import { NumberFormatTerms } from "../translations_terms";
 
-type Tool =
-  | ""
-  | "formatTool"
-  | "alignTool"
-  | "textColorTool"
-  | "fillColorTool"
-  | "borderTool"
-  | "fontSizeTool";
+type Tool = "" | "formatTool" | "alignTool" | "textColorTool" | "fillColorTool" | "borderTool";
 
 interface State {
   menuState: MenuState;
@@ -297,13 +290,10 @@ css/* scss */ `
 `;
 export class TopBar extends Component<Props, SpreadsheetChildEnv> {
   static template = "o-spreadsheet-TopBar";
-  DEFAULT_FONT_SIZE = DEFAULT_FONT_SIZE;
-
-  static components = { ColorPicker, Menu, Composer };
+  static components = { ColorPicker, Menu, Composer, FontEditor };
   commonFormats = FORMATS;
   customFormats = CUSTOM_FORMATS;
   currentFormatName = "automatic";
-  fontSizes = fontSizes;
 
   style: Style = {};
   state: State = useState({
@@ -328,7 +318,7 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
   `;
 
   setup() {
-    useExternalListener(window as any, "click", this.onExternalClick);
+    useExternalListener(window, "click", this.onExternalClick);
     onWillStart(() => this.updateCellState());
     onWillUpdateProps(() => this.updateCellState());
   }
@@ -506,12 +496,6 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
       sheetId: this.env.model.getters.getActiveSheetId(),
       target: this.env.model.getters.getSelectedZones(),
     });
-  }
-
-  setSize(fontSizeStr: string) {
-    const fontSize = parseFloat(fontSizeStr);
-    setStyle(this.env, { fontSize });
-    this.onClick();
   }
 
   doAction(action: (env: SpreadsheetChildEnv) => void) {

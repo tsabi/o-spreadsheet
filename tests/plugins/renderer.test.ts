@@ -12,8 +12,7 @@ import {
   MIN_CF_ICON_MARGIN,
   SELECTION_BORDER_COLOR,
 } from "../../src/constants";
-import { fontSizeMap } from "../../src/fonts";
-import { toHex, toZone } from "../../src/helpers";
+import { fontSizeInPixels, toHex, toZone } from "../../src/helpers";
 import { Mode, Model } from "../../src/model";
 import { RendererPlugin } from "../../src/plugins/ui_feature/renderer";
 import { Align, BorderCommand, Box, GridRenderingContext, Viewport, Zone } from "../../src/types";
@@ -1132,7 +1131,7 @@ describe("renderer", () => {
           id: "sheet1",
           colNumber: 1,
           rowNumber: 1,
-          rows: { 0: { size: Math.floor(fontSizeMap[fontSize] + 5) } },
+          rows: { 0: { size: Math.floor(fontSizeInPixels(fontSize) + 5) } },
           cells: { A1: { content: overflowingText, style: 1 } },
         },
       ],
@@ -1145,14 +1144,14 @@ describe("renderer", () => {
     box = getBoxFromText(model, overflowingText);
     expect(box.clipRect).toBeUndefined();
 
-    resizeRows(model, [0], Math.floor(fontSizeMap[fontSize] / 2));
+    resizeRows(model, [0], Math.floor(fontSizeInPixels(fontSize) / 2));
     model.drawGrid(ctx);
     box = getBoxFromText(model, overflowingText);
     expect(box.clipRect).toEqual({
       x: 0,
       y: 0,
       width: DEFAULT_CELL_WIDTH,
-      height: Math.floor(fontSizeMap[fontSize] / 2),
+      height: Math.floor(fontSizeInPixels(fontSize) / 2),
     });
   });
 
@@ -1163,7 +1162,7 @@ describe("renderer", () => {
 
     setCellContent(model, "A1", overflowingText);
     setStyle(model, "A1", { fontSize });
-    resizeRows(model, [0], Math.floor(fontSizeMap[fontSize] / 2));
+    resizeRows(model, [0], Math.floor(fontSizeInPixels(fontSize) / 2));
     resizeColumns(model, ["A"], 10);
 
     let ctx = new MockGridRenderingContext(model, 1000, 1000, {});
@@ -1173,7 +1172,7 @@ describe("renderer", () => {
       x: 0,
       y: 0,
       width: 952,
-      height: Math.floor(fontSizeMap[fontSize] / 2),
+      height: Math.floor(fontSizeInPixels(fontSize) / 2),
     });
   });
 
@@ -1574,7 +1573,7 @@ describe("renderer", () => {
       style: { verticalAlign: "middle" },
     });
     model.drawGrid(ctx);
-    expect(verticalStartPoints[0]).toEqual(18);
+    expect(verticalStartPoints[0]).toEqual(17);
 
     // vertical bottom point
     verticalStartPoints = [];
@@ -1707,7 +1706,7 @@ describe("renderer", () => {
       const fontSize = 26;
       setCellContent(model, "A1", overflowingText);
       setStyle(model, "A1", { fontSize });
-      resizeRows(model, [0], Math.floor(fontSizeMap[fontSize] / 2));
+      resizeRows(model, [0], Math.floor(fontSizeInPixels(fontSize) / 2));
       model.drawGrid(ctx);
       const box = getBoxFromText(model, overflowingText);
       expect(getCellOverflowingBackgroundDims()).toMatchObject({

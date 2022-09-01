@@ -4,8 +4,7 @@ import {
   DEFAULT_CELL_HEIGHT,
   SELECTION_BORDER_COLOR,
 } from "../../../constants";
-import { fontSizeMap } from "../../../fonts";
-import { positionToZone } from "../../../helpers";
+import { fontSizeInPixels, positionToZone } from "../../../helpers";
 import { ComposerSelection } from "../../../plugins/ui_stateful/edition";
 import { DOMDimension, Rect, Ref, SpreadsheetChildEnv, Zone } from "../../../types/index";
 import { getTextDecoration } from "../../helpers";
@@ -118,7 +117,7 @@ export class GridComposer extends Component<Props, SpreadsheetChildEnv> {
       background: ${background};
       color: ${color};
 
-      font-size: ${fontSizeMap[fontSize]}px;
+      font-size: ${fontSizeInPixels(fontSize)}px;
       font-weight: ${fontWeight};
       font-style: ${fontStyle};
       text-decoration: ${textDecoration};

@@ -175,11 +175,17 @@ exports[`Simple Spreadsheet Component simple rendering snapshot 1`] = `
         <div
           class="o-dropdown"
         >
-          <div
-            class="o-tool o-dropdown-button o-text-icon"
+          <input
+            class="o-font-size"
+            id="test_id"
+            max="400"
+            min="1"
+            title="Font Size"
+            type="number"
+          />
+          <span
             title="Font Size"
           >
-            10
             <svg
               class="o-icon"
             >
@@ -189,10 +195,10 @@ exports[`Simple Spreadsheet Component simple rendering snapshot 1`] = `
                 transform="translate(5 7)"
               />
             </svg>
-            
-          </div>
+          </span>
           
         </div>
+        
         <div
           class="o-divider"
         />

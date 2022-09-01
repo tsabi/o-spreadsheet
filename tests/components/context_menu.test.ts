@@ -283,7 +283,7 @@ describe("Context Menu", () => {
   test("close contextmenu when clicking on tools bar", async () => {
     await rightClickCell(model, "B1");
     expect(fixture.querySelector(".o-menu .o-menu-item[data-name='cut']")).toBeTruthy();
-    const fontSizeTool = fixture.querySelector('.o-tool[title="Font Size"]')!;
+    const fontSizeTool = fixture.querySelector('.o-tool[title="Bold"]')!;
     triggerMouseEvent(fontSizeTool, "click");
     await nextTick();
     expect(fixture.querySelector(".o-menu .o-menu-item[data-name='cut']")).toBeFalsy();

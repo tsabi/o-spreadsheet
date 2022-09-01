@@ -380,7 +380,7 @@ describe("Resizer component", () => {
     setCellContent(model, "B2", "b2");
     await dblClickColumn("B");
     await nextTick();
-    const expectedSize = 2 * 13 + 2 * PADDING_AUTORESIZE_HORIZONTAL; // 2 * letter size + 2 * padding
+    const expectedSize = 2 * 13.3 + 2 * PADDING_AUTORESIZE_HORIZONTAL; // 2 * letter size + 2 * padding
     expect(model.getters.getColSize(model.getters.getActiveSheetId(), 1)).toBe(expectedSize);
     expect(fixture.querySelector(".o-handle")).toBeFalsy();
   });
@@ -393,7 +393,7 @@ describe("Resizer component", () => {
     await dblClickColumn("D");
     const sheet = model.getters.getActiveSheetId();
     const initialSize = model.getters.getColSize(sheet, 0);
-    const resizedSize = 2 * 13 + 2 * PADDING_AUTORESIZE_HORIZONTAL; // 2 letter fontSize 13 + 2*3px padding
+    const resizedSize = 2 * 13.3 + 2 * PADDING_AUTORESIZE_HORIZONTAL; // 2 letter fontSize 13 + 2*3px padding
     expect(model.getters.getColSize(sheet, 1)).toBe(initialSize);
     expect(model.getters.getColSize(sheet, 2)).toBe(resizedSize);
     expect(model.getters.getColSize(sheet, 3)).toBe(resizedSize);
@@ -552,7 +552,7 @@ describe("Resizer component", () => {
     await selectColumn("C", { shiftKey: true });
     await selectColumn("E", { ctrlKey: true });
     await dblClickColumn("E");
-    const resizedSize = 13 + 2 * PADDING_AUTORESIZE_HORIZONTAL; // 1 letter fontSize 13 + 2 * padding
+    const resizedSize = 13.3 + 2 * PADDING_AUTORESIZE_HORIZONTAL; // 1 letter fontSize 13 + 2 * padding
     expect(model.getters.getColSize(model.getters.getActiveSheetId(), 0)).toBe(resizedSize);
     expect(model.getters.getColSize(model.getters.getActiveSheetId(), 1)).toBe(resizedSize);
     expect(model.getters.getColSize(model.getters.getActiveSheetId(), 2)).toBe(resizedSize);
@@ -566,7 +566,7 @@ describe("Resizer component", () => {
     await selectColumn("C", { shiftKey: true });
     await selectColumn("E", { ctrlKey: true });
     await dblClickColumn("F");
-    const resizedSize = 13 + 2 * PADDING_AUTORESIZE_HORIZONTAL; // 1 letter fontSize 13 + 2 * padding
+    const resizedSize = 13.3 + 2 * PADDING_AUTORESIZE_HORIZONTAL; // 1 letter fontSize 13 + 2 * padding
     expect(model.getters.getColSize(model.getters.getActiveSheetId(), 0)).toBe(DEFAULT_CELL_WIDTH);
     expect(model.getters.getColSize(model.getters.getActiveSheetId(), 1)).toBe(DEFAULT_CELL_WIDTH);
     expect(model.getters.getColSize(model.getters.getActiveSheetId(), 2)).toBe(DEFAULT_CELL_WIDTH);

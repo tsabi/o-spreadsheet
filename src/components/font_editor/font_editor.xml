@@ -1,0 +1,37 @@
+<templates>
+  <t t-name="o-spreadsheet-FontEditor" owl="1">
+    <div class="o-dropdown" t-ref="FontSizeContainer">
+      <input
+        id="test_id"
+        type="number"
+        min="1"
+        max="400"
+        title="Font Size"
+        class="o-font-size"
+        t-on-keydown="onFontSizeKeydown"
+        t-on-click.stop=""
+        t-on-focus.stop="onFontsizeInputFocused"
+        t-att-value="style.fontSize"
+        t-on-change="setSizeFromInput"
+        t-ref="inputFontSize"
+      />
+      <span title="Font Size" t-on-click.stop="(ev) => this.toggleFontList(ev)">
+        <t t-call="o-spreadsheet-Icon.TRIANGLE_DOWN"/>
+      </span>
+      <div
+        title="Font Size List"
+        class="o-dropdown-content o-text-options "
+        t-if="state.menuState.isOpen"
+        t-on-click.stop="">
+        <t t-foreach="fontSizes" t-as="fontSize" t-key="font_index">
+          <div
+            t-esc="fontSize"
+            t-att-data-size="fontSize"
+            class="o-dropdown-item"
+            t-on-click="() => this.setSize(fontSize)"
+          />
+        </t>
+      </div>
+    </div>
+  </t>
+</templates>
