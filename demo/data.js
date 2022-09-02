@@ -1088,9 +1088,9 @@ function computeFormulaCells(cols, rows) {
     if (letter === 0) {
       cells[x + 3] = { content: letter.toString() };
     } else {
-      const prev = _getColumnLetter(letter - 1);
+      // const prev = _getColumnLetter(letter - 1);
       cells[x + 3] = {
-        content: `=2*${prev}${rows}`,
+        content: `=2*${rows}`,
       };
     }
     for (let index = 4; index <= rows; index++) {

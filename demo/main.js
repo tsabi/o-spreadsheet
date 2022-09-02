@@ -146,12 +146,13 @@ class Demo extends Component {
       this.transportService = undefined;
       this.stateUpdateMessages = [];
     }
-    this.createModel(data || demoData);
-    // this.createModel(makeLargeDataset(26, 10_000, ["numbers"]));
+    // this.createModel(data || demoData);
+    this.createModel(makeLargeDataset(26, 10_000, ["formulas"]));
     // this.createModel({});
   }
 
   createModel(data) {
+    console.time("Model");
     this.model = new Model(
       data,
       {
@@ -162,6 +163,7 @@ class Demo extends Component {
       },
       this.stateUpdateMessages
     );
+    console.timeEnd("Model");
     o_spreadsheet.__DEBUG__ = o_spreadsheet.__DEBUG__ || {};
     o_spreadsheet.__DEBUG__.model = this.model;
     this.model.joinSession();
