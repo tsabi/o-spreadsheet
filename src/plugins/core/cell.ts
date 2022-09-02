@@ -464,15 +464,18 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
     sheetId: UID
   ): StaticCellData {
     style = isMarkdownLink(content) ? { textColor: LINK_COLOR, ...style } : style;
-    const cellData = {
-      id,
-      content,
-      style,
-      format,
-    };
+    // const cellData = {
+    //   id,
+    //   content,
+    //   style,
+    //   format,
+    // };
     if (!content.startsWith("=")) {
       return {
-        ...cellData,
+        id,
+        content,
+        style,
+        format,
         contentType: "constantValue",
         isFormula: false,
         isValidFormula: false,
@@ -486,7 +489,9 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
       const buildFormulaContent = (cell: FormulaCellData) =>
         this.buildFormulaContent(sheetId, cell);
       return {
-        ...cellData,
+        id,
+        style,
+        format,
         contentType: "validFormula",
         get content() {
           return buildFormulaContent(this);
@@ -498,7 +503,10 @@ export class CellPlugin extends CorePlugin<CoreState> implements CoreState {
       };
     } catch (error) {
       return {
-        ...cellData,
+        id,
+        content,
+        style,
+        format,
         contentType: "invalidFormula",
         isFormula: true,
         isValidFormula: false,

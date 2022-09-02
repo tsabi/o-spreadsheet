@@ -275,39 +275,59 @@ export class EvaluationPlugin extends UIPlugin {
     const visit: { [cellId: string]: "done" | "pending" } = {};
     this.evaluatedCells = {};
 
-    const trackVisit = (cellId, callback) => {
-      try {
-        if (visit[cellId] === "pending") {
-          throw new CircularDependencyError();
-        } else if (visit[cellId] === "done") {
-          return this.evaluatedCells[cellId]();
-        }
-        visit[cellId] = "pending";
-        const result = callback();
-        visit[cellId] = "done";
-        return result;
-      } catch (error) {
-        visit[cellId] = "done";
-        throw error;
-      }
-    };
+    // const trackVisit = (cellId, callback) => {
+    //   try {
+    //     if (visit[cellId] === "pending") {
+    //       throw new CircularDependencyError();
+    //     } else if (visit[cellId] === "done") {
+    //       return this.evaluatedCells[cellId]();
+    //     }
+    //     visit[cellId] = "pending";
+    //     const result = callback();
+    //     visit[cellId] = "done";
+    //     return result;
+    //   } catch (error) {
+    //     visit[cellId] = "done";
+    //     throw error;
+    //   }
+    // };
 
     const computeCell = (staticCell: StaticCellData): Cell => {
       const cellId = staticCell.id;
+      if (visit[cellId] === "done") {
+        return this.evaluatedCells[cellId]();
+      }
       try {
         switch (staticCell.contentType) {
-          case "invalidFormula":
-            return trackVisit(cellId, () =>
-              handleError(new BadExpressionError(staticCell.error.message), staticCell)
+          case "invalidFormula": {
+            const result = handleError(
+              new BadExpressionError(staticCell.error.message),
+              staticCell
             );
-          case "validFormula":
-            return trackVisit(cellId, () => computeFormulaCell(staticCell));
-          case "constantValue":
-            return trackVisit(cellId, () =>
-              this.createCell(staticCell, parseCellContent(staticCell.content), staticCell.format)
+            visit[cellId] = "done";
+            return result;
+          }
+          case "validFormula": {
+            if (visit[cellId] === "pending") {
+              throw new CircularDependencyError();
+            }
+            visit[cellId] = "pending";
+            const result = computeFormulaCell(staticCell);
+            visit[cellId] = "done";
+            return result;
+          }
+          case "constantValue": {
+            const result = this.createCell(
+              staticCell,
+              parseCellContent(staticCell.content),
+              staticCell.format
             );
+            visit[cellId] = "done";
+            return result;
+          }
         }
       } catch (e) {
+        visit[cellId] = "done";
         return handleError(e, staticCell);
       }
     };
@@ -346,11 +366,19 @@ export class EvaluationPlugin extends UIPlugin {
     };
 
     const compilationParameters = this.getCompilationParameters(computeCell);
-    // console.time("iterate");
+    console.time("iterate");
     for (const cell of this.getAllCells()) {
-      this.evaluatedCells[cell.id] = lazy(() => computeCell(cell));
+      this.evaluatedCells[cell.id] = lazy(computeCell.bind(null, cell));
+      // this.evaluatedCells[cell.id] = lazy(() => computeCell(cell));
     }
-    // console.timeEnd("iterate");
+    console.timeEnd("iterate");
+    // const n =
+    console.time("anonymous");
+    const f = {};
+    for (const cell of this.getAllCells()) {
+      f[cell.id] = 5;
+    }
+    console.timeEnd("anonymous");
     // console.timeEnd("evaluate");
   }
 
