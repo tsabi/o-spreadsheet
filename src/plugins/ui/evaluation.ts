@@ -11,6 +11,7 @@ import {
   isDefined,
   isNumber,
   isZoneValid,
+  lazy,
   positions,
   toCartesian,
   toXC,
@@ -44,6 +45,7 @@ import {
   Getters,
   HeaderIndex,
   invalidateEvaluationCommands,
+  Lazy,
   Link,
   MatrixArg,
   PrimitiveArg,
@@ -71,7 +73,7 @@ export class EvaluationPlugin extends UIPlugin {
   ] as const;
 
   private isUpToDate: Set<UID> = new Set(); // Set<sheetIds>
-  private evaluatedCells: { [cellId: string]: Cell } = {};
+  private evaluatedCells: { [cellId: string]: Lazy<Cell> } = {};
   private readonly evalContext: EvalContext;
   private readonly detectLink = linkDetector(this.getters);
 
@@ -116,27 +118,18 @@ export class EvaluationPlugin extends UIPlugin {
         break;
       }
       case "EVALUATE_CELLS":
-        this.evaluatedCells = {};
-        this.evaluate(cmd.sheetId);
+        this.evaluate();
         this.isUpToDate.add(cmd.sheetId);
         break;
       case "EVALUATE_ALL_SHEETS":
-        this.evaluatedCells = {};
-        this.evaluateAllSheets();
+        this.evaluate();
         break;
     }
   }
 
   finalize() {
-    const sheetIds = this.getters.getSheetIds();
     if (!this.isUpToDate.size) {
-      this.evaluatedCells = {};
-    }
-    for (const sheetId of sheetIds) {
-      if (!this.isUpToDate.has(sheetId)) {
-        this.evaluate(sheetId);
-        this.isUpToDate.add(sheetId);
-      }
+      this.evaluate();
     }
   }
 
@@ -146,7 +139,7 @@ export class EvaluationPlugin extends UIPlugin {
 
   evaluateFormula(formulaString: string, sheetId: UID = this.getters.getActiveSheetId()): any {
     const compiledFormula = compile(formulaString);
-    const params = this.getCompilationParameters((cell) => this.evaluatedCells[cell.id]);
+    const params = this.getCompilationParameters((cell) => this.evaluatedCells[cell.id]());
 
     const ranges: Range[] = [];
     for (let xc of compiledFormula.dependencies) {
@@ -181,14 +174,14 @@ export class EvaluationPlugin extends UIPlugin {
     if (cellId === undefined) {
       return undefined;
     }
-    return this.evaluatedCells[cellId];
+    return this.evaluatedCells[cellId]();
   }
 
   getCells(sheetId: UID): Record<UID, Cell> {
     const rawCells = this.getters.getCellsData(sheetId) || {};
     const record: Record<UID, Cell> = {};
-    for (let cellId of Object.keys(rawCells)) {
-      record[cellId] = this.evaluatedCells[cellId];
+    for (let cellId in rawCells) {
+      record[cellId] = this.evaluatedCells[cellId]();
     }
     return record;
   }
@@ -201,7 +194,7 @@ export class EvaluationPlugin extends UIPlugin {
       .getSheet(sheetId)
       .rows.map((row) => row.cells[col])
       .filter(isDefined)
-      .map((cellId) => this.evaluatedCells[cellId])
+      .map((cellId) => this.evaluatedCells[cellId]())
       .filter(isDefined);
   }
 
@@ -222,9 +215,8 @@ export class EvaluationPlugin extends UIPlugin {
   private setLoadingEvaluation(sheetId: UID, col: number, row: number) {
     const cellData = this.getters.getCellData(sheetId, col, row);
     if (cellData) {
-      this.evaluatedCells[cellData.id] = this.FUSION(
-        cellData,
-        createEvaluationResult("Loading...")
+      this.evaluatedCells[cellData.id] = lazy(() =>
+        this.FUSION(cellData, createEvaluationResult("Loading..."))
       );
     }
   }
@@ -264,14 +256,18 @@ export class EvaluationPlugin extends UIPlugin {
   // Evaluator
   // ---------------------------------------------------------------------------
 
-  private evaluate(sheetId: UID) {
-    const cells = this.getters.getCellsData(sheetId);
+  private evaluate() {
+    const cells = this.getters
+      .getSheetIds()
+      .map((sheetId) => Object.values(this.getters.getCellsData(sheetId)))
+      .flat();
     const visit: { [cellId: string]: "done" | "pending" } = {};
+    this.evaluatedCells = {};
 
     const computeCell = (staticCell: StaticCellData): Cell => {
       const cellId = staticCell.id;
-      if (visit[cellId] === "done" || this.evaluatedCells[cellId]) {
-        return this.evaluatedCells[cellId]; // already computed
+      if (visit[cellId] === "done") {
+        return this.evaluatedCells[cellId](); // already computed
       }
       try {
         switch (staticCell.contentType) {
@@ -330,8 +326,8 @@ export class EvaluationPlugin extends UIPlugin {
     };
 
     const compilationParameters = this.getCompilationParameters(computeCell);
-    for (const cell of Object.values(cells)) {
-      this.evaluatedCells[cell.id] = computeCell(cell);
+    for (const cell of cells) {
+      this.evaluatedCells[cell.id] = lazy(() => computeCell(cell));
     }
   }
 
@@ -368,7 +364,7 @@ export class EvaluationPlugin extends UIPlugin {
       staticCell: StaticCellData
     ): { value: CellValue; format?: Format } => {
       const cell = computeCell(staticCell);
-      this.evaluatedCells[staticCell.id] = cell;
+      this.evaluatedCells[staticCell.id] = lazy(() => cell);
       if (cell.evaluated.type === CellValueType.error) {
         throw new EvaluationError(
           cell.evaluated.value,
@@ -463,16 +459,6 @@ export class EvaluationPlugin extends UIPlugin {
       return readCell(range);
     }
     return [refFn, range, evalContext];
-  }
-
-  /**
-   * Triggers an evaluation of all cells on all sheets.
-   */
-  private evaluateAllSheets() {
-    for (const sheetId of this.getters.getSheetIds()) {
-      this.evaluate(sheetId);
-      this.isUpToDate.add(sheetId);
-    }
   }
 
   // ---------------------------------------------------------------------------
