@@ -133,11 +133,11 @@ export class FindAndReplacePlugin extends UIPlugin {
    * Find matches using the current regex
    */
   private findMatches() {
-    const activeSheetId = this.getters.getActiveSheetId();
-    const cells = this.getters.getCells(activeSheetId);
     const matches: SearchMatch[] = [];
 
     if (this.toSearch) {
+      const activeSheetId = this.getters.getActiveSheetId();
+      const cells = this.getters.getCells(activeSheetId);
       for (const cell of Object.values(cells)) {
         if (
           cell &&

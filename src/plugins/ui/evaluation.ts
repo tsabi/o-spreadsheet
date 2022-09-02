@@ -72,7 +72,7 @@ export class EvaluationPlugin extends UIPlugin {
     "getCellsInZone",
   ] as const;
 
-  private isUpToDate: Set<UID> = new Set(); // Set<sheetIds>
+  private isUpToDate: boolean = false;
   private evaluatedCells: { [cellId: string]: Lazy<Cell> } = {};
   private readonly evalContext: EvalContext;
   private readonly detectLink = linkDetector(this.getters);
@@ -94,13 +94,13 @@ export class EvaluationPlugin extends UIPlugin {
 
   handle(cmd: Command) {
     if (invalidateEvaluationCommands.has(cmd.type)) {
-      this.isUpToDate.clear();
+      this.isUpToDate = false;
     }
     switch (cmd.type) {
       case "START":
       case "UNDO":
       case "REDO":
-        this.isUpToDate.clear();
+        this.isUpToDate = false;
         for (const sheetId of this.getters.getSheetIds()) {
           for (const { col, row } of positions(this.getters.getSheetZone(sheetId))) {
             this.setLoadingEvaluation(sheetId, col, row);
@@ -108,28 +108,31 @@ export class EvaluationPlugin extends UIPlugin {
         }
         break;
       case "UPDATE_CELL":
-        this.isUpToDate.clear();
+        this.isUpToDate = false;
         if ("content" in cmd || "format" in cmd) {
           this.setLoadingEvaluation(cmd.sheetId, cmd.col, cmd.row);
         }
         break;
       case "ACTIVATE_SHEET": {
-        this.isUpToDate.delete(cmd.sheetIdTo);
+        this.evaluate();
+        this.isUpToDate = true;
         break;
       }
       case "EVALUATE_CELLS":
         this.evaluate();
-        this.isUpToDate.add(cmd.sheetId);
+        this.isUpToDate = true;
         break;
       case "EVALUATE_ALL_SHEETS":
         this.evaluate();
+        this.isUpToDate = true;
         break;
     }
   }
 
   finalize() {
-    if (!this.isUpToDate.size) {
+    if (!this.isUpToDate) {
       this.evaluate();
+      this.isUpToDate = true;
     }
   }
 
@@ -256,30 +259,52 @@ export class EvaluationPlugin extends UIPlugin {
   // Evaluator
   // ---------------------------------------------------------------------------
 
+  private *getAllCells(): Iterable<StaticCellData> {
+    // use an iterable to avoid re-building a new object
+    // TODO double check this
+    for (const sheetId of this.getters.getSheetIds()) {
+      const cells = this.getters.getCellsData(sheetId);
+      for (const cellId in cells) {
+        yield cells[cellId];
+      }
+    }
+  }
+
   private evaluate() {
-    const cells = this.getters
-      .getSheetIds()
-      .map((sheetId) => Object.values(this.getters.getCellsData(sheetId)))
-      .flat();
+    console.time("evaluate");
     const visit: { [cellId: string]: "done" | "pending" } = {};
     this.evaluatedCells = {};
 
+    const trackVisit = (cellId, callback) => {
+      try {
+        if (visit[cellId] === "pending") {
+          throw new CircularDependencyError();
+        } else if (visit[cellId] === "done") {
+          return this.evaluatedCells[cellId]();
+        }
+        visit[cellId] = "pending";
+        const result = callback();
+        visit[cellId] = "done";
+        return result;
+      } catch (error) {
+        visit[cellId] = "done";
+        throw error;
+      }
+    };
+
     const computeCell = (staticCell: StaticCellData): Cell => {
       const cellId = staticCell.id;
-      if (visit[cellId] === "done") {
-        return this.evaluatedCells[cellId](); // already computed
-      }
       try {
         switch (staticCell.contentType) {
           case "invalidFormula":
-            return handleError(new BadExpressionError(staticCell.error.message), staticCell);
+            return trackVisit(cellId, () =>
+              handleError(new BadExpressionError(staticCell.error.message), staticCell)
+            );
           case "validFormula":
-            return computeFormulaCell(staticCell);
+            return trackVisit(cellId, () => computeFormulaCell(staticCell));
           case "constantValue":
-            return this.createCell(
-              staticCell,
-              parseCellContent(staticCell.content),
-              staticCell.format
+            return trackVisit(cellId, () =>
+              this.createCell(staticCell, parseCellContent(staticCell.content), staticCell.format)
             );
         }
       } catch (e) {
@@ -304,20 +329,15 @@ export class EvaluationPlugin extends UIPlugin {
 
     const computeFormulaCell = (cellData: FormulaCellData): Cell => {
       const cellId = cellData.id;
-      if (visit[cellId] === "pending") {
-        throw new CircularDependencyError();
-      }
       compilationParameters[2].__originCellXC = () => {
         // compute the value lazily for performance reasons
         const position = compilationParameters[2].getters.getCellPosition(cellId);
         return toXC(position.col, position.row);
       };
-      visit[cellId] = "pending";
       const computedCell = cellData.compiledFormula.execute(
         cellData.dependencies,
         ...compilationParameters
       );
-      visit[cellId] = "done";
       if (Array.isArray(computedCell.value)) {
         // if a value returns an array (like =A1:A3)
         throw new Error(_lt("This formula depends on invalid values"));
@@ -326,9 +346,12 @@ export class EvaluationPlugin extends UIPlugin {
     };
 
     const compilationParameters = this.getCompilationParameters(computeCell);
-    for (const cell of cells) {
+    console.time("iterate");
+    for (const cell of this.getAllCells()) {
       this.evaluatedCells[cell.id] = lazy(() => computeCell(cell));
     }
+    console.timeEnd("iterate");
+    console.timeEnd("evaluate");
   }
 
   /**
