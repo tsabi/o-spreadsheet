@@ -271,7 +271,7 @@ export class EvaluationPlugin extends UIPlugin {
   }
 
   private evaluate() {
-    console.time("evaluate");
+    // console.time("evaluate");
     const visit: { [cellId: string]: "done" | "pending" } = {};
     this.evaluatedCells = {};
 
@@ -346,12 +346,12 @@ export class EvaluationPlugin extends UIPlugin {
     };
 
     const compilationParameters = this.getCompilationParameters(computeCell);
-    console.time("iterate");
+    // console.time("iterate");
     for (const cell of this.getAllCells()) {
       this.evaluatedCells[cell.id] = lazy(() => computeCell(cell));
     }
-    console.timeEnd("iterate");
-    console.timeEnd("evaluate");
+    // console.timeEnd("iterate");
+    // console.timeEnd("evaluate");
   }
 
   /**
