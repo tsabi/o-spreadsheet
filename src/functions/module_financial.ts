@@ -466,6 +466,34 @@ export const DURATION: AddFunctionDescription = {
 };
 
 // -----------------------------------------------------------------------------
+// EFFECT
+// -----------------------------------------------------------------------------
+export const EFFECT: AddFunctionDescription = {
+  description: _lt("Annual effective interest rate."),
+  args: args(`
+  nominal_rate (number) ${_lt("The nominal interest rate per year.")}
+  periods_per_year (number) ${_lt("The number of compounding periods per year.")}
+  `),
+  returns: ["NUMBER"],
+  compute: function (nominal_rate: PrimitiveArgValue, periods_per_year: PrimitiveArgValue): number {
+    const nominal = toNumber(nominal_rate);
+    const periods = Math.trunc(toNumber(periods_per_year));
+
+    assert(
+      () => nominal > 0 && nominal <= 1,
+      _lt("The nominal rate (%s) must be between 0 and 1.", nominal.toString())
+    );
+    assert(
+      () => periods > 0,
+      _lt("The number of periods by year (%s) must strictly greater than 0.", periods.toString())
+    );
+
+    // https://en.wikipedia.org/wiki/Nominal_interest_rate#Nominal_versus_effective_interest_rate
+    return Math.pow(1 + nominal / periods, periods) - 1;
+  },
+};
+
+// -----------------------------------------------------------------------------
 // FV
 // -----------------------------------------------------------------------------
 const DEFAULT_PRESENT_VALUE = 0;
@@ -626,6 +654,37 @@ export const MDURATION: AddFunctionDescription = {
     const y = toNumber(securityYield);
     const k = Math.trunc(toNumber(frequency));
     return duration / (1 + y / k);
+  },
+};
+
+// -----------------------------------------------------------------------------
+// NOMINAL
+// -----------------------------------------------------------------------------
+export const NOMINAL: AddFunctionDescription = {
+  description: _lt("Annual nominal interest rate."),
+  args: args(`
+  effective_rate (number) ${_lt("The effective interest rate per year.")}
+  periods_per_year (number) ${_lt("The number of compounding periods per year.")}
+  `),
+  returns: ["NUMBER"],
+  compute: function (
+    effective_rate: PrimitiveArgValue,
+    periods_per_year: PrimitiveArgValue
+  ): number {
+    const effective = toNumber(effective_rate);
+    const periods = Math.trunc(toNumber(periods_per_year));
+
+    assert(
+      () => effective > 0 && effective <= 1,
+      _lt("The effective rate (%s) must be between 0 and 1.", effective.toString())
+    );
+    assert(
+      () => periods > 0,
+      _lt("The number of periods by year (%s) must strictly greater than 0.", periods.toString())
+    );
+
+    // https://en.wikipedia.org/wiki/Nominal_interest_rate#Nominal_versus_effective_interest_rate
+    return (Math.pow(effective + 1, 1 / periods) - 1) * periods;
   },
 };
 
