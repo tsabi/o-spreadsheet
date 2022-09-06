@@ -700,7 +700,7 @@ export const FILTERS_REMOVE_FILTER_TABLE = (env: SpreadsheetChildEnv) => {
 export const SELECTION_CONTAINS_FILTER = (env: SpreadsheetChildEnv): boolean => {
   const sheetId = env.model.getters.getActiveSheetId();
   const selectedZones = env.model.getters.getSelectedZones();
-  return env.model.getters.isZonesContainFilter(sheetId, selectedZones);
+  return env.model.getters.doesZonesContainFilter(sheetId, selectedZones);
 };
 
 export const SELECTION_IS_CONTINUOUS = (env: SpreadsheetChildEnv): boolean => {

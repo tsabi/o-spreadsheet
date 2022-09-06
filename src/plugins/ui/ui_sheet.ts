@@ -1,4 +1,4 @@
-import { FILTER_EDGE_LENGTH, FILTER_ICON_MARGIN, PADDING_AUTORESIZE } from "../../constants";
+import { FILTER_ICON_MARGIN, ICON_EDGE_LENGTH, PADDING_AUTORESIZE } from "../../constants";
 import { computeCfIconWidth, computeTextWidth, positions } from "../../helpers/index";
 import { Cell, CellValueType, Command, CommandResult, UID } from "../../types";
 import { HeaderIndex, Position } from "../../types/misc";
@@ -71,7 +71,7 @@ export class SheetUIPlugin extends UIPlugin {
     }
     const isFilterHeader = this.getters.isFilterHeader(sheetId, col, row);
     if (isFilterHeader) {
-      width += FILTER_EDGE_LENGTH + FILTER_ICON_MARGIN;
+      width += ICON_EDGE_LENGTH + FILTER_ICON_MARGIN;
     }
     return width;
   }

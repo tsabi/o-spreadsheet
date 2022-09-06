@@ -168,6 +168,20 @@ describe("Filters plugin", () => {
       expect(zoneToXc(model.getters.getFilterTables(sheetId)[0].zone)).toEqual("A1:A3");
       expect(getFilterValues(model)).toEqual([{ zone: "A1:A3", value: [] }]);
     });
+
+    test("Table zone isn't expanded when another cell below the table had a content", () => {
+      setCellContent(model, "B4", "Something");
+      createFilter(model, "A1:B3");
+      setCellContent(model, "A4", "Something Else");
+      expect(zoneToXc(model.getters.getFilterTables(sheetId)[0].zone)).toEqual("A1:B3");
+    });
+
+    test("Table zone is expanded when a cell on the row below the table but not below the table had a content", () => {
+      setCellContent(model, "B4", "Something");
+      createFilter(model, "A1:A3");
+      setCellContent(model, "A4", "Something Else");
+      expect(zoneToXc(model.getters.getFilterTables(sheetId)[0].zone)).toEqual("A1:A4");
+    });
   });
 
   describe("Grid manipulation", () => {

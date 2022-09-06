@@ -1,7 +1,7 @@
 import { _lt } from "../translation";
 import { Position, UnboundedZone, Zone, ZoneDimension } from "../types";
 import { lettersToNumber, numberToLetters, toCartesian, toXC } from "./coordinates";
-import { range, sumOfArray } from "./misc";
+import { range } from "./misc";
 import { isColReference, isRowReference } from "./references";
 
 /**
@@ -190,25 +190,22 @@ export function zoneToXc(zone: Zone | UnboundedZone): string {
 
 /**
  * Expand a zone after inserting columns or rows.
+ *
+ * Don't resize the zone if a col/row was added right before/after the row but only move the zone.
  */
 export function expandZoneOnInsertion<Z extends UnboundedZone | Zone>(
   zone: Z,
   start: "left" | "top",
   base: number,
   position: "after" | "before",
-  quantity: number,
-  shouldIncludeEnd = false
+  quantity: number
 ): Z {
   const dimension = start === "left" ? "columns" : "rows";
   const baseElement = position === "before" ? base - 1 : base;
   const end = start === "left" ? "right" : "bottom";
   const zoneEnd = zone[end];
 
-  if (zoneEnd) {
-    shouldIncludeEnd =
-      shouldIncludeEnd || position === "before" ? zoneEnd > baseElement : zoneEnd > baseElement;
-  }
-  if (zone[start] <= baseElement && shouldIncludeEnd) {
+  if (zone[start] <= baseElement && zoneEnd && zoneEnd > baseElement) {
     return createAdaptedZone(zone, dimension, "RESIZE", quantity);
   }
   if (baseElement < zone[start]) {
@@ -644,7 +641,7 @@ function isFullCol(zone: UnboundedZone): boolean {
   return zone.bottom === undefined;
 }
 
-/** Return the area of a zone */
+/** Returns the area of a zone */
 export function getZoneArea(zone: Zone): number {
   return (zone.bottom - zone.top + 1) * (zone.right - zone.left + 1);
 }
@@ -655,7 +652,19 @@ export function getZoneArea(zone: Zone): number {
  * */
 export function areZonesContinuous(...zones: Zone[]): boolean {
   const unionOfZones = union(...zones);
-  return getZoneArea(unionOfZones) === sumOfArray(zones.map(getZoneArea));
+  const unionPositions = new Set(positions(unionOfZones).map((p) => zoneToXc(positionToZone(p))));
+  const zonesPositions = new Set(
+    zones
+      .map(positions)
+      .flat()
+      .map((p) => zoneToXc(positionToZone(p)))
+  );
+  for (const p of unionPositions) {
+    if (!zonesPositions.has(p)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /** Return all the columns in the given list of zones */

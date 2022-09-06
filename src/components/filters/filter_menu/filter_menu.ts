@@ -26,7 +26,6 @@ const CSS = css/* scss */ `
       cursor: pointer;
       user-select: none;
 
-      &:hover,
       &.selected {
         background-color: rgba(0, 0, 0, 0.08);
       }
@@ -157,13 +156,14 @@ export class FilterMenu extends Component<Props, SpreadsheetChildEnv> {
 
   private state: State | undefined;
 
-  valueListRef = useRef("filter_value_list");
+  private valueListRef = useRef("filterValueList");
+  private searchBar = useRef("filterMenuSearchBar");
 
   setup() {
     const sheetId = this.env.model.getters.getActiveSheetId();
     const filterPosition = this.props.filterPosition;
     const filter = this.filter;
-    if (!filter || !filterPosition) {
+    if (!filter) {
       this.state = useState({ values: [], textFilter: "", selectedValue: undefined });
       return;
     }
@@ -196,8 +196,12 @@ export class FilterMenu extends Component<Props, SpreadsheetChildEnv> {
     this.state = useState({ values, textFilter: "", selectedValue: undefined });
   }
 
-  selectVal(value: Value) {
+  selectValue(value: Value) {
+    if (this.state) {
+      this.state.selectedValue = value.string;
+    }
     value.checked = !value.checked;
+    this.searchBar.el?.focus();
   }
 
   selectAll() {
@@ -277,7 +281,7 @@ export class FilterMenu extends Component<Props, SpreadsheetChildEnv> {
         break;
       case "Enter":
         if (selectedIndex !== undefined) {
-          this.selectVal(displayedValues[selectedIndex]);
+          this.selectValue(displayedValues[selectedIndex]);
         }
         ev.preventDefault();
         break;
@@ -334,7 +338,6 @@ export const FilterMenuPopoverBuilder: PopoverBuilders = {
       props: { filterPosition: position },
       Component: FilterMenu,
       cellCorner: "BottomLeft",
-      popoverType: "FilterMenu",
     };
   },
 };

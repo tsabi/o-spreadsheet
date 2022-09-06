@@ -1,6 +1,3 @@
-import { Component } from "@odoo/owl";
-import { Env } from "@odoo/owl/dist/types/app/app";
-import { ComponentNode } from "@odoo/owl/dist/types/component/component_node";
 import { Registry } from "../registry";
 import { SpreadsheetChildEnv } from "../types/env";
 
@@ -40,7 +37,6 @@ export interface MenuItem {
   separator?: boolean;
   icon?: string;
   textColor?: string;
-  component?: new (props: any, env: Env, node: ComponentNode) => Component;
 }
 
 export type FullMenuItem = Required<MenuItem>;

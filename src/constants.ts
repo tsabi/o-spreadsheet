@@ -38,8 +38,7 @@ export const UNHIDE_ICON_EDGE_LENGTH = 14;
 export const MIN_CF_ICON_MARGIN = 4;
 export const MIN_CELL_TEXT_MARGIN = 4;
 export const CF_ICON_EDGE_LENGTH = 15;
-export const FILTER_ICON_MARGIN = 4;
-export const FILTER_EDGE_LENGTH = 20;
+export const FILTER_ICON_MARGIN = 2;
 
 // Menus
 export const MENU_WIDTH = 250;

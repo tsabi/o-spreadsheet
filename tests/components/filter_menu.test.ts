@@ -31,7 +31,7 @@ describe("Filter menu component", () => {
   function getFilterMenuValues() {
     const values: { value: string; isChecked: boolean }[] = [];
     const filterValueEls = fixture.querySelectorAll(".o-filter-menu-value");
-    for (let filterValue of filterValueEls) {
+    for (const filterValue of filterValueEls) {
       const isChecked = !!filterValue.querySelector(".o-filter-menu-value-checked span")
         ?.textContent;
       const value = filterValue.querySelector(".o-filter-menu-value-text")!.textContent!;
@@ -133,6 +133,16 @@ describe("Filter menu component", () => {
       expect(values.map((val) => val.value)).toEqual(["(Blanks)", "2"]);
     });
 
+    test("Can hover mouse to select items", async () => {
+      await openFilterMenu();
+      const listItems = fixture.querySelectorAll(".o-filter-menu-value");
+      expect(listItems[0].classList.contains("selected")).toBeFalsy();
+
+      listItems[0].dispatchEvent(new Event("mouseenter", { bubbles: true }));
+      await nextTick();
+      expect(listItems[0].classList.contains("selected")).toBeTruthy();
+    });
+
     test("Clicking on values check and uncheck them", async () => {
       await openFilterMenu();
       expect(getFilterMenuValues()[0]).toEqual({ value: "(Blanks)", isChecked: true });
@@ -192,6 +202,14 @@ describe("Filter menu component", () => {
         expect(getFilterMenuValues().map((v) => v.value)).toEqual(["1"]);
       });
 
+      test("Clicking on values focus the search input", async () => {
+        await openFilterMenu();
+        const searchInput = fixture.querySelector(".o-filter-menu input");
+        expect(document.activeElement).not.toBe(searchInput);
+        await simulateClick(".o-filter-menu-value");
+        expect(document.activeElement).toBe(searchInput);
+      });
+
       test("Search bar uses fuzzy search", async () => {
         setCellContent(model, "A2", "Florida");
         setCellContent(model, "A3", "Alaska");
@@ -212,17 +230,15 @@ describe("Filter menu component", () => {
 
         searchInput.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
         await nextTick();
-        let listItems = fixture.querySelectorAll(".o-filter-menu-value");
+        const listItems = fixture.querySelectorAll(".o-filter-menu-value");
         expect(listItems[0].classList.contains("selected")).toBeTruthy();
 
         searchInput.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
         await nextTick();
-        listItems = fixture.querySelectorAll(".o-filter-menu-value");
         expect(listItems[1].classList.contains("selected")).toBeTruthy();
 
         searchInput.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp" }));
         await nextTick();
-        listItems = fixture.querySelectorAll(".o-filter-menu-value");
         expect(listItems[0].classList.contains("selected")).toBeTruthy();
       });
 

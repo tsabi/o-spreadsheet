@@ -37,7 +37,6 @@ export const ErrorToolTipPopoverBuilder: PopoverBuilders = {
         isOpen: true,
         props: { text: cell.evaluated.error.message },
         Component: ErrorToolTip,
-        popoverType: "ErrorToolTip",
         cellCorner: "TopRight",
       };
     }

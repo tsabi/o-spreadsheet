@@ -88,7 +88,7 @@
           position="getFilterHeaderPosition(header)"
           isActive="isFilterActive(header)"
           t-key="'icon_'+header.col + '_' + header.row"
-          onClick="(ev) => this.toggleFilterMenu(header, ev)"
+          onClick="(ev) => this.toggleFilterMenu(header)"
         />
       </t>
       <t

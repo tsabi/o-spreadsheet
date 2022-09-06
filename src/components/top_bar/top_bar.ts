@@ -502,11 +502,10 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
     this.env.model.dispatch("REQUEST_REDO");
   }
 
-  get selectionContainFilter() {
+  get selectionContainsFilter() {
     const sheetId = this.env.model.getters.getActiveSheetId();
     const selectedZones = this.env.model.getters.getSelectedZones();
-    const a = this.env.model.getters.isZonesContainFilter(sheetId, selectedZones);
-    return a;
+    return this.env.model.getters.doesZonesContainFilter(sheetId, selectedZones);
   }
 
   get cannotCreateFilter() {

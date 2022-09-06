@@ -12,9 +12,10 @@ import {
   BACKGROUND_GRAY_COLOR,
   ComponentsImportance,
   DEFAULT_CELL_HEIGHT,
-  FILTER_EDGE_LENGTH,
+  FILTER_ICON_MARGIN,
   HEADER_HEIGHT,
   HEADER_WIDTH,
+  ICON_EDGE_LENGTH,
   SCROLLBAR_WIDTH,
 } from "../../constants";
 import { findCellInNewZone, isInside, MAX_DELAY, range } from "../../helpers/index";
@@ -950,9 +951,11 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     const { offsetX, offsetY } = this.env.model.getters.getActiveViewport();
     const row = this.env.model.getters.getRowDimensions(sheetId, position.row);
     const col = this.env.model.getters.getColDimensions(sheetId, position.col);
+    // TODO : change this offset when we support vertical cell align
+    const centeringOffset = (row.size - ICON_EDGE_LENGTH) / 2;
     return {
-      x: col.end - FILTER_EDGE_LENGTH + HEADER_WIDTH - offsetX,
-      y: row.end - FILTER_EDGE_LENGTH + HEADER_HEIGHT - offsetY,
+      x: col.end - ICON_EDGE_LENGTH + HEADER_WIDTH - offsetX - FILTER_ICON_MARGIN,
+      y: row.end - ICON_EDGE_LENGTH + HEADER_HEIGHT - offsetY - centeringOffset,
     };
   }
 

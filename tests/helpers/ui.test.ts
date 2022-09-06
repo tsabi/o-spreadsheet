@@ -103,18 +103,24 @@ describe("UI Helpers", () => {
     test("Create a filter across a merge", () => {
       merge(model, "A1:A2");
       interactiveAddFilter(env, sheetId, target("A1:B1"));
-      expect(contentTextSpy).toHaveBeenCalledWith(AddFilterInteractiveContent.mergeInFilter);
+      expect(contentTextSpy).toHaveBeenCalledWith(
+        AddFilterInteractiveContent.mergeInFilter.toString()
+      );
     });
 
     test("Create a filter across another filter", () => {
       createFilter(model, "A1:A2");
       interactiveAddFilter(env, sheetId, target("A1:B5"));
-      expect(contentTextSpy).toHaveBeenCalledWith(AddFilterInteractiveContent.filterOverlap);
+      expect(contentTextSpy).toHaveBeenCalledWith(
+        AddFilterInteractiveContent.filterOverlap.toString()
+      );
     });
 
     test("Create filters with non-continuous zones", () => {
       interactiveAddFilter(env, sheetId, target("A1:A2,C3"));
-      expect(contentTextSpy).toHaveBeenCalledWith(AddFilterInteractiveContent.nonContinuousTargets);
+      expect(contentTextSpy).toHaveBeenCalledWith(
+        AddFilterInteractiveContent.nonContinuousTargets.toString()
+      );
     });
   });
 

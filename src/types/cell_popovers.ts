@@ -41,7 +41,6 @@ type OpenCellPopover<C extends ComponentConstructor> = {
   Component: C;
   props: PropsOf<C>;
   cellCorner: "TopRight" | "BottomLeft";
-  popoverType: CellPopoverType;
 };
 
 export type CellPopoverComponent<C extends SizedComponentConstructor = SizedComponentConstructor> =

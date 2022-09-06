@@ -500,7 +500,7 @@ export class ClipboardPlugin extends UIPlugin {
         }
       }
     }
-    if (options === undefined) {
+    if (!options) {
       this.pasteCopiedTables(state, target);
     }
   }

@@ -16,6 +16,7 @@
       </div>
       <div class="o-filter-search">
         <input
+          t-ref="filterMenuSearchBar"
           type="text"
           t-model="state.textFilter"
           placeholder="Search..."
@@ -25,10 +26,11 @@
           <t t-call="o-spreadsheet-Icon.SEARCH"/>
         </i>
       </div>
-      <div class="o-filter-menu-list" t-ref="filter_value_list">
+      <div class="o-filter-menu-list" t-ref="filterValueList">
         <t t-foreach="displayedValues" t-as="value" t-key="value.string">
           <div
-            t-on-click="() => selectVal(value)"
+            t-on-click="() => this.selectValue(value)"
+            t-on-mouseenter="() => state.selectedValue = value.string"
             class="o-filter-menu-item o-filter-menu-value"
             t-att-class="{'selected': value.string === state.selectedValue}">
             <div>

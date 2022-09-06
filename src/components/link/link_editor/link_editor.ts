@@ -193,7 +193,6 @@ export const LinkEditorPopoverBuilder: PopoverBuilders = {
       props: { cellPosition: position },
       Component: LinkEditor,
       cellCorner: "BottomLeft",
-      popoverType: "LinkEditor",
     };
   },
 };

@@ -10,7 +10,6 @@ import {
   DEFAULT_FONT_SIZE,
   DEFAULT_FONT_WEIGHT,
   FILTERS_COLOR,
-  FILTER_EDGE_LENGTH,
   FILTER_ICON_MARGIN,
   HEADER_BORDER_COLOR,
   HEADER_FONT_SIZE,
@@ -428,7 +427,7 @@ export class RendererPlugin extends UIPlugin {
             box.x +
             box.width -
             MIN_CELL_TEXT_MARGIN -
-            (box.isFilterHeader ? FILTER_ICON_MARGIN + FILTER_EDGE_LENGTH : 0);
+            (box.isFilterHeader ? ICON_EDGE_LENGTH + FILTER_ICON_MARGIN : 0);
         } else {
           x = box.x + box.width / 2;
         }
@@ -508,7 +507,7 @@ export class RendererPlugin extends UIPlugin {
     for (let col = left; col <= right; col++) {
       const colZone = { left: col, right: col, top: 0, bottom: numberOfRows - 1 };
       const { x, width } = this.getRect(colZone, viewport);
-      const colHasFilter = this.getters.isZonesContainFilter(sheetId, [colZone]);
+      const colHasFilter = this.getters.doesZonesContainFilter(sheetId, [colZone]);
       const isColActive = activeCols.has(col);
       const isColSelected = selectedCols.has(col);
       if (isColActive) {
@@ -527,7 +526,7 @@ export class RendererPlugin extends UIPlugin {
     for (let row = top; row <= bottom; row++) {
       const rowZone = { top: row, bottom: row, left: 0, right: numberOfCols - 1 };
       const { y, height } = this.getRect(rowZone, viewport);
-      const rowHasFilter = this.getters.isZonesContainFilter(sheetId, [rowZone]);
+      const rowHasFilter = this.getters.doesZonesContainFilter(sheetId, [rowZone]);
       const isRowActive = activeRows.has(row);
       const isRowSelected = selectedRows.has(row);
       if (isRowActive) {
@@ -658,7 +657,7 @@ export class RendererPlugin extends UIPlugin {
 
     /** Filter Header */
     box.isFilterHeader = this.getters.isFilterHeader(sheetId, col, row);
-    const headerIconWidth = box.isFilterHeader ? FILTER_ICON_MARGIN + ICON_EDGE_LENGTH : 0;
+    const headerIconWidth = box.isFilterHeader ? ICON_EDGE_LENGTH + FILTER_ICON_MARGIN : 0;
 
     /** Content */
     const text = this.getters.getCellText(cell, showFormula);

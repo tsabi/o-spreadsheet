@@ -19,6 +19,7 @@ import {
 } from "../../src/types";
 import { XLSXExport } from "../../src/types/xlsx";
 import { OWL_TEMPLATES } from "../setup/jest.setup";
+import { CellEvaluation } from "./../../src/types/cells";
 import { redo, setCellContent, undo } from "./commands_helpers";
 import { getCell, getCellContent } from "./getters_helpers";
 
@@ -427,14 +428,23 @@ export function toCartesianArray(xc: string): [number, number] {
   const { col, row } = toCartesian(xc);
   return [col, row];
 }
+interface CellValue {
+  value: string | number | boolean;
+  style?: Style;
+  evaluated: CellEvaluation;
+  format?: string;
+  content: string;
+}
 
-export function getCellsObject(model: Model, sheetId: UID) {
-  const cells = {};
+export function getCellsObject(model: Model, sheetId: UID): Record<string, CellValue> {
+  const cells: Record<string, CellValue> = {};
   for (let cell of Object.values(model.getters.getCells(sheetId))) {
     const { col, row } = model.getters.getCellPosition(cell.id);
     cell = model.getters.getCell(sheetId, col, row)!;
     cells[toXC(col, row)] = {
-      ...cell,
+      style: cell.style,
+      format: cell.format,
+      evaluated: cell.evaluated,
       value: cell.evaluated.value,
       content: cell.content,
     };

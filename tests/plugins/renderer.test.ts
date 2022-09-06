@@ -628,6 +628,7 @@ describe("renderer", () => {
     setCellContent(model, "A1", "1");
     setCellContent(model, "C1", "1");
     model.drawGrid(ctx);
+    console.log(textAligns);
     expect(textAligns).toEqual(["right", "left", "right", "right", "center"]); // A1-C1-A2:B2-C2:D2 and center for headers. C1 is stil lin overflow
   });
 

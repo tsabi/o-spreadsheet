@@ -2,8 +2,8 @@ import {
   DEFAULT_CELL_HEIGHT,
   DEFAULT_FONT,
   DEFAULT_FONT_SIZE,
-  FILTER_EDGE_LENGTH,
   FILTER_ICON_MARGIN,
+  ICON_EDGE_LENGTH,
   PADDING_AUTORESIZE,
 } from "../../src/constants";
 import { fontSizeMap } from "../../src/fonts";
@@ -435,7 +435,7 @@ describe("Autoresize", () => {
     createFilter(model, "A1");
     model.dispatch("AUTORESIZE_COLUMNS", { sheetId, cols: [0] });
     expect(model.getters.getColSize(sheetId, 0)).toBe(
-      sizes[0] + padding + FILTER_EDGE_LENGTH + FILTER_ICON_MARGIN
+      sizes[0] + padding + ICON_EDGE_LENGTH + FILTER_ICON_MARGIN
     );
   });
 
@@ -443,7 +443,7 @@ describe("Autoresize", () => {
     createFilter(model, "A1");
     model.dispatch("AUTORESIZE_COLUMNS", { sheetId, cols: [0] });
     expect(model.getters.getColSize(sheetId, 0)).toBe(
-      padding + FILTER_EDGE_LENGTH + FILTER_ICON_MARGIN
+      padding + ICON_EDGE_LENGTH + FILTER_ICON_MARGIN
     );
   });
 

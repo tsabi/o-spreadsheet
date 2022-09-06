@@ -6,6 +6,7 @@ import {
   isInside,
   isZoneInside,
   overlap,
+  range,
   reduceZoneOnDeletion,
   toZone,
   union,
@@ -25,6 +26,7 @@ import {
   Zone,
 } from "../../types/index";
 import { CorePlugin } from "../core_plugin";
+import { Alias } from "./../../types/misc";
 
 /**
  * There is 2 components in filters : FilterTables and filters.
@@ -47,23 +49,23 @@ import { CorePlugin } from "../core_plugin";
  *  - And the core plugin know mapping filterId/position
  */
 
-type FilterTableId = UID;
+type FilterTableId = UID & Alias;
 interface FiltersState {
   tables: Record<UID, Record<FilterTableId, FilterTable>>;
 }
 
 export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersState {
   static getters = [
+    "doesZonesContainFilter",
     "getFilter",
     "getFilters",
     "getFilterTable",
     "getFilterTables",
     "getFilterTablesInZone",
-    "isZonesContainFilter",
     "getFilterId",
   ] as const;
 
-  tables: Record<UID, Record<FilterId, FilterTable>> = {};
+  readonly tables: Record<UID, Record<FilterTableId, FilterTable>> = {};
 
   // ---------------------------------------------------------------------------
   // Command Handling
@@ -121,10 +123,9 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
         break;
       case "CREATE_FILTER_TABLE": {
         const zone = union(...cmd.target);
-        const filterId = this.uuidGenerator.uuidv4();
-        const newFilter = this.createFilterTable(zone);
-        this.history.update("tables", cmd.sheetId, filterId, newFilter);
-
+        const filterTableId = this.uuidGenerator.uuidv4();
+        const newFilterTable = this.createFilterTable(zone);
+        this.history.update("tables", cmd.sheetId, filterTableId, newFilterTable);
         break;
       }
       case "REMOVE_FILTER_TABLE": {
@@ -139,9 +140,7 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
         break;
       }
       case "UPDATE_CELL": {
-        // Since this plugin is loaded before CellPlugin, the getters still give us the old cell content
-        const oldCellContent = this.getters.getCell(cmd.sheetId, cmd.col, cmd.row)?.content;
-        this.onUpdateCell(cmd, oldCellContent);
+        this.onUpdateCell(cmd);
       }
     }
   }
@@ -197,7 +196,7 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
     return tables;
   }
 
-  isZonesContainFilter(sheetId: UID, zones: Zone[]): boolean {
+  doesZonesContainFilter(sheetId: UID, zones: Zone[]): boolean {
     for (const zone of zones) {
       for (const filterTable of this.getFilterTables(sheetId)) {
         if (intersection(zone, filterTable.zone)) {
@@ -223,15 +222,13 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
       );
       if (zoneToXc(zone) !== zoneToXc(filterTable.zone)) {
         const filters: Filter[] = [];
-        for (let filterId = 0; filterId < filterTable.filters.length; filterId++) {
-          const filter = filterTable.filters[filterId];
+        for (const filter of filterTable.filters) {
           const filterZone = expandZoneOnInsertion(
             filter.zoneWithHeaders,
             cmd.dimension === "COL" ? "left" : "top",
             cmd.base,
             cmd.position,
-            cmd.quantity,
-            true
+            cmd.quantity
           );
           filters.push(new Filter(filter.id, filterZone));
         }
@@ -271,8 +268,7 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
       } else {
         if (zoneToXc(zone) !== zoneToXc(table.zone)) {
           const filters: Filter[] = [];
-          for (let filterId = 0; filterId < table.filters.length; filterId++) {
-            const filter = table.filters[filterId];
+          for (const filter of table.filters) {
             const newFilterZone = reduceZoneOnDeletion(
               filter.zoneWithHeaders,
               cmd.dimension === "COL" ? "left" : "top",
@@ -297,36 +293,64 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
     return new FilterTable(zone);
   }
 
-  private onUpdateCell(
-    { content: cellContent, sheetId, col, row }: UpdateCellCommand,
-    oldCellContent: string | undefined
-  ) {
-    if (oldCellContent === undefined && cellContent !== undefined) {
-      for (let tableId of this.getFilterTablesIds(sheetId)) {
-        const table = this.tables[sheetId][tableId];
-        const zone = table.zone;
-        if (zone.bottom + 1 === row && col >= zone.left && col <= zone.right) {
-          const newZone = { ...zone, bottom: zone.bottom + 1 };
-          this.history.update("tables", sheetId, tableId, "zone", newZone);
-          for (let filterId = 0; filterId < table.filters.length; filterId++) {
-            const filter = table.filters[filterId];
-            const newFilterZone = {
-              ...filter.zoneWithHeaders,
-              bottom: filter.zoneWithHeaders.bottom + 1,
-            };
-            this.history.update(
-              "tables",
-              sheetId,
-              tableId,
-              "filters",
-              filterId,
-              "zoneWithHeaders",
-              newFilterZone
-            );
-          }
+  private onUpdateCell(cmd: UpdateCellCommand) {
+    const sheetId = cmd.sheetId;
+    for (let tableId of this.getFilterTablesIds(sheetId)) {
+      const table = this.tables[sheetId][tableId];
+      if (this.canUpdateCellCmdExtendTable(cmd, table)) {
+        const newZone = { ...table.zone, bottom: table.zone.bottom + 1 };
+        this.history.update("tables", sheetId, tableId, "zone", newZone);
+        for (let filterIndex = 0; filterIndex < table.filters.length; filterIndex++) {
+          const filter = table.filters[filterIndex];
+          const newFilterZone = {
+            ...filter.zoneWithHeaders,
+            bottom: filter.zoneWithHeaders.bottom + 1,
+          };
+          this.history.update(
+            "tables",
+            sheetId,
+            tableId,
+            "filters",
+            filterIndex,
+            "zoneWithHeaders",
+            newFilterZone
+          );
         }
+        return;
       }
     }
+  }
+
+  /**
+   * Check if an UpdateCell command should cause the given table to be extended by one row.
+   *
+   * The table should be extended if :
+   * 1) The cell updated is right below the table
+   * 2) The command add a content to the cell
+   * 3) No cell right below the table had any content before the command
+   *
+   */
+  private canUpdateCellCmdExtendTable(
+    { content: newCellContent, sheetId, col, row }: UpdateCellCommand,
+    table: FilterTable
+  ) {
+    if (!newCellContent) {
+      return;
+    }
+
+    const zone = table.zone;
+    if (!(zone.bottom + 1 === row && col >= zone.left && col <= zone.right)) {
+      return false;
+    }
+
+    for (const col of range(zone.left, zone.right + 1)) {
+      // Since this plugin is loaded before CellPlugin, the getters still give us the old cell content
+      const cellContent = this.getters.getCell(sheetId, col, row)?.content;
+      if (cellContent !== undefined) {
+        return false;
+      }
+    }
+    return true;
   }
 
   // ---------------------------------------------------------------------------
@@ -334,16 +358,12 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
   // ---------------------------------------------------------------------------
 
   import(data: WorkbookData) {
-    this.tables = {};
     for (let sheet of data.sheets) {
-      const filterTables: Record<UID, FilterTable> = {};
       for (let filterTableData of sheet.filterTables || []) {
         const table = this.createFilterTable(toZone(filterTableData.range));
         const tableId = this.uuidGenerator.uuidv4();
-        filterTables[tableId] = table;
+        this.history.update("tables", sheet.id, tableId, table);
       }
-
-      this.tables[sheet.id] = filterTables;
     }
   }
 

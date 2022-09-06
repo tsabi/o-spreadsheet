@@ -1,7 +1,12 @@
 import { App } from "@odoo/owl";
 import { Spreadsheet, TransportService } from "../../src";
 import { Grid } from "../../src/components/grid/grid";
-import { HEADER_WIDTH, MESSAGE_VERSION, SCROLLBAR_WIDTH } from "../../src/constants";
+import {
+  FILTER_ICON_MARGIN,
+  HEADER_WIDTH,
+  MESSAGE_VERSION,
+  SCROLLBAR_WIDTH,
+} from "../../src/constants";
 import { scrollDelay, toZone } from "../../src/helpers";
 import { Model } from "../../src/model";
 import { dashboardMenuRegistry } from "../../src/registries";
@@ -36,8 +41,8 @@ import { MockTransportService } from "../__mocks__/transport_service";
 import {
   DEFAULT_CELL_HEIGHT,
   DEFAULT_CELL_WIDTH,
-  FILTER_EDGE_LENGTH,
   HEADER_HEIGHT,
+  ICON_EDGE_LENGTH,
 } from "./../../src/constants";
 jest.mock("../../src/components/composer/content_editable_helper", () =>
   require("./__mocks__/content_editable_helper")
@@ -590,9 +595,16 @@ describe("Grid component", () => {
 
       const icons = fixture.querySelectorAll(".o-filter-icon");
       expect(icons).toHaveLength(2);
-      const top = `${DEFAULT_CELL_HEIGHT * 2 - FILTER_EDGE_LENGTH + HEADER_HEIGHT}px`;
-      const leftA = `${DEFAULT_CELL_WIDTH * 2 - FILTER_EDGE_LENGTH + HEADER_WIDTH}px`;
-      const leftB = `${DEFAULT_CELL_WIDTH * 3 - FILTER_EDGE_LENGTH + HEADER_WIDTH}px`;
+      const centerIngOffset = (DEFAULT_CELL_HEIGHT - ICON_EDGE_LENGTH) / 2;
+      const top = `${
+        DEFAULT_CELL_HEIGHT * 2 - ICON_EDGE_LENGTH + HEADER_HEIGHT - centerIngOffset
+      }px`;
+      const leftA = `${
+        DEFAULT_CELL_WIDTH * 2 - ICON_EDGE_LENGTH + HEADER_WIDTH - FILTER_ICON_MARGIN
+      }px`;
+      const leftB = `${
+        DEFAULT_CELL_WIDTH * 3 - ICON_EDGE_LENGTH + HEADER_WIDTH - FILTER_ICON_MARGIN
+      }px`;
       expect((icons[0] as HTMLElement).style["_values"]).toEqual({ top, left: leftA });
       expect((icons[1] as HTMLElement).style["_values"]).toEqual({ top, left: leftB });
     });
