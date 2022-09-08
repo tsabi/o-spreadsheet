@@ -872,6 +872,58 @@ export const PMT: AddFunctionDescription = {
 };
 
 // -----------------------------------------------------------------------------
+// PPMT
+// -----------------------------------------------------------------------------
+export const PPMT: AddFunctionDescription = {
+  description: _lt("Payment on the principal of an investment."),
+  args: args(`
+  rate (number) ${_lt("The annualized rate of interest.")}
+  period (number) ${_lt("The amortization period, in terms of number of periods.")}
+  number_of_periods (number) ${_lt("The number of payments to be made.")}
+  present_value (number) ${_lt("The current value of the annuity.")}
+  future_value (number, default=${DEFAULT_FUTURE_VALUE}) ${_lt(
+    "The future value remaining after the final payment has been made."
+  )}
+  end_or_beginning (number, default=${DEFAULT_END_OR_BEGINNING}) ${_lt(
+    "Whether payments are due at the end (0) or beginning (1) of each period."
+  )}
+  `),
+  returns: ["NUMBER"],
+  compute: function (
+    rate: PrimitiveArgValue,
+    currentPeriod: PrimitiveArgValue,
+    numberOfPeriods: PrimitiveArgValue,
+    presentValue: PrimitiveArgValue,
+    futureValue: PrimitiveArgValue = DEFAULT_FUTURE_VALUE,
+    endOrBeginning: PrimitiveArgValue = DEFAULT_END_OR_BEGINNING
+  ): number {
+    endOrBeginning = endOrBeginning || 0;
+    const n = toNumber(numberOfPeriods);
+    const r = toNumber(rate);
+    const period = toNumber(currentPeriod);
+    const type = toBoolean(endOrBeginning) ? 1 : 0;
+    const fv = toNumber(futureValue);
+    const pv = toNumber(presentValue);
+
+    assertNumberOfPeriodsPositive(n);
+    assert(
+      () => period > 0 && period <= n,
+      _lt("The period must be between 1 and number_of_periods", n.toString())
+    );
+
+    const payment = PMT.compute(r, n, pv, fv, endOrBeginning) as number;
+
+    if (type === 1 && period === 1) return payment;
+    const eqPeriod = type === 0 ? period - 1 : period - 2;
+    const eqPv = pv + payment * type;
+
+    const capitalAtPeriod = -(FV.compute(r, eqPeriod, payment, eqPv, 0) as number);
+    const currentInterest = capitalAtPeriod * r;
+    return payment + currentInterest;
+  },
+};
+
+// -----------------------------------------------------------------------------
 // PV
 // -----------------------------------------------------------------------------
 export const PV: AddFunctionDescription = {
