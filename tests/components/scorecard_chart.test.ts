@@ -81,6 +81,7 @@ describe("Scorecard charts", () => {
           cells: {
             A1: { content: "2" },
             A2: { content: "3" },
+            A3: { content: "2.1234" },
             B1: { content: "1" },
             B2: { content: "2" },
             B3: { content: "3" },
@@ -196,14 +197,17 @@ describe("Scorecard charts", () => {
   });
 
   test("Baseline is displayed with the cell format", async () => {
+    createScorecardChart(model, { keyValue: "A3", baseline: "B2" }, chartId);
+    await nextTick();
+    expect(getChartBaselineElement()?.textContent).toEqual((0.12).toLocaleString());
+
     model.dispatch("SET_FORMATTING", {
       sheetId,
       target: target("B2"),
-      format: "[$$]#,##0.00",
+      format: "[$$]#,####0.0000",
     });
-    createScorecardChart(model, { keyValue: "A1", baseline: "B2" }, chartId);
     await nextTick();
-    expect(getChartBaselineElement()?.textContent).toEqual("$0.00");
+    expect(getChartBaselineElement()?.textContent).toEqual("$0.1234");
   });
 
   test("Key value and baseline are displayed with the cell style", async () => {
