@@ -773,7 +773,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       this.env.model.dispatch(
         ev.ctrlKey ? "PREPARE_SELECTION_INPUT_EXPANSION" : "STOP_SELECTION_INPUT"
       );
-      this.gridOverlay.el!.removeEventListener("mousemove", onMouseMove);
       if (this.env.model.getters.isPaintingFormat()) {
         this.env.model.dispatch("PASTE", {
           target: this.env.model.getters.getSelectedZones(),
