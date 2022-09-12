@@ -1,4 +1,384 @@
+import { formatValue } from "../../src/helpers";
 import { evaluateCell, evaluateCellFormat, evaluateGrid } from "../test_helpers/helpers";
+
+describe("Coupons formulas", () => {
+  function testCouponArgNumber(fnName: string) {
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100)` })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 1)` })).not.toBe("#BAD_EXPR");
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 1 ,0)` })).not.toBe("#BAD_EXPR");
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 1, 0, 0)` })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+  }
+
+  function testMaturityGreaterThanSettlement(fnName: string) {
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 1)` })).not.toBe("#ERROR");
+    expect(evaluateCell("A1", { A1: `=${fnName}(100, 0, 1)` })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+  }
+
+  function testFrequencyValue(fnName: string) {
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 0)` })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 1)` })).not.toBe("#ERROR");
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 2)` })).not.toBe("#ERROR");
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 3)` })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 4)` })).not.toBe("#ERROR");
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 5)` })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+  }
+
+  function testDayCountConventionValue(fnName: string) {
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 1, -1)` })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 1, 0)` })).not.toBe("#ERROR");
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 1, 1)` })).not.toBe("#ERROR");
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 1, 2)` })).not.toBe("#ERROR");
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 1, 3)` })).not.toBe("#ERROR");
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 1, 4)` })).not.toBe("#ERROR");
+    expect(evaluateCell("A1", { A1: `=${fnName}(0, 100, 1, 5)` })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+  }
+
+  describe("COUPDAYS formula", () => {
+    describe("Function arguments", () => {
+      test("take at 3 or 4 arguments", () => testCouponArgNumber("COUPDAYS"));
+      test("maturity date should be greater than settlement date", () =>
+        testMaturityGreaterThanSettlement("COUPDAYS"));
+      test("frequency should be 1, 2 or 4", () => testFrequencyValue("COUPDAYS"));
+      test("day count convention should be between 0 and 4", () =>
+        testDayCountConventionValue("COUPDAYS"));
+    });
+
+    test.each([
+      ["01/01/2012", "05/01/2016", 1, 0, 360],
+      ["01/01/2012", "05/01/2016", 2, 1, 182],
+      ["01/01/2012", "05/01/2016", 4, 2, 90],
+      ["01/01/2012", "05/01/2016", 1, 3, 365],
+      ["01/01/2012", "05/01/2016", 2, 4, 180],
+      ["01/01/2012", "05/01/2016", 4, 1, 92],
+      ["01/01/2012", "01/02/2012", 1, 0, 360],
+      ["01/01/2012", "01/02/2012", 2, 1, 184],
+      ["01/01/2012", "01/02/2012", 4, 2, 90],
+      ["01/01/2012", "01/02/2012", 1, 3, 365],
+      ["01/01/2012", "01/02/2012", 2, 4, 180],
+      ["01/01/2012", "01/02/2012", 4, 1, 92],
+      ["01/01/2020", "07/31/2020", 1, 0, 360],
+      ["01/01/2020", "07/31/2020", 2, 1, 184],
+      ["01/01/2020", "07/31/2020", 4, 2, 90],
+      ["01/01/2020", "07/31/2020", 1, 3, 365],
+      ["01/01/2020", "07/31/2020", 2, 4, 180],
+      ["01/01/2020", "07/31/2020", 4, 1, 92],
+      ["06/01/2005", "12/31/2005", 2, 0, 180],
+      ["06/01/2005", "12/31/2005", 2, 1, 181],
+      ["06/01/2005", "12/31/2005", 2, 2, 180],
+      ["06/01/2005", "12/31/2005", 2, 3, 182.5],
+      ["06/01/2005", "12/31/2005", 2, 4, 180],
+      ["12/05/2005", "01/01/2010", 4, 0, 90],
+      ["12/05/2005", "01/01/2010", 4, 1, 92],
+      ["12/05/2005", "01/01/2010", 4, 2, 90],
+      ["12/05/2005", "01/01/2010", 4, 3, 91.25],
+      ["12/05/2005", "01/01/2010", 4, 4, 90],
+    ])(
+      "function result =COUPDAYS(%s, %s, %s, %s)",
+      (
+        settlement: string,
+        maturity: string,
+        frequency: number,
+        dayCount: number,
+        expectedResult: number
+      ) => {
+        const cellValue = evaluateCell("A1", {
+          A1: `=COUPDAYS("${settlement}", "${maturity}", ${frequency}, ${dayCount})`,
+        });
+        expect(cellValue).toEqual(expectedResult);
+      }
+    );
+  });
+
+  describe("COUPDAYBS formula", () => {
+    describe("Function arguments", () => {
+      test("take at 3 or 4 arguments", () => testCouponArgNumber("COUPDAYBS"));
+      test("maturity date should be greater than settlement date", () =>
+        testMaturityGreaterThanSettlement("COUPDAYBS"));
+      test("frequency should be 1, 2 or 4", () => testFrequencyValue("COUPDAYBS"));
+      test("day count convention should be between 0 and 4", () =>
+        testDayCountConventionValue("COUPDAYBS"));
+    });
+
+    test.each([
+      ["01/01/2012", "05/01/2016", 1, 0, 240],
+      ["01/01/2012", "05/01/2016", 2, 1, 61],
+      ["01/01/2012", "05/01/2016", 4, 2, 61],
+      ["01/01/2012", "05/01/2016", 1, 3, 245],
+      ["01/01/2012", "05/01/2016", 2, 4, 60],
+      ["01/01/2012", "05/01/2016", 4, 1, 61],
+      ["01/01/2012", "01/02/2012", 1, 0, 359],
+      ["01/01/2012", "01/02/2012", 2, 1, 183],
+      ["01/01/2012", "01/02/2012", 4, 2, 91],
+      ["01/01/2012", "01/02/2012", 1, 3, 364],
+      ["01/01/2012", "01/02/2012", 2, 4, 179],
+      ["01/01/2012", "01/02/2012", 4, 1, 91],
+      ["01/01/2020", "07/31/2020", 1, 0, 151],
+      ["01/01/2020", "07/31/2020", 2, 1, 154],
+      ["01/01/2020", "07/31/2020", 4, 2, 62],
+      ["01/01/2020", "07/31/2020", 1, 3, 154],
+      ["01/01/2020", "07/31/2020", 2, 4, 151],
+      ["01/01/2020", "07/31/2020", 4, 1, 62],
+      ["06/01/2005", "12/31/2005", 2, 0, 151],
+      ["06/01/2005", "12/31/2005", 2, 1, 152],
+      ["06/01/2005", "12/31/2005", 2, 2, 152],
+      ["06/01/2005", "12/31/2005", 2, 3, 152],
+      ["06/01/2005", "12/31/2005", 2, 4, 151],
+      ["12/05/2005", "01/01/2010", 4, 0, 64],
+      ["12/05/2005", "01/01/2010", 4, 1, 65],
+      ["12/05/2005", "01/01/2010", 4, 2, 65],
+      ["12/05/2005", "01/01/2010", 4, 3, 65],
+      ["12/05/2005", "01/01/2010", 4, 4, 64],
+    ])(
+      "function result =COUPDAYBS(%s, %s, %s, %s)",
+      (
+        settlement: string,
+        maturity: string,
+        frequency: number,
+        dayCount: number,
+        expectedResult: number
+      ) => {
+        const cellValue = evaluateCell("A1", {
+          A1: `=COUPDAYBS("${settlement}", "${maturity}", ${frequency}, ${dayCount})`,
+        });
+        expect(cellValue).toEqual(expectedResult);
+      }
+    );
+  });
+
+  describe("COUPDAYSNC formula", () => {
+    describe("Function arguments", () => {
+      test("take at 3 or 4 arguments", () => testCouponArgNumber("COUPDAYSNC"));
+      test("maturity date should be greater than settlement date", () =>
+        testMaturityGreaterThanSettlement("COUPDAYSNC"));
+      test("frequency should be 1, 2 or 4", () => testFrequencyValue("COUPDAYSNC"));
+      test("day count convention should be between 0 and 4", () =>
+        testDayCountConventionValue("COUPDAYSNC"));
+    });
+
+    test.each([
+      ["01/01/2012", "05/01/2016", 1, 0, 120],
+      ["01/01/2012", "05/01/2016", 2, 1, 121],
+      ["01/01/2012", "05/01/2016", 4, 2, 31],
+      ["01/01/2012", "05/01/2016", 1, 3, 121],
+      ["01/01/2012", "05/01/2016", 2, 4, 120],
+      ["01/01/2012", "05/01/2016", 4, 1, 31],
+      ["01/01/2012", "01/02/2012", 1, 0, 1],
+      ["01/01/2012", "01/02/2012", 2, 1, 1],
+      ["01/01/2012", "01/02/2012", 4, 2, 1],
+      ["01/01/2012", "01/02/2012", 1, 3, 1],
+      ["01/01/2012", "01/02/2012", 2, 4, 1],
+      ["01/01/2012", "01/02/2012", 4, 1, 1],
+      ["01/01/2020", "07/31/2020", 1, 0, 209],
+      ["01/01/2020", "07/31/2020", 2, 1, 30],
+      ["01/01/2020", "07/31/2020", 4, 2, 30],
+      ["01/01/2020", "07/31/2020", 1, 3, 212],
+      ["01/01/2020", "07/31/2020", 2, 4, 29],
+      ["01/01/2020", "07/31/2020", 4, 1, 30],
+      ["06/01/2005", "12/31/2005", 2, 0, 29],
+      ["06/01/2005", "12/31/2005", 2, 1, 29],
+      ["06/01/2005", "12/31/2005", 2, 2, 29],
+      ["06/01/2005", "12/31/2005", 2, 3, 29],
+      ["06/01/2005", "12/31/2005", 2, 4, 29],
+      ["12/05/2005", "01/01/2010", 4, 0, 26],
+      ["12/05/2005", "01/01/2010", 4, 1, 27],
+      ["12/05/2005", "01/01/2010", 4, 2, 27],
+      ["12/05/2005", "01/01/2010", 4, 3, 27],
+      ["12/05/2005", "01/01/2010", 4, 4, 26],
+    ])(
+      "function result =COUPDAYSNC(%s, %s, %s, %s)",
+      (
+        settlement: string,
+        maturity: string,
+        frequency: number,
+        dayCount: number,
+        expectedResult: number
+      ) => {
+        const cellValue = evaluateCell("A1", {
+          A1: `=COUPDAYSNC("${settlement}", "${maturity}", ${frequency}, ${dayCount})`,
+        });
+        expect(cellValue).toEqual(expectedResult);
+      }
+    );
+  });
+
+  describe("COUPPCD formula", () => {
+    describe("Function arguments", () => {
+      test("take at 3 or 4 arguments", () => testCouponArgNumber("COUPPCD"));
+      test("maturity date should be greater than settlement date", () =>
+        testMaturityGreaterThanSettlement("COUPPCD"));
+      test("frequency should be 1, 2 or 4", () => testFrequencyValue("COUPPCD"));
+      test("day count convention should be between 0 and 4", () =>
+        testDayCountConventionValue("COUPPCD"));
+    });
+
+    test.each([
+      ["01/01/2012", "05/01/2016", 1, 0, "05/01/2011"],
+      ["01/01/2012", "05/01/2016", 2, 1, "11/01/2011"],
+      ["01/01/2012", "05/01/2016", 4, 2, "11/01/2011"],
+      ["01/01/2012", "05/01/2016", 1, 3, "05/01/2011"],
+      ["01/01/2012", "05/01/2016", 2, 4, "11/01/2011"],
+      ["01/01/2012", "05/01/2016", 4, 1, "11/01/2011"],
+      ["01/01/2012", "01/02/2012", 1, 0, "01/02/2011"],
+      ["01/01/2012", "01/02/2012", 2, 1, "07/02/2011"],
+      ["01/01/2012", "01/02/2012", 4, 2, "10/02/2011"],
+      ["01/01/2012", "01/02/2012", 1, 3, "01/02/2011"],
+      ["01/01/2012", "01/02/2012", 2, 4, "07/02/2011"],
+      ["01/01/2012", "01/02/2012", 4, 1, "10/02/2011"],
+      ["01/01/2020", "07/31/2020", 1, 0, "07/31/2019"],
+      ["01/01/2020", "07/31/2020", 2, 1, "07/31/2019"],
+      ["01/01/2020", "07/31/2020", 4, 2, "10/31/2019"],
+      ["01/01/2020", "07/31/2020", 1, 3, "07/31/2019"],
+      ["01/01/2020", "07/31/2020", 2, 4, "07/31/2019"],
+      ["01/01/2020", "07/31/2020", 4, 1, "10/31/2019"],
+      ["12/31/2005", "11/30/2010", 1, 0, "11/30/2005"],
+      ["12/31/2005", "11/30/2010", 2, 1, "11/30/2005"],
+      ["12/31/2005", "11/30/2010", 4, 2, "11/30/2005"],
+      ["12/31/2005", "11/30/2010", 1, 3, "11/30/2005"],
+      ["12/31/2005", "11/30/2010", 2, 4, "11/30/2005"],
+      ["12/31/2005", "11/30/2010", 4, 1, "11/30/2005"],
+      ["12/05/2009", "01/01/2010", 1, 0, "01/01/2009"],
+      ["12/05/2009", "01/01/2010", 2, 1, "07/01/2009"],
+      ["12/05/2009", "01/01/2010", 4, 2, "10/01/2009"],
+      ["12/05/2009", "01/01/2010", 1, 3, "01/01/2009"],
+      ["12/05/2009", "01/01/2010", 2, 4, "07/01/2009"],
+      ["12/05/2009", "01/01/2010", 4, 1, "10/01/2009"],
+    ])(
+      "function result =COUPPCD(%s, %s, %s, %s)",
+      (
+        settlement: string,
+        maturity: string,
+        frequency: number,
+        dayCount: number,
+        expectedResult: string
+      ) => {
+        const cellValue = evaluateCell("A1", {
+          A1: `=COUPPCD("${settlement}", "${maturity}", ${frequency}, ${dayCount})`,
+        });
+        expect(formatValue(cellValue, "mm/dd/yyyy")).toEqual(expectedResult);
+      }
+    );
+
+    test("return formatted value", () => {
+      expect(evaluateCellFormat("A1", { A1: "=COUPPCD(0, 100, 1, 1)" })).toBe("m/d/yyyy");
+    });
+  });
+
+  describe("COUPNCD formula", () => {
+    describe("Function arguments", () => {
+      test("take at 3 or 4 arguments", () => testCouponArgNumber("COUPNCD"));
+      test("maturity date should be greater than settlement date", () =>
+        testMaturityGreaterThanSettlement("COUPNCD"));
+      test("frequency should be 1, 2 or 4", () => testFrequencyValue("COUPNCD"));
+      test("day count convention should be between 0 and 4", () =>
+        testDayCountConventionValue("COUPNCD"));
+    });
+
+    test.each([
+      ["01/01/2012", "05/01/2016", 1, 0, "05/01/2012"],
+      ["01/01/2012", "05/01/2016", 2, 1, "05/01/2012"],
+      ["01/01/2012", "05/01/2016", 4, 2, "02/01/2012"],
+      ["01/01/2012", "05/01/2016", 1, 3, "05/01/2012"],
+      ["01/01/2012", "05/01/2016", 2, 4, "05/01/2012"],
+      ["01/01/2012", "05/01/2016", 4, 1, "02/01/2012"],
+      ["01/01/2012", "01/02/2012", 1, 0, "01/02/2012"],
+      ["01/01/2012", "01/02/2012", 2, 1, "01/02/2012"],
+      ["01/01/2012", "01/02/2012", 4, 2, "01/02/2012"],
+      ["01/01/2012", "01/02/2012", 1, 3, "01/02/2012"],
+      ["01/01/2012", "01/02/2012", 2, 4, "01/02/2012"],
+      ["01/01/2012", "01/02/2012", 4, 1, "01/02/2012"],
+      ["01/01/2020", "07/31/2020", 1, 0, "07/31/2020"],
+      ["01/01/2020", "07/31/2020", 2, 1, "01/31/2020"],
+      ["01/01/2020", "07/31/2020", 4, 2, "01/31/2020"],
+      ["01/01/2020", "07/31/2020", 1, 3, "07/31/2020"],
+      ["01/01/2020", "07/31/2020", 2, 4, "01/31/2020"],
+      ["01/01/2020", "07/31/2020", 4, 1, "01/31/2020"],
+      ["12/01/2005", "12/31/2005", 4, 0, "12/31/2005"],
+      ["12/01/2005", "12/31/2005", 4, 1, "12/31/2005"],
+      ["12/01/2005", "12/31/2005", 4, 2, "12/31/2005"],
+      ["12/01/2005", "12/31/2005", 4, 3, "12/31/2005"],
+      ["12/01/2005", "12/31/2005", 4, 4, "12/31/2005"],
+      ["12/05/2005", "01/01/2010", 4, 0, "01/01/2006"],
+      ["12/05/2005", "01/01/2010", 4, 1, "01/01/2006"],
+      ["12/05/2005", "01/01/2010", 4, 2, "01/01/2006"],
+      ["12/05/2005", "01/01/2010", 4, 3, "01/01/2006"],
+      ["12/05/2005", "01/01/2010", 4, 4, "01/01/2006"],
+    ])(
+      "function result =COUPNCD(%s, %s, %s, %s)",
+      (
+        settlement: string,
+        maturity: string,
+        frequency: number,
+        dayCount: number,
+        expectedResult: string
+      ) => {
+        const cellValue = evaluateCell("A1", {
+          A1: `=COUPNCD("${settlement}", "${maturity}", ${frequency}, ${dayCount})`,
+        });
+        expect(formatValue(cellValue, "mm/dd/yyyy")).toEqual(expectedResult);
+      }
+    );
+
+    test("return formatted value", () => {
+      expect(evaluateCellFormat("A1", { A1: "=COUPNCD(0, 100, 1, 1)" })).toBe("m/d/yyyy");
+    });
+  });
+
+  describe("COUPNUM formula", () => {
+    describe("Function arguments", () => {
+      test("take at 3 or 4 arguments", () => testCouponArgNumber("COUPNUM"));
+      test("maturity date should be greater than settlement date", () =>
+        testMaturityGreaterThanSettlement("COUPNUM"));
+      test("frequency should be 1, 2 or 4", () => testFrequencyValue("COUPNUM"));
+      test("day count convention should be between 0 and 4", () =>
+        testDayCountConventionValue("COUPNUM"));
+    });
+
+    test.each([
+      ["01/01/2012", "05/01/2016", 1, 0, 5],
+      ["01/01/2012", "05/01/2016", 2, 1, 9],
+      ["01/01/2012", "05/01/2016", 4, 2, 18],
+      ["01/01/2012", "05/01/2016", 1, 3, 5],
+      ["01/01/2012", "05/01/2016", 2, 4, 9],
+      ["01/01/2012", "05/01/2016", 4, 1, 18],
+      ["01/01/2012", "01/02/2012", 1, 0, 1],
+      ["01/01/2012", "01/02/2012", 2, 1, 1],
+      ["01/01/2012", "01/02/2012", 4, 2, 1],
+      ["01/01/2012", "01/02/2012", 1, 3, 1],
+      ["01/01/2012", "01/02/2012", 2, 4, 1],
+      ["01/01/2012", "01/02/2012", 4, 1, 1],
+      ["01/01/2020", "07/31/2020", 1, 0, 1],
+      ["01/01/2020", "07/31/2020", 2, 1, 2],
+      ["01/01/2020", "07/31/2020", 4, 2, 3],
+      ["01/01/2020", "07/31/2020", 1, 3, 1],
+      ["01/01/2020", "07/31/2020", 2, 4, 2],
+      ["01/01/2020", "07/31/2020", 4, 1, 3],
+      ["12/01/2005", "12/31/2005", 4, 0, 1],
+      ["12/01/2005", "12/31/2005", 4, 1, 1],
+      ["12/01/2005", "12/31/2005", 4, 2, 1],
+      ["12/01/2005", "12/31/2005", 4, 3, 1],
+      ["12/01/2005", "12/31/2005", 4, 4, 1],
+      ["12/05/2005", "01/01/2010", 4, 0, 17],
+      ["12/05/2005", "01/01/2010", 4, 1, 17],
+      ["12/05/2005", "01/01/2010", 4, 2, 17],
+      ["12/05/2005", "01/01/2010", 4, 3, 17],
+      ["12/05/2005", "01/01/2010", 4, 4, 17],
+    ])(
+      "function result =COUPNUM(%s, %s, %s, %s)",
+      (
+        settlement: string,
+        maturity: string,
+        frequency: number,
+        dayCount: number,
+        expectedResult: number
+      ) => {
+        const cellValue = evaluateCell("A1", {
+          A1: `=COUPNUM("${settlement}", "${maturity}", ${frequency}, ${dayCount})`,
+        });
+        expect(cellValue).toEqual(expectedResult);
+      }
+    );
+  });
+});
 
 describe("DB formula", () => {
   test("take at 4 or 5 arguments", () => {

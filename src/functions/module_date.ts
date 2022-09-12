@@ -1,4 +1,10 @@
-import { INITIAL_1900_DAY, jsDateToRoundNumber, MS_PER_DAY, parseDateTime } from "../helpers/dates";
+import {
+  getDaysInMonth,
+  INITIAL_1900_DAY,
+  jsDateToRoundNumber,
+  MS_PER_DAY,
+  parseDateTime,
+} from "../helpers/dates";
 import { _lt } from "../translation";
 import { AddFunctionDescription, ArgValue, PrimitiveArgValue } from "../types";
 import { args } from "./arguments";
@@ -134,7 +140,14 @@ export const EDATE: AddFunctionDescription = {
     const yStart = _startDate.getFullYear();
     const mStart = _startDate.getMonth();
     const dStart = _startDate.getDate();
-    const jsDate = new Date(yStart, mStart + _months, dStart);
+    const jsDate = new Date(yStart, mStart + _months);
+
+    // 31/03 minus one month should be 28/02, not 31/02
+    if (dStart > getDaysInMonth(jsDate)) {
+      jsDate.setDate(getDaysInMonth(jsDate));
+    } else {
+      jsDate.setDate(dStart);
+    }
     return jsDateToRoundNumber(jsDate);
   },
   isExported: true,

@@ -205,3 +205,12 @@ export function jsDateToRoundNumber(date: Date): number {
   const delta = date.getTime() - INITIAL_1900_DAY.getTime();
   return Math.round(delta / MS_PER_DAY);
 }
+
+/** Return the number of days in the current month of the given date */
+export function getDaysInMonth(date: Date): number {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+}
+
+export function monthsBetweenDate(start: Date, end: Date) {
+  return end.getMonth() - start.getMonth() + 12 * (end.getFullYear() - start.getFullYear());
+}
