@@ -109,6 +109,10 @@ interface Props {
 export class FiguresContainer extends Component<Props, SpreadsheetChildEnv> {
   static template = "o-spreadsheet-FiguresContainer";
   static components = {};
+  static defaultProps = {
+    onFigureDeleted: () => {},
+    sidePanelIsOpen: false,
+  };
   figureRegistry = figureRegistry;
 
   dnd = useState({
