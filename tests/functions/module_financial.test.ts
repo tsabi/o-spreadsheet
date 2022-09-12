@@ -2737,6 +2737,66 @@ describe("PRICE formula", () => {
   });
 });
 
+describe("RATE function", () => {
+  test("take 3-6 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=RATE()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=RATE(1)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=RATE(1, 1)" })).toBe("#BAD_EXPR");
+    expect(evaluateCell("A1", { A1: "=RATE(1, 1, -1)" })).toBeCloseTo(0);
+    expect(evaluateCell("A1", { A1: "=RATE(1, 1, -1, 0)" })).toBeCloseTo(0);
+    expect(evaluateCell("A1", { A1: "=RATE(1, 1, -1, 0, 0)" })).toBeCloseTo(0);
+    expect(evaluateCell("A1", { A1: "=RATE(1, 1, -1, 0, 0, 0.1)" })).toBeCloseTo(0);
+    expect(evaluateCell("A1", { A1: "=RATE(1, 1, -1, 0, 0, 0.1, 0)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+  });
+
+  test("number_of_periods is > 0", () => {
+    expect(evaluateCell("A1", { A1: "=RATE(-1, 1, -1)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #!NUM
+    expect(evaluateCell("A1", { A1: "=RATE(0, 1, -1)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #!NUM
+    expect(evaluateCell("A1", { A1: "=RATE(1, 1, -1)" })).toBeCloseTo(0);
+  });
+
+  test("There is both positive and negative values in the arguments", () => {
+    expect(evaluateCell("A1", { A1: "=RATE(1, 1, 1, 0)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #!NUM
+    expect(evaluateCell("A1", { A1: "=RATE(1, -1, -1, 0)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #!NUM
+    expect(evaluateCell("A1", { A1: "=RATE(1, 0, 1, 1)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #!NUM
+    expect(evaluateCell("A1", { A1: "=RATE(1, 0, -1, -1)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #!NUM
+    expect(evaluateCell("A1", { A1: "=RATE(1, -1, 0, -1)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #!NUM
+    expect(evaluateCell("A1", { A1: "=RATE(1, 1, 0, 1)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #!NUM
+  });
+
+  test("rate_guess is > -1", () => {
+    expect(evaluateCell("A1", { A1: "=RATE(1, 1, -1, 0, 0, -2)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #!NUM
+    expect(evaluateCell("A1", { A1: "=RATE(1, 1, -1, 0, 0, -1)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #!NUM
+  });
+
+  test.each([
+    [9, -250, 800, 0, 0, 0.1, 0.278182649],
+    [6.5, 12, -200, 0, 0, 0.23, -0.203677625],
+    [100, 100, -1000, 0, 0, 0.1, 0.099992739],
+    [3, -16, 56, 20, 0, 0.1, -0.432602703],
+    [9, -58, 56000, 40, 0, 0.1, -0.523735054],
+    [12, -15, 600, 0, 1, 0.1, -0.167833761],
+    [16, -87, 1978, 100, 1, 0.5, -0.056513459],
+    [6, -1, 5, 0, 0, 0.1, 0.054717925],
+  ])(
+    "function result =RATE(%s, %s, %s, %s, %s, %s)",
+    (
+      nPeriods: number,
+      payment: number,
+      presentValue: number,
+      futureValue: number,
+      endStart: number,
+      guess: number,
+      expectedResult: number
+    ) => {
+      const cellValue = evaluateCell("A1", {
+        A1: `=RATE(${nPeriods}, ${payment}, ${presentValue}, ${futureValue}, ${endStart}, ${guess})`,
+      });
+      expect(cellValue).toBeCloseTo(expectedResult, 4);
+    }
+  );
+});
+
 describe("YIELD formula", () => {
   test("take at 6 or 7 arguments", () => {
     expect(evaluateCell("A1", { A1: "=YIELD(0, 365, 0.05, 90, 120)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A

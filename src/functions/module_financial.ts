@@ -1,4 +1,4 @@
-import { monthsBetweenDate } from "../helpers";
+import { monthsBetweenDate, productOfArray } from "../helpers";
 import { _lt } from "../translation";
 import { AddFunctionDescription, ArgValue, MatrixArgValue, PrimitiveArgValue } from "../types";
 import { args } from "./arguments";
@@ -32,7 +32,7 @@ function newtonMethod(
     xDelta = Math.abs(newX - x);
     x = newX;
     yEqual0 = xDelta < epsMax || Math.abs(y) < epsMax;
-    assert(() => count < interMax, _lt(`Function [[FUNCTION_NAME]] didn't find any result`));
+    assert(() => count < interMax, _lt(`Function [[FUNCTION_NAME]] didn't find any result.`));
     count++;
   } while (!yEqual0);
   return x;
@@ -796,6 +796,7 @@ export const PV: AddFunctionDescription = {
     const p = toNumber(paymentAmount);
     const fv = toNumber(futureValue);
     const type = toBoolean(endOrBeginning) ? 1 : 0;
+    // https://wiki.documentfoundation.org/Documentation/Calc_Functions/PV
     return r ? -((p * (1 + r * type) * ((1 + r) ** n - 1)) / r + fv) / (1 + r) ** n : -(fv + p * n);
   },
 };
@@ -877,6 +878,77 @@ export const PRICE: AddFunctionDescription = {
     return (
       redemptionPresentValue + cashFlowsPresentValue - cashFlowFromCoupon * (1 - timeFirstCoupon)
     );
+  },
+};
+
+// -----------------------------------------------------------------------------
+// RATE
+// -----------------------------------------------------------------------------
+const RATE_GUESS_DEFAULT = 0.1;
+export const RATE: AddFunctionDescription = {
+  description: _lt("Interest rate of an annuity investment."),
+  args: args(`
+  number_of_periods (number) ${_lt("The number of payments to be made.")}
+  payment_amount (number) ${_lt("The amount per period to be paid.")}
+  present_value (number) ${_lt("The current value of the annuity.")}
+  future_value (number, default=${DEFAULT_FUTURE_VALUE}) ${_lt(
+    "The future value remaining after the final payment has been made."
+  )}
+  end_or_beginning (number, default=${DEFAULT_END_OR_BEGINNING}) ${_lt(
+    "Whether payments are due at the end (0) or beginning (1) of each period."
+  )}
+  rate_guess (number, default=${RATE_GUESS_DEFAULT}) ${_lt(
+    "An estimate for what the interest rate will be."
+  )}
+  `),
+  returns: ["NUMBER"],
+  compute: function (
+    numberOfPeriods: PrimitiveArgValue,
+    paymentAmount: PrimitiveArgValue,
+    presentValue: PrimitiveArgValue,
+    futureValue: PrimitiveArgValue = DEFAULT_FUTURE_VALUE,
+    endOrBeginning: PrimitiveArgValue = DEFAULT_END_OR_BEGINNING,
+    rateGuess: PrimitiveArgValue = RATE_GUESS_DEFAULT
+  ): number {
+    futureValue = futureValue || 0;
+    endOrBeginning = endOrBeginning || 0;
+    rateGuess = rateGuess || 0;
+    const n = toNumber(numberOfPeriods);
+    const payment = toNumber(paymentAmount);
+    const type = toBoolean(endOrBeginning) ? 1 : 0;
+    const guess = toNumber(rateGuess);
+    let fv = toNumber(futureValue);
+    let pv = toNumber(presentValue);
+
+    assert(() => n >= 0, _lt("The number_of_periods (%s) must be greater than 0.", n.toString()));
+    assert(
+      () => productOfArray([payment, pv, fv].filter((val) => val !== 0)) < 0,
+      _lt(
+        "There must be both positive and negative values in [payment_amount, present_value, future_value].",
+        n.toString()
+      )
+    );
+    assert(() => guess > -1, _lt("The rate_guess (%s) must be greater than -1.", guess.toString()));
+
+    fv -= payment * type;
+    pv += payment * type;
+
+    // https://github.com/apache/openoffice/blob/trunk/main/sc/source/core/tool/interpr2.cxx
+    const func = (rate: number) => {
+      const powN = Math.pow(1.0 + rate, n);
+      const intResult = (powN - 1.0) / rate;
+      return fv + pv * powN + payment * intResult;
+    };
+    const derivFunc = (rate: number) => {
+      const powNMinus1 = Math.pow(1.0 + rate, n - 1.0);
+      const powN = Math.pow(1.0 + rate, n);
+      const intResult = (powN - 1.0) / rate;
+      const intResultDeriv = (n * powNMinus1) / rate - intResult / rate;
+      const fTermDerivation = pv * n * powNMinus1 + payment * intResultDeriv;
+      return fTermDerivation;
+    };
+
+    return newtonMethod(func, derivFunc, guess, 20, 1e-5);
   },
 };
 

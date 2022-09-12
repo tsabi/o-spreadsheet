@@ -457,3 +457,8 @@ export function removeFalsyAttributes(obj: Object): Object {
   Object.keys(cleanObject).forEach((key) => !cleanObject[key] && delete cleanObject[key]);
   return cleanObject;
 }
+
+/** Returns the product of an array of number */
+export function productOfArray(arr: number[]) {
+  return arr.reduce((partialSum, a) => partialSum * a, 1);
+}
