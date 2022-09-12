@@ -285,7 +285,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   private gridRef!: Ref<HTMLElement>;
   private vScrollbar!: ScrollBar;
   private hScrollbar!: ScrollBar;
-  private gridOverlay!: Ref<HTMLElement>;
   private canvas!: Ref<HTMLElement>;
   private currentSheet!: UID;
   private clickedCol!: HeaderIndex;
@@ -303,7 +302,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     this.vScrollbarRef = useRef("vscrollbar");
     this.hScrollbarRef = useRef("hscrollbar");
     this.gridRef = useRef("grid");
-    this.gridOverlay = useRef("gridOverlay");
     this.canvas = useRef("canvas");
     this.canvasPosition = useAbsolutePosition(this.canvas);
     this.vScrollbar = new ScrollBar(this.vScrollbarRef.el, "vertical");

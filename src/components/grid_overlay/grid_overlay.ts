@@ -1,5 +1,5 @@
-import { Component } from "@odoo/owl";
-import { Position } from "../../types";
+import { Component, useRef } from "@odoo/owl";
+import { HeaderIndex, Pixel, Position, Ref } from "../../types";
 
 interface Props {
   onCellClicked: (position: Position) => void;
@@ -7,6 +7,11 @@ interface Props {
 
 class GridOverlay extends Component<Props> {
   static template = "o-spreadsheet-GridOverlay";
+  private gridOverlay!: Ref<HTMLElement>;
+
+  setup() {
+    this.gridOverlay = useRef("gridOverlay");
+  }
 
   /**
    * Get the coordinates in pixels, with 0,0 being the top left of the grid itself
