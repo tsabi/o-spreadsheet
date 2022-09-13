@@ -4,15 +4,19 @@ import { AddFunctionDescription, ArgValue, MatrixArgValue, PrimitiveArgValue } f
 import { args } from "./arguments";
 import { assert, reduceNumbers, toBoolean, toJsDate, toNumber, visitNumbers } from "./helpers";
 import {
+  assertCostPositiveOrZero,
+  assertLifePositive,
   assertNumberOfPeriodsPositive,
+  assertPeriodPositive,
   assertPresentValuePositive,
   assertPricePositive,
   assertRatePositive,
   assertRedemptionPositive,
+  assertSalvagePositiveOrZero,
   checkCouponFrequency,
   checkDayCountConvention,
+  checkFirstAndLastPeriodsAreValid,
   checkMaturityAndSettlementDates,
-  checkPeriodsAreValid,
   checkSettlementAndIssueDates,
 } from "./helper_financial";
 import { EDATE, YEARFRAC } from "./module_date";
@@ -404,7 +408,7 @@ export const CUMIPMT: AddFunctionDescription = {
     const pv = toNumber(presentValue);
     const nOfPeriods = toNumber(numberOfPeriods);
 
-    checkPeriodsAreValid(first, last, nOfPeriods);
+    checkFirstAndLastPeriodsAreValid(first, last, nOfPeriods);
     assertRatePositive(_rate);
     assertPresentValuePositive(pv);
 
@@ -450,7 +454,7 @@ export const CUMPRINC: AddFunctionDescription = {
     const pv = toNumber(presentValue);
     const nOfPeriods = toNumber(numberOfPeriods);
 
-    checkPeriodsAreValid(first, last, nOfPeriods);
+    checkFirstAndLastPeriodsAreValid(first, last, nOfPeriods);
     assertRatePositive(_rate);
     assertPresentValuePositive(pv);
 
@@ -493,16 +497,10 @@ export const DB: AddFunctionDescription = {
     const _month = args.length ? Math.trunc(toNumber(args[0])) : 12;
     const lifeLimit = _life + (_month === 12 ? 0 : 1);
 
-    assert(() => _cost > 0, _lt("The cost (%s) must be strictly positive.", _cost.toString()));
-    assert(
-      () => _salvage >= 0,
-      _lt("The salvage (%s) must be positive or null.", _salvage.toString())
-    );
-    assert(() => _life > 0, _lt("The life (%s) must be strictly positive.", _life.toString()));
-    assert(
-      () => _period > 0,
-      _lt("The period (%s) must be strictly positive.", _period.toString())
-    );
+    assertCostPositiveOrZero(_cost);
+    assertSalvagePositiveOrZero(_salvage);
+    assertPeriodPositive(_period);
+    assertLifePositive(_life);
     assert(
       () => 1 <= _month && _month <= 12,
       _lt("The month (%s) must be between 1 and 12 inclusive.", _month.toString())
@@ -534,6 +532,71 @@ export const DB: AddFunctionDescription = {
     }
 
     return before - after;
+  },
+};
+
+// -----------------------------------------------------------------------------
+// DDB
+// -----------------------------------------------------------------------------
+const DEFAULT_DDB_DEPRECIATION_FACTOR = 2;
+export const DDB: AddFunctionDescription = {
+  description: _lt("Depreciation via double-declining balance method."),
+  args: args(`
+        cost (number) ${_lt("The initial cost of the asset.")}
+        salvage (number) ${_lt("The value of the asset at the end of depreciation.")}
+        life (number) ${_lt("The number of periods over which the asset is depreciated.")}
+        period (number) ${_lt("The single period within life for which to calculate depreciation.")}
+        factor (number, default=${DEFAULT_DDB_DEPRECIATION_FACTOR}) ${_lt(
+    "The number of months in the first year of depreciation."
+  )}
+    `),
+  returns: ["NUMBER"],
+  compute: function (
+    cost: PrimitiveArgValue,
+    salvage: PrimitiveArgValue,
+    life: PrimitiveArgValue,
+    period: PrimitiveArgValue,
+    factor: PrimitiveArgValue = DEFAULT_DDB_DEPRECIATION_FACTOR
+  ): number {
+    const _cost = toNumber(cost);
+    const _salvage = toNumber(salvage);
+    const _life = toNumber(life);
+    const _period = Math.trunc(toNumber(period));
+    const _factor = toNumber(factor);
+
+    assertCostPositiveOrZero(_cost);
+    assertSalvagePositiveOrZero(_salvage);
+    assertPeriodPositive(_period);
+    assertLifePositive(_life);
+    assert(
+      () => _period <= _life,
+      _lt(
+        "The period (%s) must be less than or equal life (%.",
+        _period.toString(),
+        _life.toString()
+      )
+    );
+    assert(
+      () => _factor > 0,
+      _lt("The depreciation factor (%s) must be strictly positive.", _factor.toString())
+    );
+
+    if (_cost === 0) return 0;
+
+    const deprecFactor = _factor / _life;
+    let currentCost = _cost;
+    let deprec = currentCost * deprecFactor;
+    for (let i = 0; i < _period; i++) {
+      deprec = currentCost * deprecFactor;
+      if (currentCost - deprec < _salvage) {
+        deprec = currentCost - _salvage;
+        currentCost = _salvage;
+      } else {
+        currentCost -= deprec;
+      }
+    }
+
+    return deprec;
   },
 };
 
