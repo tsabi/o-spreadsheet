@@ -1,4 +1,5 @@
 import { monthsBetweenDate, productOfArray } from "../helpers";
+import { jsDateToRoundNumber } from "../helpers/dates";
 import { _lt } from "../translation";
 import { AddFunctionDescription, ArgValue, MatrixArgValue, PrimitiveArgValue } from "../types";
 import { args } from "./arguments";
@@ -49,6 +50,91 @@ function newtonMethod(
   } while (!yEqual0);
   return x;
 }
+
+// -----------------------------------------------------------------------------
+// ACCRINT
+// -----------------------------------------------------------------------------
+const DEFAULT_ACCRINT_REDEMPTION = 1000;
+const DEFAULT_ACCRINT_FREQUENCY = 1;
+export const ACCRINT: AddFunctionDescription = {
+  description: _lt("Accrued interest of security with periodic payments."),
+  args: args(`
+        issue (date) ${_lt("The date the security was initially issued.")}
+        first_payment (date) ${_lt("The first date interest will be paid.")}
+        settlement (date) ${_lt(
+          "The settlement date of the security, the date after issuance when the security is delivered to the buyer."
+        )}
+        rate (number) ${_lt("The annualized rate of interest.")}
+        redemption (number, default=${DEFAULT_ACCRINT_REDEMPTION}) ${_lt(
+    "The redemption amount per 100 face value, or par."
+  )}
+        frequency (number, default=${DEFAULT_ACCRINT_FREQUENCY}) ${_lt(
+    "The number of interest or coupon payments per year (1, 2, or 4)."
+  )}
+        day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt(
+    "An indicator of what day count method to use."
+  )}
+    `),
+  returns: ["NUMBER"],
+  compute: function (
+    issue: PrimitiveArgValue,
+    firstPayment: PrimitiveArgValue,
+    settlement: PrimitiveArgValue,
+    rate: PrimitiveArgValue,
+    redemption: PrimitiveArgValue = DEFAULT_ACCRINT_REDEMPTION,
+    frequency: PrimitiveArgValue = DEFAULT_ACCRINT_FREQUENCY,
+    dayCountConvention: PrimitiveArgValue = DEFAULT_DAY_COUNT_CONVENTION
+  ): number {
+    redemption = redemption || 0;
+    dayCountConvention = dayCountConvention || 0;
+    const start = Math.trunc(toNumber(issue));
+    const end = Math.trunc(toNumber(settlement));
+    const _redemption = toNumber(redemption);
+    const _rate = toNumber(rate);
+    const _frequency = Math.trunc(toNumber(frequency));
+    const _dayCountConvention = Math.trunc(toNumber(dayCountConvention));
+
+    checkSettlementAndIssueDates(end, start);
+    checkCouponFrequency(_frequency);
+    checkDayCountConvention(_dayCountConvention);
+    assertRedemptionPositive(_redemption);
+    assertRatePositive(_rate);
+
+    const startDate = toJsDate(issue);
+    const endDate = toJsDate(settlement);
+    const yearsDiffs = endDate.getFullYear() - startDate.getFullYear();
+
+    if (yearsDiffs === 0) {
+      const yearFrac = YEARFRAC.compute(start, end, dayCountConvention) as number;
+      return _redemption * _rate * yearFrac;
+    }
+
+    let result = 0;
+
+    // fraction issue date => end of year
+    const startDateStartOfYear = new Date(startDate.getFullYear(), 0, 1);
+    const startYearFrac = YEARFRAC.compute(
+      jsDateToRoundNumber(startDateStartOfYear),
+      start,
+      dayCountConvention
+    ) as number;
+    result += _redemption * _rate * (1 - startYearFrac);
+
+    // years between issue and settlement
+    result += _redemption * _rate * (yearsDiffs - 1);
+
+    // fraction start of settlement year => settlement date
+    const endDateStartOfYear = new Date(endDate.getFullYear(), 0, 1);
+    const endYearFrac = YEARFRAC.compute(
+      jsDateToRoundNumber(endDateStartOfYear),
+      end,
+      dayCountConvention
+    ) as number;
+    result += _redemption * _rate * endYearFrac;
+
+    return result;
+  },
+};
 
 // -----------------------------------------------------------------------------
 // ACCRINTM
