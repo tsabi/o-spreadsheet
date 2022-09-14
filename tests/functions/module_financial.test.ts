@@ -1775,6 +1775,78 @@ describe("IPMT function", () => {
   );
 });
 
+describe("INTRATE function", () => {
+  test("INTRATE takes 4-5 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=INTRATE()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=INTRATE(0)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=INTRATE(0, 1)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=INTRATE(0, 1, 1)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=INTRATE(0, 1, 1, 1)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=INTRATE(0, 1, 1, 1, 0)" })).toBe(0);
+    expect(evaluateCell("A1", { A1: "=INTRATE(0, 1, 1, 1, 0, 0)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+  });
+
+  test("settlement should be < than maturity", () => {
+    expect(evaluateCell("A1", { A1: "=INTRATE(1, 1, 1, 1, 0)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+    expect(evaluateCell("A1", { A1: "=INTRATE(2, 1, 1, 1, 0)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+  });
+
+  test("investment should be > 0", () => {
+    expect(evaluateCell("A1", { A1: "=INTRATE(0, 1, -1, 1, 0)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+    expect(evaluateCell("A1", { A1: "=INTRATE(0, 1, 0, 1, 0)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+  });
+
+  test("redemption should be > 0", () => {
+    expect(evaluateCell("A1", { A1: "=INTRATE(0, 1, 1, -1, 0)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+    expect(evaluateCell("A1", { A1: "=INTRATE(0, 1, 1, 0, 0)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+  });
+
+  test("dayCountConvention should be between 0 and 4", () => {
+    expect(evaluateCell("A1", { A1: "=INTRATE(0, 1, 1, 1, -1)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+    expect(evaluateCell("A1", { A1: "=INTRATE(0, 1, 1, 1, 5)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+  });
+
+  test.each([
+    ["01/01/2004", "01/01/2006", 100, 50, 0, -0.25],
+    ["01/01/2005", "06/06/2006", 10, 400, 0, 27.26213592],
+    ["03/12/2004", "02/28/2012", 400, 105, 0, -0.092637823],
+    ["02/29/2020", "01/03/2022", 59, 15, 0, -0.404939029],
+    ["01/01/2004", "01/01/2006", 59.8, 15.9, 0, -0.367056856],
+    ["01/01/2005", "06/06/2006", 500, 500, 0, 0],
+    ["01/01/2004", "02/28/2012", 12, 120, 0, 1.103166496],
+    ["01/01/2005", "12/31/2005", 100, 50, 1, -0.501373626],
+    ["01/01/2005", "12/31/2005", 100, 50, 1, -0.501373626],
+    ["01/01/2005", "12/31/2005", 100, 50, 2, -0.494505495],
+    ["01/01/2005", "12/31/2005", 100, 50, 3, -0.501373626],
+    ["01/01/2005", "12/31/2005", 100, 50, 4, -0.501392758],
+    ["02/29/2004", "01/01/2007", 55, 40, 0, -0.096162408],
+    ["02/29/2004", "01/01/2007", 55, 40, 1, -0.096059437],
+    ["02/29/2004", "01/01/2007", 55, 40, 2, -0.094678706],
+    ["02/29/2004", "01/01/2007", 55, 40, 3, -0.095993688],
+    ["02/29/2004", "01/01/2007", 55, 40, 4, -0.096068315],
+    ["01/01/2002", "02/28/2007", 20, 60, 0, 0.387722132],
+    ["01/01/2002", "02/28/2007", 20, 60, 1, 0.387650389],
+    ["01/01/2002", "02/28/2007", 20, 60, 2, 0.382165605],
+    ["01/01/2002", "02/28/2007", 20, 60, 3, 0.387473461],
+    ["01/01/2002", "02/28/2007", 20, 60, 4, 0.387722132],
+  ])(
+    "function result =INTRATE(%s, %s, %s, %s, %s)",
+    (
+      settlement: string,
+      maturity: string,
+      investment: number,
+      redemption: number,
+      dayCountConvention: number,
+      expectedResult: number
+    ) => {
+      const cellValue = evaluateCell("A1", {
+        A1: `=INTRATE("${settlement}", "${maturity}", ${investment}, ${redemption}, ${dayCountConvention})`,
+      });
+      expect(cellValue).toBeCloseTo(expectedResult, 4);
+    }
+  );
+});
+
 describe("IRR formula", () => {
   test("ttake 2 arg minimum", () => {
     expect(evaluateCell("A1", { A1: "=IRR()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
