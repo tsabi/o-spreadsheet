@@ -1657,6 +1657,63 @@ describe("FV formula", () => {
   });
 });
 
+describe("FVSCHEDULE function", () => {
+  test("FVSCHEDULE takes 2 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=FVSCHEDULE()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=FVSCHEDULE(1)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=FVSCHEDULE(1, 0)" })).toBe(1);
+    expect(evaluateCell("A1", { A1: "=FVSCHEDULE(1, 0, 0)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+  });
+
+  test.each([
+    [100, [0.05, 0.05, 0.05, 0.05, 0.05], 127.6282],
+    [100, [0.05, 0.04, 0.03, 0.02, 0.01], 115.8727752],
+    [200, [-0.03, -0.05, -0.1, -0.1, -0.09], 135.84753],
+    [-800, [0.09, -0.1, 0.11, -0.12, 1.56], -1962.477158],
+  ])(
+    "function result =FVSCHEDULE(%s, %s)",
+    (principal: number, schedule: number[], expectedResult: number) => {
+      const grid = {
+        B1: schedule[0].toString(),
+        B2: schedule[1].toString(),
+        B3: schedule[2].toString(),
+        B4: schedule[3].toString(),
+        B5: schedule[4].toString(),
+      };
+      const cellValue = evaluateCell("A1", { ...grid, A1: `=FVSCHEDULE(${principal}, B1:B5)` });
+      expect(cellValue).toBeCloseTo(expectedResult, 4);
+    }
+  );
+
+  test("can take single value as argument", () => {
+    expect(evaluateCell("A1", { A1: `=FVSCHEDULE(100, 0.5)` })).toBeCloseTo(150, 4);
+    expect(evaluateCell("A1", { A1: `=FVSCHEDULE(100, A2)`, A2: "0.1" })).toBeCloseTo(110, 4);
+  });
+
+  test("can take multi-dimensional arrays as argument", () => {
+    const schedule = [0.05, 0.04, 0.03, 0.02, 0.01];
+    const grid = {
+      B1: schedule[0].toString(),
+      B2: schedule[1].toString(),
+      B3: schedule[2].toString(),
+      C1: schedule[3].toString(),
+      C2: schedule[4].toString(),
+    };
+    const cellValue = evaluateCell("A1", { ...grid, A1: `=FVSCHEDULE(100, B1:C3)` });
+    expect(cellValue).toBeCloseTo(115.8727752, 4);
+
+    const grid2 = {
+      B1: schedule[0].toString(),
+      C1: schedule[1].toString(),
+      D1: schedule[2].toString(),
+      B2: schedule[3].toString(),
+      C2: schedule[4].toString(),
+    };
+    const cellValue2 = evaluateCell("A1", { ...grid2, A1: `=FVSCHEDULE(100, B1:D2)` });
+    expect(cellValue2).toBeCloseTo(115.8727752, 4);
+  });
+});
+
 describe("IPMT function", () => {
   test("IPMT takes 4-6 arguments", () => {
     expect(evaluateCell("A1", { A1: "=IPMT()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A

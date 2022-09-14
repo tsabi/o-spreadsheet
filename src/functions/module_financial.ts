@@ -841,6 +841,38 @@ export const FV: AddFunctionDescription = {
 };
 
 // -----------------------------------------------------------------------------
+// FVSCHEDULE
+// -----------------------------------------------------------------------------
+export const FVSCHEDULE: AddFunctionDescription = {
+  description: _lt("Future value of principal from series of rates."),
+  args: args(`
+  principal (number) ${_lt("The amount of initial capital or value to compound against.")}
+  rate_schedule (number, range<number>) ${_lt(
+    "A series of interest rates to compound against the principal."
+  )}
+  `),
+  returns: ["NUMBER"],
+  compute: function (
+    principalAmount: PrimitiveArgValue,
+    rateSchedule: MatrixArgValue | PrimitiveArgValue
+  ): number {
+    const principal = toNumber(principalAmount);
+    if (!Array.isArray(rateSchedule)) {
+      const rate = toNumber(rateSchedule);
+      return principal * (1 + rate);
+    }
+    const schedule = rateSchedule.flat().map(toNumber);
+
+    let current = principal;
+    for (const rate of schedule) {
+      current = current * (1 + rate);
+    }
+
+    return current;
+  },
+};
+
+// -----------------------------------------------------------------------------
 // IPMT
 // -----------------------------------------------------------------------------
 export const IPMT: AddFunctionDescription = {
