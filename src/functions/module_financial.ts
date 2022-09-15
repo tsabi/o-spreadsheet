@@ -1817,14 +1817,11 @@ export const RECEIVED: AddFunctionDescription = {
     /**
      * https://support.microsoft.com/en-us/office/received-function-7a3f8b93-6611-4f81-8576-828312c9b5e5
      *
-     * B = number of days in year, depending on year basis
-     * DSM = number of days from settlement to maturity
-     *
      *                    investment
      * RECEIVED = _________________________
      *              1 - discount * DSM / B
      *
-     * with DSM = number of days from settlement to maturity and B = number od fays in a year
+     * with DSM = number of days from settlement to maturity and B = number of days in a year
      *
      * The ratio DSM/B can be computed with the YEARFRAC function to take the dayCountConvention into account.
      */
