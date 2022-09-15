@@ -458,6 +458,11 @@ export function removeFalsyAttributes(obj: Object): Object {
   return cleanObject;
 }
 
+/** Returns the sum of an array of number */
+export function sumOfArray(arr: number[]) {
+  return arr.reduce((partialSum, a) => partialSum + a, 0);
+}
+
 /** Returns the product of an array of number */
 export function productOfArray(arr: number[]) {
   return arr.reduce((partialSum, a) => partialSum * a, 1);
