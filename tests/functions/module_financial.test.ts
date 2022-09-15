@@ -4092,6 +4092,42 @@ describe("SYD function", () => {
   );
 });
 
+describe("TBILLEQ function", () => {
+  test("TBILLEQ takes 3 arguments", () => {
+    expect(evaluateCell("A1", { A1: "=TBILLEQ()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=TBILLEQ(0)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=TBILLEQ(0, 1)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+    expect(evaluateCell("A1", { A1: "=TBILLEQ(0, 1, 1)" })).toBeCloseTo(1.016713092, 4);
+    expect(evaluateCell("A1", { A1: "=TBILLEQ(0, 1, 1, 0)" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A
+  });
+
+  // test("testArgValueTemplate", () => {
+  //   expect(evaluateCell("A1", { A1: "=TBILLEQ(0, 1, 1)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+  //   expect(evaluateCell("A1", { A1: "=TBILLEQ(0, 1, 1)" })).toBe("#ERROR"); // @compatibility: on google sheets, return #NUM!
+  // });
+
+  test.each([
+    ["02/29/2012", "02/20/2013", "41%", 0.692535517608404],
+    ["01/01/2012", "05/01/2012", "10%", 0.104915205518827],
+    ["10/01/2012", "11/10/2012", "10%", 0.10252808988764],
+    ["12/30/2014", "12/31/2014", "68%", 0.69074919291996],
+    ["02/28/2012", "01/31/2013", "2%", 0.0206599875474048],
+    ["02/29/2012", "01/30/2013", "20%", 0.248299319727891],
+    ["02/29/2012", "01/31/2013", "20%", 0.248468345813479],
+    ["02/29/2012", "01/15/2013", "20%", 0.245956873315364],
+    ["12/31/2012", "02/01/2013", "20%", 0.206447963800905],
+    ["12/31/2012", "05/01/2013", "20%", 0.217520858164482],
+    ["02/29/2012", "01/01/2013", "10%", 0.110673135233475],
+    ["01/01/2012", "02/28/2012", "15%", 0.155849701110162],
+  ])(
+    "function result =TBILLEQ(%s, %s, %s)",
+    (arg0: string, arg1: string, arg2: string, expectedResult: number) => {
+      const cellValue = evaluateCell("A1", { A1: `=TBILLEQ("${arg0}", "${arg1}", ${arg2})` });
+      expect(cellValue).toBeCloseTo(expectedResult, 4);
+    }
+  );
+});
+
 describe("TBILLPRICE function", () => {
   test("TBILLPRICE takes 3 arguments", () => {
     expect(evaluateCell("A1", { A1: "=TBILLPRICE()" })).toBe("#BAD_EXPR"); // @compatibility: on google sheets, return #N/A

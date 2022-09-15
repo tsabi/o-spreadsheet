@@ -29,7 +29,7 @@ import {
   checkMaturityAndSettlementDates,
   checkSettlementAndIssueDates,
 } from "./helper_financial";
-import { EDATE, YEARFRAC } from "./module_date";
+import { DAYS, EDATE, YEARFRAC } from "./module_date";
 
 const DEFAULT_DAY_COUNT_CONVENTION = 0;
 const DEFAULT_END_OR_BEGINNING = 0;
@@ -1928,6 +1928,55 @@ export const SYD: AddFunctionDescription = {
     const remainingPeriods = _life - _period + 1;
 
     return (_cost - _salvage) * (remainingPeriods / deprecFactor);
+  },
+};
+
+// -----------------------------------------------------------------------------
+// TBILLEQ
+// -----------------------------------------------------------------------------
+export const TBILLEQ: AddFunctionDescription = {
+  description: _lt("Equivalent rate of return for a US Treasury bill."),
+  args: args(`
+      settlement (date) ${_lt(
+        "The settlement date of the security, the date after issuance when the security is delivered to the buyer."
+      )}
+      maturity (date) ${_lt(
+        "The maturity or end date of the security, when it can be redeemed at face, or par value."
+      )}
+      discount (number) ${_lt("The discount rate of the bill at time of purchase.")}
+    `),
+  returns: ["NUMBER"],
+  compute: function (
+    settlement: PrimitiveArgValue,
+    maturity: PrimitiveArgValue,
+    discount: PrimitiveArgValue
+  ): number {
+    const start = Math.trunc(toNumber(settlement));
+    const end = Math.trunc(toNumber(maturity));
+    const disc = toNumber(discount);
+
+    const startDate = toJsDate(start);
+    const endDate = toJsDate(end);
+
+    const startDatePlusOneYear = new Date(startDate);
+    startDatePlusOneYear.setFullYear(startDate.getFullYear() + 1);
+
+    checkMaturityAndSettlementDates(start, end);
+    assert(
+      () => endDate.getTime() <= startDatePlusOneYear.getTime(),
+      _lt(
+        "The settlement date (%s) must at most one year after the maturity date (%s).",
+        start.toString(),
+        end.toString()
+      )
+    );
+    assertDiscountPositive(disc);
+    assert(() => disc < 1, _lt("The discount (%s) must be smaller than 1.", disc.toString()));
+
+    /**
+     */
+    const days = DAYS.compute(end, start) as number;
+    return (365 * disc) / (360 - disc * days);
   },
 };
 
