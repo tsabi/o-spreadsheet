@@ -462,3 +462,8 @@ export function removeFalsyAttributes(obj: Object): Object {
 export function productOfArray(arr: number[]) {
   return arr.reduce((partialSum, a) => partialSum * a, 1);
 }
+
+export function transpose2dArray<T>(matrix: T[][]): T[][] {
+  if (!matrix.length) return matrix;
+  return matrix[0].map((_, i) => matrix.map((row) => row[i]));
+}
