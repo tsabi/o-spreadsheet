@@ -278,7 +278,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     Highlight,
     Popover,
   };
-
+  private focus!: () => void;
   private menuState!: MenuState;
   private vScrollbarRef!: Ref<HTMLElement>;
   private hScrollbarRef!: Ref<HTMLElement>;
@@ -501,12 +501,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     PAGEDOWN: () => this.env.model.dispatch("SHIFT_VIEWPORT_DOWN"),
     PAGEUP: () => this.env.model.dispatch("SHIFT_VIEWPORT_UP"),
   };
-
-  focus() {
-    if (!this.env.model.getters.getSelectedFigureId()) {
-      this.gridOverlay.el!.focus();
-    }
-  }
 
   get gridEl(): HTMLElement {
     if (!this.gridRef.el) {
@@ -764,8 +758,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     startDnd(onMouseMove, onMouseUp);
   }
 
-  onDoubleClick(ev) {
-    const [col, row] = this.getCartesianCoordinates(ev);
+  onCellDoubleClicked({ col, row }: Position) {
     if (this.clickedCol === col && this.clickedRow === row) {
       const cell = this.env.model.getters.getActiveCell();
       !cell || cell.isEmpty()

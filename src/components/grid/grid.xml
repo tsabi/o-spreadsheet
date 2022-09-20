@@ -8,7 +8,17 @@
       t-on-wheel="onMouseWheel"
       t-ref="grid">
       <!-- tabindex="-1" is necessary to keep the focus on composer while selecting a cell -->
-      <div
+      <GridOverlay
+        onCellClicked="onMouseDown"
+        onCellDoubleClicked="onCellDoubleClicked"
+        exposeFocus="(focus) => this.focus = focus">
+        <FiguresContainer
+          model="props.model"
+          sidePanelIsOpen="props.sidePanelIsOpen"
+          onFigureDeleted="() => this.focus()"
+        />
+      </GridOverlay>
+      <!-- <div
         t-ref="gridOverlay"
         tabindex="-1"
         class="o-grid-overlay"
@@ -21,7 +31,7 @@
           sidePanelIsOpen="props.sidePanelIsOpen"
           onFigureDeleted="() => this.focus()"
         />
-      </div>
+      </div> -->
       <HeadersOverlay
         t-if="!env.isDashboard()"
         onOpenContextMenu="(type, x, y) => this.toggleContextMenu(type, x, y)"

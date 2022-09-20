@@ -1,16 +1,26 @@
 import { Component, useRef } from "@odoo/owl";
-import { HeaderIndex, Pixel, Position, Ref } from "../../types";
+import { HeaderIndex, Pixel, Position, Ref, SpreadsheetChildEnv } from "../../types";
 
+interface ClickModifiers {}
 interface Props {
-  onCellClicked: (position: Position) => void;
+  onCellClicked: (position: Position, modifiers: ClickModifiers) => void;
+  onCellDoubleClicked: (position: Position) => void;
+  exposeFocus: (focus: () => void) => void;
 }
 
-class GridOverlay extends Component<Props> {
+class GridOverlay extends Component<Props, SpreadsheetChildEnv> {
   static template = "o-spreadsheet-GridOverlay";
   private gridOverlay!: Ref<HTMLElement>;
 
   setup() {
     this.gridOverlay = useRef("gridOverlay");
+    this.props.exposeFocus(() => this.focus());
+  }
+
+  focus() {
+    if (!this.env.model.getters.getSelectedFigureId()) {
+      this.gridOverlay.el!.focus();
+    }
   }
 
   /**
