@@ -209,8 +209,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   private hScrollbar!: ScrollBar;
   private canvas!: Ref<HTMLElement>;
   private currentSheet!: UID;
-  private clickedCol!: HeaderIndex;
-  private clickedRow!: HeaderIndex;
 
   private canvasPosition!: DOMCoordinates;
   hoveredCell!: Partial<Position>;
@@ -229,8 +227,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     this.vScrollbar = new ScrollBar(this.vScrollbarRef.el, "vertical");
     this.hScrollbar = new ScrollBar(this.hScrollbarRef.el, "horizontal");
     this.currentSheet = this.env.model.getters.getActiveSheetId();
-    this.clickedCol = 0;
-    this.clickedRow = 0;
     this.hoveredCell = useState({ col: undefined, row: undefined });
 
     useExternalListener(document.body, "cut", this.copy.bind(this, true));
@@ -589,8 +585,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     if (col < 0 || row < 0) {
       return;
     }
-    this.clickedCol = col;
-    this.clickedRow = row;
 
     if (this.env.model.getters.isDashboard()) {
       this.env.model.selection.selectCell(col, row);
@@ -631,13 +625,12 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   }
 
   onCellDoubleClicked(col: HeaderIndex, row: HeaderIndex) {
-    if (this.clickedCol === col && this.clickedRow === row) {
-      const cell = this.env.model.getters.getActiveCell();
-      if (!cell || cell.isEmpty()) {
-        this.props.onGridComposerCellFocused();
-      } else {
-        this.props.onComposerContentFocused();
-      }
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    const cell = this.env.model.getters.getCell(sheetId, col, row);
+    if (!cell || cell.isEmpty()) {
+      this.props.onGridComposerCellFocused();
+    } else {
+      this.props.onComposerContentFocused();
     }
   }
 
