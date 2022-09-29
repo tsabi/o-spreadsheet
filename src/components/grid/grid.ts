@@ -566,11 +566,11 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   /**
    * Get the coordinates in pixels, with 0,0 being the top left of the grid itself
    */
-  getCoordinates(ev: MouseEvent): [Pixel, Pixel] {
+  private getCoordinates(ev: MouseEvent): [Pixel, Pixel] {
     return [ev.offsetX, ev.offsetY];
   }
 
-  getCartesianCoordinates(ev: MouseEvent): [HeaderIndex, HeaderIndex] {
+  private getCartesianCoordinates(ev: MouseEvent): [HeaderIndex, HeaderIndex] {
     const [x, y] = this.getCoordinates(ev);
     const colIndex = this.env.model.getters.getColIndex(x);
     const rowIndex = this.env.model.getters.getRowIndex(y);
@@ -630,13 +630,14 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     dragAndDropBeyondTheViewport(this.env, onMouseMove, onMouseUp);
   }
 
-  onDoubleClick(ev) {
-    const [col, row] = this.getCartesianCoordinates(ev);
+  onCellDoubleClicked(col: HeaderIndex, row: HeaderIndex) {
     if (this.clickedCol === col && this.clickedRow === row) {
       const cell = this.env.model.getters.getActiveCell();
-      !cell || cell.isEmpty()
-        ? this.props.onGridComposerCellFocused()
-        : this.props.onComposerContentFocused();
+      if (!cell || cell.isEmpty()) {
+        this.props.onGridComposerCellFocused();
+      } else {
+        this.props.onComposerContentFocused();
+      }
     }
   }
 

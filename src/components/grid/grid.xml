@@ -10,7 +10,7 @@
       t-ref="grid">
       <GridOverlay
         onMouseDown.bind="onMouseDown"
-        onDoubleClick.bind="onDoubleClick"
+        onCellDoubleClicked.bind="onCellDoubleClicked"
         onCanvasContextMenu.bind="onCanvasContextMenu"
         onCellHovered.bind="onCellHovered"
         gridOverlayDimensions="gridOverlayDimensions"

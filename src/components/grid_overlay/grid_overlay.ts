@@ -1,6 +1,6 @@
 import { Component, onMounted, onPatched, onWillUnmount, useRef } from "@odoo/owl";
 import { HEADER_HEIGHT, HEADER_WIDTH } from "../../constants";
-import { Position, Ref, SpreadsheetChildEnv } from "../../types";
+import { HeaderIndex, Position, Ref, SpreadsheetChildEnv } from "../../types";
 import { FiguresContainer } from "../figures/container/container";
 import { useInterval } from "../helpers/time_hooks";
 
@@ -80,6 +80,7 @@ function useCellHovered(
 
 interface Props {
   onCellHovered: (position: Partial<Position>) => void;
+  onCellDoubleClicked: (col: HeaderIndex, row: HeaderIndex) => void;
   gridOverlayDimensions: string;
   // TODO add those used in the template
 }
@@ -105,7 +106,18 @@ export class GridOverlay extends Component<Props> {
     return this.gridOverlay.el;
   }
 
-  resizeGrid() {
+  onDoubleClick(ev) {
+    const [col, row] = this.getCartesianCoordinates(ev);
+    this.props.onCellDoubleClicked(col, row);
+  }
+
+  private getCartesianCoordinates(ev: MouseEvent): [HeaderIndex, HeaderIndex] {
+    const colIndex = this.env.model.getters.getColIndex(ev.offsetX);
+    const rowIndex = this.env.model.getters.getRowIndex(ev.offsetY);
+    return [colIndex, rowIndex];
+  }
+
+  private resizeGrid() {
     const currentHeight = this.gridOverlayEl.clientHeight;
     const currentWidth = this.gridOverlayEl.clientWidth;
     const { height: viewportHeight, width: viewportWidth } =
