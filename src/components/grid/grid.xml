@@ -11,7 +11,7 @@
       <GridOverlay
         onCellClicked.bind="onCellClicked"
         onCellDoubleClicked.bind="onCellDoubleClicked"
-        onCanvasContextMenu.bind="onCanvasContextMenu"
+        onCellRightClicked.bind="onCellRightClicked"
         onCellHovered.bind="onCellHovered"
         gridOverlayDimensions="gridOverlayDimensions"
         sidePanelIsOpen="props.sidePanelIsOpen"

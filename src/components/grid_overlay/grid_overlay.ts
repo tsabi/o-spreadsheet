@@ -1,6 +1,6 @@
 import { Component, onMounted, onPatched, onWillUnmount, useRef } from "@odoo/owl";
 import { HEADER_HEIGHT, HEADER_WIDTH } from "../../constants";
-import { HeaderIndex, Position, Ref, SpreadsheetChildEnv } from "../../types";
+import { DOMCoordinates, HeaderIndex, Position, Ref, SpreadsheetChildEnv } from "../../types";
 import { FiguresContainer } from "../figures/container/container";
 import { useInterval } from "../helpers/time_hooks";
 
@@ -86,6 +86,7 @@ interface Props {
     row: HeaderIndex,
     modifiers: { ctrlKey: boolean; shiftKey: boolean }
   ) => void;
+  onCellRightClicked: (col: HeaderIndex, row: HeaderIndex, coordinates: DOMCoordinates) => void;
   gridOverlayDimensions: string;
   // TODO add those used in the template
 }
@@ -123,9 +124,18 @@ export class GridOverlay extends Component<Props> {
     this.props.onCellClicked(col, row, { shiftKey: ev.shiftKey, ctrlKey: ev.ctrlKey });
   }
 
-  onDoubleClick(ev) {
+  onDoubleClick(ev: MouseEvent) {
     const [col, row] = this.getCartesianCoordinates(ev);
     this.props.onCellDoubleClicked(col, row);
+  }
+
+  onCanvasContextMenu(ev: MouseEvent) {
+    ev.preventDefault();
+    const [col, row] = this.getCartesianCoordinates(ev);
+    if (col < 0 || row < 0) {
+      return;
+    }
+    this.props.onCellRightClicked(col, row, { x: ev.clientX, y: ev.clientY });
   }
 
   private getCartesianCoordinates(ev: MouseEvent): [HeaderIndex, HeaderIndex] {

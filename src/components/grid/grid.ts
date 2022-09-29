@@ -559,20 +559,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   // Zone selection with mouse
   // ---------------------------------------------------------------------------
 
-  /**
-   * Get the coordinates in pixels, with 0,0 being the top left of the grid itself
-   */
-  private getCoordinates(ev: MouseEvent): [Pixel, Pixel] {
-    return [ev.offsetX, ev.offsetY];
-  }
-
-  private getCartesianCoordinates(ev: MouseEvent): [HeaderIndex, HeaderIndex] {
-    const [x, y] = this.getCoordinates(ev);
-    const colIndex = this.env.model.getters.getColIndex(x);
-    const rowIndex = this.env.model.getters.getRowIndex(y);
-    return [colIndex, rowIndex];
-  }
-
   onCellClicked(
     col: HeaderIndex,
     row: HeaderIndex,
@@ -700,12 +686,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   // Context Menu
   // ---------------------------------------------------------------------------
 
-  onCanvasContextMenu(ev: MouseEvent) {
-    ev.preventDefault();
-    const [col, row] = this.getCartesianCoordinates(ev);
-    if (col < 0 || row < 0) {
-      return;
-    }
+  onCellRightClicked(col: HeaderIndex, row: HeaderIndex, { x, y }: DOMCoordinates) {
     const zones = this.env.model.getters.getSelectedZones();
     const lastZone = zones[zones.length - 1];
     let type: ContextMenuType = "CELL";
@@ -720,7 +701,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
         type = "ROW";
       }
     }
-    this.toggleContextMenu(type, ev.clientX, ev.clientY);
+    this.toggleContextMenu(type, x, y);
   }
 
   toggleContextMenu(type: ContextMenuType, x: Pixel, y: Pixel) {
