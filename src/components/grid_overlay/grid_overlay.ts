@@ -118,9 +118,6 @@ export class GridOverlay extends Component<Props> {
       return;
     }
     const [col, row] = this.getCartesianCoordinates(ev);
-    if (col < 0 || row < 0) {
-      return;
-    }
     this.props.onCellClicked(col, row, { shiftKey: ev.shiftKey, ctrlKey: ev.ctrlKey });
   }
 
@@ -132,9 +129,6 @@ export class GridOverlay extends Component<Props> {
   onCanvasContextMenu(ev: MouseEvent) {
     ev.preventDefault();
     const [col, row] = this.getCartesianCoordinates(ev);
-    if (col < 0 || row < 0) {
-      return;
-    }
     this.props.onCellRightClicked(col, row, { x: ev.clientX, y: ev.clientY });
   }
 
