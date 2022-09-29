@@ -1,6 +1,12 @@
 import { Component, onMounted, onPatched, onWillUnmount, useRef } from "@odoo/owl";
-import { HEADER_HEIGHT, HEADER_WIDTH } from "../../constants";
-import { DOMCoordinates, HeaderIndex, Position, Ref, SpreadsheetChildEnv } from "../../types";
+import {
+  DOMCoordinates,
+  DOMDimension,
+  HeaderIndex,
+  Position,
+  Ref,
+  SpreadsheetChildEnv,
+} from "../../types";
 import { FiguresContainer } from "../figures/container/container";
 import { useInterval } from "../helpers/time_hooks";
 
@@ -87,15 +93,15 @@ interface Props {
     modifiers: { ctrlKey: boolean; shiftKey: boolean }
   ) => void;
   onCellRightClicked: (col: HeaderIndex, row: HeaderIndex, coordinates: DOMCoordinates) => void;
+  onGridResized: (dimension: DOMDimension) => void;
   gridOverlayDimensions: string;
-  // TODO add those used in the template
+  sidePanelIsOpen: boolean;
+  onFigureDeleted: () => void;
 }
 
 export class GridOverlay extends Component<Props> {
   static template = "o-spreadsheet-GridOverlay";
-  static components = {
-    FiguresContainer,
-  };
+  static components = { FiguresContainer };
   private gridOverlay!: Ref<HTMLElement>;
 
   setup() {
@@ -139,22 +145,9 @@ export class GridOverlay extends Component<Props> {
   }
 
   private resizeGrid() {
-    const currentHeight = this.gridOverlayEl.clientHeight;
-    const currentWidth = this.gridOverlayEl.clientWidth;
-    const { height: viewportHeight, width: viewportWidth } =
-      this.env.model.getters.getSheetViewDimensionWithHeaders();
-    const headerHeight = this.env.isDashboard() ? 0 : HEADER_HEIGHT;
-    const headerWidth = this.env.isDashboard() ? 0 : HEADER_WIDTH;
-    if (
-      currentHeight + headerHeight != viewportHeight ||
-      currentWidth + headerWidth !== viewportWidth
-    ) {
-      this.env.model.dispatch("RESIZE_SHEETVIEW", {
-        width: currentWidth,
-        height: currentHeight,
-        gridOffsetX: headerWidth,
-        gridOffsetY: headerHeight,
-      });
-    }
+    this.props.onGridResized({
+      height: this.gridOverlayEl.clientHeight,
+      width: this.gridOverlayEl.clientWidth,
+    });
   }
 }

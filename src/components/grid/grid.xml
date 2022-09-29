@@ -13,6 +13,7 @@
         onCellDoubleClicked.bind="onCellDoubleClicked"
         onCellRightClicked.bind="onCellRightClicked"
         onCellHovered.bind="onCellHovered"
+        onGridResized.bind="onGridResized"
         gridOverlayDimensions="gridOverlayDimensions"
         sidePanelIsOpen="props.sidePanelIsOpen"
         onFigureDeleted.bind="focus"

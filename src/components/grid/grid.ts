@@ -29,6 +29,7 @@ import { ClosedCellPopover, PositionedCellPopover } from "../../types/cell_popov
 import {
   Client,
   DOMCoordinates,
+  DOMDimension,
   HeaderIndex,
   Pixel,
   Position,
@@ -521,6 +522,21 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     ctx.translate(-CANVAS_SHIFT, -CANVAS_SHIFT);
     ctx.scale(dpr, dpr);
     this.env.model.drawGrid(renderingContext);
+  }
+
+  onGridResized({ height, width }: DOMDimension) {
+    const { height: viewportHeight, width: viewportWidth } =
+      this.env.model.getters.getSheetViewDimensionWithHeaders();
+    const headerHeight = this.env.isDashboard() ? 0 : HEADER_HEIGHT;
+    const headerWidth = this.env.isDashboard() ? 0 : HEADER_WIDTH;
+    if (height + headerHeight != viewportHeight || width + headerWidth !== viewportWidth) {
+      this.env.model.dispatch("RESIZE_SHEETVIEW", {
+        width: width,
+        height: height,
+        gridOffsetX: headerWidth,
+        gridOffsetY: headerHeight,
+      });
+    }
   }
 
   private moveCanvas(deltaX, deltaY) {
