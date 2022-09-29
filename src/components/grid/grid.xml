@@ -75,7 +75,9 @@
         onClose="() => this.closeMenu()"
       />
       <t t-set="gridSize" t-value="env.model.getters.getMainViewportRect()"/>
-      <div
+      <VerticalScrollBar/>
+      <HorizontalScrollBar/>
+      <!-- <div
         class="o-scrollbar vertical"
         t-on-scroll="onScroll"
         t-ref="vscrollbar"
@@ -88,7 +90,7 @@
         t-ref="hscrollbar"
         t-att-style="hScrollbarStyle">
         <div t-attf-style="height:1px;width:{{gridSize.width}}px"/>
-      </div>
+      </div> -->
       <div class="o-scrollbar corner"/>
     </div>
   </t>

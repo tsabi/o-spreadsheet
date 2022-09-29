@@ -1,0 +1,91 @@
+import { Component, xml } from "@odoo/owl";
+import { SpreadsheetChildEnv } from "../../types";
+import { ScrollBar } from "./scrollbar";
+
+export class VerticalScrollBar extends Component<any, SpreadsheetChildEnv> {
+  static components = { ScrollBar };
+  static template = xml/*xml*/ `
+    <ScrollBar
+      t-if="isDisplayed"
+      height="height"
+      position="position"
+      offset="offset"
+      direction="'vertical'"
+      onScroll="onScroll"
+    />`;
+
+  get offset() {
+    return this.env.model.getters.getActiveSheetScrollInfo().offsetScrollbarY;
+  }
+
+  get height() {
+    return this.env.model.getters.getMainViewportRect().height;
+  }
+
+  get isDisplayed() {
+    const { yRatio } = this.env.model.getters.getFrozenSheetViewRatio(
+      this.env.model.getters.getActiveSheetId()
+    );
+    return yRatio < 1;
+  }
+
+  get position() {
+    const { y } = this.env.model.getters.getMainViewportRect();
+    return {
+      top: `${y}px`,
+    };
+  }
+
+  onScroll(offset) {
+    const { offsetScrollbarX } = this.env.model.getters.getActiveSheetScrollInfo();
+    const { maxOffsetY } = this.env.model.getters.getMaximumSheetOffset();
+    this.env.model.dispatch("SET_VIEWPORT_OFFSET", {
+      offsetX: offsetScrollbarX, // offsetX is the same
+      offsetY: Math.min(offset, maxOffsetY),
+    });
+  }
+}
+
+export class HorizontalScrollBar extends Component<any, SpreadsheetChildEnv> {
+  static components = { ScrollBar };
+  static template = xml/*xml*/ `
+      <ScrollBar
+        t-if="isDisplayed"
+        width="width"
+        position="position"
+        offset="offset"
+        direction="'horizontal'"
+        onScroll="onScroll"
+      />`;
+
+  get offset() {
+    return this.env.model.getters.getActiveSheetScrollInfo().offsetScrollbarX;
+  }
+
+  get width() {
+    return this.env.model.getters.getMainViewportRect().width;
+  }
+
+  get isDisplayed() {
+    const { xRatio } = this.env.model.getters.getFrozenSheetViewRatio(
+      this.env.model.getters.getActiveSheetId()
+    );
+    return xRatio < 1;
+  }
+
+  get position() {
+    const { x } = this.env.model.getters.getMainViewportRect();
+    return {
+      left: `${x}px`,
+    };
+  }
+
+  onScroll(offset) {
+    const { offsetScrollbarY } = this.env.model.getters.getActiveSheetScrollInfo();
+    const { maxOffsetX } = this.env.model.getters.getMaximumSheetOffset();
+    this.env.model.dispatch("SET_VIEWPORT_OFFSET", {
+      offsetX: Math.min(offset, maxOffsetX),
+      offsetY: offsetScrollbarY, // offsetY is the same
+    });
+  }
+}

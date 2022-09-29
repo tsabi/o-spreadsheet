@@ -1,0 +1,5 @@
+<templates>
+  <t t-name="o-spreadsheet-VerticalScrollbar" owl="1">
+    <Scrollbar height="" direction="'vertical'"/>
+  </t>
+</templates>

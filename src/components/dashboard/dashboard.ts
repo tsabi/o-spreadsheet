@@ -181,8 +181,8 @@ export class SpreadsheetDashboard extends Component<Props, SpreadsheetChildEnv> 
   }
 
   private initGrid() {
-    this.vScrollbar.el = this.vScrollbarRef.el!;
-    this.hScrollbar.el = this.hScrollbarRef.el!;
+    // this.vScrollbar.el = this.vScrollbarRef.el!;
+    // this.hScrollbar.el = this.hScrollbarRef.el!;
     this.drawGrid();
   }
 

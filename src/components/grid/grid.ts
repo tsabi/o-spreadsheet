@@ -48,6 +48,7 @@ import { Highlight } from "../highlight/highlight/highlight";
 import { Menu, MenuState } from "../menu/menu";
 import { Popover } from "../popover/popover";
 import { ScrollBar } from "../scrollbar";
+import { HorizontalScrollBar, VerticalScrollBar } from "../scrollbar/vertical_scrollbar";
 /**
  * The Grid component is the main part of the spreadsheet UI. It is responsible
  * for displaying the actual grid, rendering it, managing events, ...
@@ -198,6 +199,8 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     ClientTag,
     Highlight,
     Popover,
+    VerticalScrollBar,
+    HorizontalScrollBar,
   };
 
   private menuState!: MenuState;
