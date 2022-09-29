@@ -81,6 +81,11 @@ function useCellHovered(
 interface Props {
   onCellHovered: (position: Partial<Position>) => void;
   onCellDoubleClicked: (col: HeaderIndex, row: HeaderIndex) => void;
+  onCellClicked: (
+    col: HeaderIndex,
+    row: HeaderIndex,
+    modifiers: { ctrlKey: boolean; shiftKey: boolean }
+  ) => void;
   gridOverlayDimensions: string;
   // TODO add those used in the template
 }
@@ -104,6 +109,18 @@ export class GridOverlay extends Component<Props> {
       throw new Error("GridOverlay el is not defined.");
     }
     return this.gridOverlay.el;
+  }
+
+  onMouseDown(ev: MouseEvent) {
+    if (ev.button > 0) {
+      // not main button, probably a context menu
+      return;
+    }
+    const [col, row] = this.getCartesianCoordinates(ev);
+    if (col < 0 || row < 0) {
+      return;
+    }
+    this.props.onCellClicked(col, row, { shiftKey: ev.shiftKey, ctrlKey: ev.ctrlKey });
   }
 
   onDoubleClick(ev) {

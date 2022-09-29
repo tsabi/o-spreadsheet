@@ -573,17 +573,13 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     return [colIndex, rowIndex];
   }
 
-  onMouseDown(ev: MouseEvent) {
-    if (ev.button > 0) {
-      // not main button, probably a context menu
-      return;
-    }
-    if (ev.ctrlKey) {
+  onCellClicked(
+    col: HeaderIndex,
+    row: HeaderIndex,
+    { ctrlKey, shiftKey }: { ctrlKey: boolean; shiftKey: boolean }
+  ) {
+    if (ctrlKey) {
       this.env.model.dispatch("PREPARE_SELECTION_INPUT_EXPANSION");
-    }
-    const [col, row] = this.getCartesianCoordinates(ev);
-    if (col < 0 || row < 0) {
-      return;
     }
 
     if (this.env.model.getters.isDashboard()) {
@@ -595,9 +591,9 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     if (this.env.model.getters.getEditionMode() === "editing") {
       this.env.model.dispatch("STOP_EDITION");
     }
-    if (ev.shiftKey) {
+    if (shiftKey) {
       this.env.model.selection.setAnchorCorner(col, row);
-    } else if (ev.ctrlKey) {
+    } else if (ctrlKey) {
       this.env.model.selection.addCellToSelection(col, row);
     } else {
       this.env.model.selection.selectCell(col, row);

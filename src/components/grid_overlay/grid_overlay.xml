@@ -4,7 +4,7 @@
       t-ref="gridOverlay"
       class="o-grid-overlay"
       t-att-style="props.gridOverlayDimensions"
-      t-on-mousedown="props.onMouseDown"
+      t-on-mousedown="onMouseDown"
       t-on-dblclick="onDoubleClick"
       t-on-contextmenu="props.onCanvasContextMenu">
       <FiguresContainer

@@ -9,7 +9,7 @@
       t-on-wheel="onMouseWheel"
       t-ref="grid">
       <GridOverlay
-        onMouseDown.bind="onMouseDown"
+        onCellClicked.bind="onCellClicked"
         onCellDoubleClicked.bind="onCellDoubleClicked"
         onCanvasContextMenu.bind="onCanvasContextMenu"
         onCellHovered.bind="onCellHovered"
