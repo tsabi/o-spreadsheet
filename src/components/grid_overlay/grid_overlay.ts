@@ -80,6 +80,7 @@ function useCellHovered(
 
 interface Props {
   onCellHovered: (position: Partial<Position>) => void;
+  gridOverlayDimensions: string;
   // TODO add those used in the template
 }
 

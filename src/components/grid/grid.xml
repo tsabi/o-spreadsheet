@@ -58,10 +58,7 @@
       </Popover>
       <t
         t-if="env.model.getters.getEditionMode() === 'inactive' and isAutoFillActive() and !env.isDashboard()">
-        <Autofill
-          position="getAutofillPosition()"
-          getGridBoundingClientRect="() => this.getGridBoundingClientRect()"
-        />
+        <Autofill position="getAutofillPosition()"/>
       </t>
       <t t-if="env.model.getters.getEditionMode() !== 'inactive' and !env.isDashboard()">
         <t t-foreach="env.model.getters.getHighlights()" t-as="highlight" t-key="highlight_index">

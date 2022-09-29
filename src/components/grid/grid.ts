@@ -449,10 +449,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     return this.gridRef.el;
   }
 
-  getGridBoundingClientRect(): DOMRect {
-    return this.gridEl.getBoundingClientRect();
-  }
-
   onScroll() {
     const { offsetScrollbarX, offsetScrollbarY } =
       this.env.model.getters.getActiveSheetScrollInfo();
