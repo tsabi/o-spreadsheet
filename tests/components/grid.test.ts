@@ -631,11 +631,13 @@ describe("Grid component", () => {
     });
 
     test("Scrolling the grid remove hover popover", async () => {
-      setCellContent(model, "A1", "=1/0");
-      await hoverCell(model, "A1", 400);
+      setCellContent(model, "A10", "=1/0");
+      await hoverCell(model, "A10", 400);
       expect(fixture.querySelector(".o-error-tooltip")).not.toBeNull();
       scrollGrid({ deltaY: 100 });
       await nextTick();
+      const sheetId = model.getters.getActiveSheetId();
+      expect(model.getters.isVisibleInViewport(sheetId, 0, 9)).toBe(true);
       expect(fixture.querySelector(".o-error-tooltip")).toBeNull();
     });
 
@@ -649,6 +651,8 @@ describe("Grid component", () => {
       expect(fixture.querySelector(".o-link-editor")).not.toBeNull();
       scrollGrid({ deltaY: DEFAULT_CELL_HEIGHT });
       await nextTick();
+      const sheetId = model.getters.getActiveSheetId();
+      expect(model.getters.isVisibleInViewport(sheetId, 0, 0)).toBe(false);
       expect(fixture.querySelector(".o-link-editor")).toBeNull();
     });
 
@@ -662,6 +666,8 @@ describe("Grid component", () => {
       expect(fixture.querySelector(".o-link-editor")).not.toBeNull();
       scrollGrid({ deltaY: DEFAULT_CELL_HEIGHT - 5 });
       await nextTick();
+      const sheetId = model.getters.getActiveSheetId();
+      expect(model.getters.isVisibleInViewport(sheetId, 0, 0)).toBe(true);
       expect(fixture.querySelector(".o-link-editor")).not.toBeNull();
     });
   });
@@ -1205,7 +1211,7 @@ describe("Events on Grid update viewport correctly", () => {
     jest.spyOn(HTMLDivElement.prototype, "clientWidth", "get").mockImplementation(() => 800);
     jest.spyOn(HTMLDivElement.prototype, "clientHeight", "get").mockImplementation(() => 650);
     // force a rerendering to pass through patched() of the Grid component.
-    parent.render();
+    parent.render(true);
     await nextTick();
 
     expect(model.getters.getSheetViewDimension()).toMatchObject({

@@ -8,19 +8,15 @@
       t-on-keydown="onKeydown"
       t-on-wheel="onMouseWheel"
       t-ref="grid">
-      <div
-        t-ref="gridOverlay"
-        class="o-grid-overlay"
-        t-att-style="gridOverlayStyle"
-        t-on-mousedown="onMouseDown"
-        t-on-dblclick="onDoubleClick"
-        t-on-contextmenu="onCanvasContextMenu">
-        <FiguresContainer
-          model="props.model"
-          sidePanelIsOpen="props.sidePanelIsOpen"
-          onFigureDeleted="() => this.focus()"
-        />
-      </div>
+      <GridOverlay
+        onMouseDown.bind="onMouseDown"
+        onDoubleClick.bind="onDoubleClick"
+        onCanvasContextMenu.bind="onCanvasContextMenu"
+        onCellHovered.bind="onCellHovered"
+        gridOverlayStyle="gridOverlayStyle"
+        sidePanelIsOpen="props.sidePanelIsOpen"
+        onFigureDeleted.bind="focus"
+      />
       <HeadersOverlay
         t-if="!env.isDashboard()"
         onOpenContextMenu="(type, x, y) => this.toggleContextMenu(type, x, y)"

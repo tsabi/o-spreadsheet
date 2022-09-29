@@ -39,12 +39,11 @@ import {
 import { Autofill } from "../autofill/autofill";
 import { ClientTag } from "../collaborative_client_tag/collaborative_client_tag";
 import { GridComposer } from "../composer/grid_composer/grid_composer";
-import { FiguresContainer } from "../figures/container/container";
+import { GridOverlay } from "../grid_overlay/grid_overlay";
 import { HeadersOverlay } from "../headers_overlay/headers_overlay";
 import { css } from "../helpers/css";
 import { dragAndDropBeyondTheViewport } from "../helpers/drag_and_drop";
 import { useAbsolutePosition } from "../helpers/position_hook";
-import { useInterval } from "../helpers/time_hooks";
 import { Highlight } from "../highlight/highlight/highlight";
 import { Menu, MenuState } from "../menu/menu";
 import { Popover } from "../popover/popover";
@@ -77,82 +76,6 @@ const keyDownMappingIgnore: string[] = ["CTRL+C", "CTRL+V"];
 // -----------------------------------------------------------------------------
 // Error Tooltip Hook
 // -----------------------------------------------------------------------------
-
-function useCellHovered(env: SpreadsheetChildEnv): Partial<Position> {
-  const hoveredPosition: Partial<Position> = useState({} as Partial<Position>);
-  const { Date } = window;
-  const gridRef = useRef("gridOverlay");
-  const vScrollbarRef = useRef("vscrollbar");
-  const hScrollbarRef = useRef("hscrollbar");
-  let x = 0;
-  let y = 0;
-  let lastMoved = 0;
-
-  function getPosition(): Position {
-    const col = env.model.getters.getColIndex(x);
-    const row = env.model.getters.getRowIndex(y);
-    return { col, row };
-  }
-
-  const { pause, resume } = useInterval(checkTiming, 200);
-
-  function checkTiming() {
-    const { col, row } = getPosition();
-    const delta = Date.now() - lastMoved;
-    if (delta > 300 && (col !== hoveredPosition.col || row !== hoveredPosition.row)) {
-      hoveredPosition.col = undefined;
-      hoveredPosition.row = undefined;
-    }
-    if (delta > 300) {
-      if (col < 0 || row < 0) {
-        return;
-      }
-      hoveredPosition.col = col;
-      hoveredPosition.row = row;
-    }
-  }
-  function updateMousePosition(e: MouseEvent) {
-    x = e.offsetX;
-    y = e.offsetY;
-    lastMoved = Date.now();
-  }
-
-  function recompute() {
-    const { col, row } = getPosition();
-    if (col !== hoveredPosition.col || row !== hoveredPosition.row) {
-      hoveredPosition.col = undefined;
-      hoveredPosition.row = undefined;
-    }
-  }
-
-  function reset() {
-    hoveredPosition.col = undefined;
-    hoveredPosition.row = undefined;
-  }
-
-  onMounted(() => {
-    const grid = gridRef.el!;
-    grid.addEventListener("mousemove", updateMousePosition);
-    grid.addEventListener("mouseleave", pause);
-    grid.addEventListener("mouseenter", resume);
-    grid.addEventListener("mousedown", recompute);
-
-    vScrollbarRef.el!.addEventListener("scroll", reset);
-    hScrollbarRef.el!.addEventListener("scroll", reset);
-  });
-
-  onWillUnmount(() => {
-    const grid = gridRef.el!;
-    grid.removeEventListener("mousemove", updateMousePosition);
-    grid.removeEventListener("mouseleave", pause);
-    grid.removeEventListener("mouseenter", resume);
-    grid.removeEventListener("mousedown", recompute);
-
-    vScrollbarRef.el!.removeEventListener("scroll", reset);
-    hScrollbarRef.el!.removeEventListener("scroll", reset);
-  });
-  return hoveredPosition;
-}
 
 function useTouchMove(handler: (deltaX: Pixel, deltaY: Pixel) => void, canMoveUp: () => boolean) {
   const canvasRef = useRef("canvas");
@@ -269,10 +192,10 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   static template = "o-spreadsheet-Grid";
   static components = {
     GridComposer,
+    GridOverlay,
     HeadersOverlay,
     Menu,
     Autofill,
-    FiguresContainer,
     ClientTag,
     Highlight,
     Popover,
@@ -284,7 +207,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   private gridRef!: Ref<HTMLElement>;
   private vScrollbar!: ScrollBar;
   private hScrollbar!: ScrollBar;
-  private gridOverlay!: Ref<HTMLElement>;
   private canvas!: Ref<HTMLElement>;
   private currentSheet!: UID;
   private clickedCol!: HeaderIndex;
@@ -302,7 +224,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     this.vScrollbarRef = useRef("vscrollbar");
     this.hScrollbarRef = useRef("hscrollbar");
     this.gridRef = useRef("grid");
-    this.gridOverlay = useRef("gridOverlay");
     this.canvas = useRef("canvas");
     this.canvasPosition = useAbsolutePosition(this.canvas);
     this.vScrollbar = new ScrollBar(this.vScrollbarRef.el, "vertical");
@@ -310,25 +231,26 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     this.currentSheet = this.env.model.getters.getActiveSheetId();
     this.clickedCol = 0;
     this.clickedRow = 0;
-    this.hoveredCell = useCellHovered(this.env);
+    this.hoveredCell = useState({ col: undefined, row: undefined });
 
     useExternalListener(document.body, "cut", this.copy.bind(this, true));
     useExternalListener(document.body, "copy", this.copy.bind(this, false));
     useExternalListener(document.body, "paste", this.paste);
     useTouchMove(this.moveCanvas.bind(this), () => this.vScrollbar.scroll > 0);
     onMounted(() => this.initGrid());
-    onPatched(() => {
-      this.drawGrid();
-      this.resizeGrid();
-    });
+    onPatched(() => this.drawGrid());
     this.props.exposeFocus(() => this.focus());
+  }
+
+  onCellHovered({ col, row }) {
+    this.hoveredCell.col = col;
+    this.hoveredCell.row = row;
   }
 
   private initGrid() {
     this.vScrollbar.el = this.vScrollbarRef.el!;
     this.hScrollbar.el = this.hScrollbarRef.el!;
     this.focus();
-    this.resizeGrid();
     this.drawGrid();
   }
 
@@ -524,31 +446,8 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     return this.gridRef.el;
   }
 
-  get gridOverlayEl(): HTMLElement {
-    if (!this.gridOverlay.el) {
-      throw new Error("GridOverlay el is not defined.");
-    }
-    return this.gridOverlay.el;
-  }
-
   getGridBoundingClientRect(): DOMRect {
     return this.gridEl.getBoundingClientRect();
-  }
-
-  resizeGrid() {
-    const scrollBarWidth = this.env.isDashboard() ? 0 : SCROLLBAR_WIDTH;
-    const currentHeight = this.gridOverlayEl.clientHeight - scrollBarWidth;
-    const currentWidth = this.gridOverlayEl.clientWidth - scrollBarWidth;
-    const { height: viewportHeight, width: viewportWidth } =
-      this.env.model.getters.getSheetViewDimension();
-    if (currentHeight != viewportHeight || currentWidth !== viewportWidth) {
-      this.env.model.dispatch("RESIZE_SHEETVIEW", {
-        width: currentWidth,
-        height: currentHeight,
-        gridOffsetX: this.env.isDashboard() ? 0 : HEADER_WIDTH,
-        gridOffsetY: this.env.isDashboard() ? 0 : HEADER_HEIGHT,
-      });
-    }
   }
 
   onScroll() {
@@ -652,6 +551,8 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
 
     const deltaX = ev.shiftKey ? ev.deltaY : ev.deltaX;
     const deltaY = ev.shiftKey ? ev.deltaX : ev.deltaY;
+    this.hoveredCell.col = undefined;
+    this.hoveredCell.row = undefined;
     this.moveCanvas(normalize(deltaX), normalize(deltaY));
   }
 
