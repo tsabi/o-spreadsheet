@@ -254,12 +254,15 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     this.drawGrid();
   }
 
-  get gridOverlayStyle() {
+  get gridOverlayDimensions() {
+    const offsetX = this.env.isDashboard() ? 0 : HEADER_HEIGHT;
+    const offsetY = this.env.isDashboard() ? 0 : HEADER_WIDTH;
+    const scrollbar = this.env.isDashboard() ? 0 : SCROLLBAR_WIDTH;
     return `
-      top: ${this.env.isDashboard() ? 0 : HEADER_HEIGHT}px;
-      left: ${this.env.isDashboard() ? 0 : HEADER_WIDTH}px;
-      height: calc(100% - ${this.env.isDashboard() ? 0 : HEADER_HEIGHT}px);
-      width: calc(100% - ${this.env.isDashboard() ? 0 : HEADER_WIDTH}px);
+      top: ${offsetX}px;
+      left: ${offsetY}px;
+      height: calc(100% - ${offsetX + scrollbar}px);
+      width: calc(100% - ${offsetY + scrollbar}px);
     `;
   }
 

@@ -3,7 +3,7 @@
     <div
       t-ref="gridOverlay"
       class="o-grid-overlay"
-      t-att-style="props.gridOverlayStyle"
+      t-att-style="props.gridOverlayDimensions"
       t-on-mousedown="props.onMouseDown"
       t-on-dblclick="props.onDoubleClick"
       t-on-contextmenu="props.onCanvasContextMenu">

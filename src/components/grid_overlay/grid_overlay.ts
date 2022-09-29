@@ -1,5 +1,5 @@
 import { Component, onMounted, onPatched, onWillUnmount, useRef } from "@odoo/owl";
-import { HEADER_HEIGHT, HEADER_WIDTH, SCROLLBAR_WIDTH } from "../../constants";
+import { HEADER_HEIGHT, HEADER_WIDTH } from "../../constants";
 import { Position, Ref, SpreadsheetChildEnv } from "../../types";
 import { FiguresContainer } from "../figures/container/container";
 import { useInterval } from "../helpers/time_hooks";
@@ -105,17 +105,21 @@ export class GridOverlay extends Component<Props> {
   }
 
   resizeGrid() {
-    const scrollBarWidth = this.env.isDashboard() ? 0 : SCROLLBAR_WIDTH;
-    const currentHeight = this.gridOverlayEl.clientHeight - scrollBarWidth;
-    const currentWidth = this.gridOverlayEl.clientWidth - scrollBarWidth;
+    const currentHeight = this.gridOverlayEl.clientHeight;
+    const currentWidth = this.gridOverlayEl.clientWidth;
     const { height: viewportHeight, width: viewportWidth } =
-      this.env.model.getters.getSheetViewDimension();
-    if (currentHeight != viewportHeight || currentWidth !== viewportWidth) {
+      this.env.model.getters.getSheetViewDimensionWithHeaders();
+    const headerHeight = this.env.isDashboard() ? 0 : HEADER_HEIGHT;
+    const headerWidth = this.env.isDashboard() ? 0 : HEADER_WIDTH;
+    if (
+      currentHeight + headerHeight != viewportHeight ||
+      currentWidth + headerWidth !== viewportWidth
+    ) {
       this.env.model.dispatch("RESIZE_SHEETVIEW", {
         width: currentWidth,
         height: currentHeight,
-        gridOffsetX: this.env.isDashboard() ? 0 : HEADER_WIDTH,
-        gridOffsetY: this.env.isDashboard() ? 0 : HEADER_HEIGHT,
+        gridOffsetX: headerWidth,
+        gridOffsetY: headerHeight,
       });
     }
   }

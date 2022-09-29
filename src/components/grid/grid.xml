@@ -13,7 +13,7 @@
         onDoubleClick.bind="onDoubleClick"
         onCanvasContextMenu.bind="onCanvasContextMenu"
         onCellHovered.bind="onCellHovered"
-        gridOverlayStyle="gridOverlayStyle"
+        gridOverlayDimensions="gridOverlayDimensions"
         sidePanelIsOpen="props.sidePanelIsOpen"
         onFigureDeleted.bind="focus"
       />
