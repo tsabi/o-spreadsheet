@@ -10,8 +10,8 @@ exports[`Grid component in dashboard mode simple dashboard rendering snapshot 1`
     style="
       top: 0px;
       left: 0px;
-      height: calc(100% - 0px);
-      width: calc(100% - 0px);
+      height: calc(100% - 15px);
+      width: calc(100% - 15px);
     "
   >
     <!-- TODO remove sidePanelIsOpen props. It is wrong.
@@ -23,8 +23,6 @@ exports[`Grid component in dashboard mode simple dashboard rendering snapshot 1`
     
   </div>
   
-  
-  
   <canvas
     height="985"
     style="width:985px;height:985px;"
@@ -32,15 +30,10 @@ exports[`Grid component in dashboard mode simple dashboard rendering snapshot 1`
   />
   
   
-  
-  
-  
-  
-  
   <div
     class="o-scrollbar vertical"
     style="
-      width: 0px;
+      
       top: 0px;"
   >
     <div
@@ -50,7 +43,7 @@ exports[`Grid component in dashboard mode simple dashboard rendering snapshot 1`
   <div
     class="o-scrollbar horizontal"
     style="
-      width: 0px;
+      
       left: 0px;"
   >
     <div

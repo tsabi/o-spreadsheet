@@ -5,6 +5,7 @@ exports[`Spreadsheet simple rendering snapshot 1`] = `
   class="o-spreadsheet"
   style="grid-template-rows: 63px auto 37px"
 >
+  
   <div
     class="o-spreadsheet-topbar o-two-columns"
   >
@@ -367,7 +368,6 @@ exports[`Spreadsheet simple rendering snapshot 1`] = `
       
     </div>
   </div>
-  
   <div
     class="o-grid o-two-columns"
     tabindex="-1"
@@ -465,7 +465,6 @@ exports[`Spreadsheet simple rendering snapshot 1`] = `
       class="o-scrollbar corner"
     />
   </div>
-  
   
   <div
     class="o-spreadsheet-bottom-bar o-two-columns"

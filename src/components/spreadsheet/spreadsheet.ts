@@ -20,6 +20,7 @@ import { _lt } from "../../translation";
 import { SpreadsheetChildEnv, WorkbookData } from "../../types";
 import { NotifyUIEvent } from "../../types/ui";
 import { BottomBar } from "../bottom_bar/bottom_bar";
+import { SpreadsheetDashboard } from "../dashboard/dashboard";
 import { Grid } from "../grid/grid";
 import { css } from "../helpers/css";
 import { SidePanel } from "../side_panel/side_panel/side_panel";
@@ -87,7 +88,7 @@ interface ComposerState {
 
 export class Spreadsheet extends Component<SpreadsheetProps, SpreadsheetChildEnv> {
   static template = "o-spreadsheet-Spreadsheet";
-  static components = { TopBar, Grid, BottomBar, SidePanel };
+  static components = { TopBar, Grid, BottomBar, SidePanel, SpreadsheetDashboard };
   static _t = t;
 
   model!: Model;

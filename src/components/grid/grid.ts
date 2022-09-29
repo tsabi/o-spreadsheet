@@ -23,7 +23,6 @@ import { interactivePaste, interactivePasteFromOS } from "../../helpers/ui/paste
 import { ComposerSelection } from "../../plugins/ui/edition";
 import { cellMenuRegistry } from "../../registries/menus/cell_menu_registry";
 import { colMenuRegistry } from "../../registries/menus/col_menu_registry";
-import { dashboardMenuRegistry } from "../../registries/menus/dashboard_menu_registry";
 import { rowMenuRegistry } from "../../registries/menus/row_menu_registry";
 import { ClosedCellPopover, PositionedCellPopover } from "../../types/cell_popovers";
 import {
@@ -60,13 +59,12 @@ import { ScrollBar } from "../scrollbar";
  * - a vertical resizer (same, for rows)
  */
 
-export type ContextMenuType = "ROW" | "COL" | "CELL" | "DASHBOARD";
+export type ContextMenuType = "ROW" | "COL" | "CELL";
 
 const registries = {
   ROW: rowMenuRegistry,
   COL: colMenuRegistry,
   CELL: cellMenuRegistry,
-  DASHBOARD: dashboardMenuRegistry,
 };
 
 // copy and paste are specific events that should not be managed by the keydown event,
@@ -252,14 +250,11 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   }
 
   get gridOverlayDimensions() {
-    const offsetX = this.env.isDashboard() ? 0 : HEADER_HEIGHT;
-    const offsetY = this.env.isDashboard() ? 0 : HEADER_WIDTH;
-    const scrollbar = this.env.isDashboard() ? 0 : SCROLLBAR_WIDTH;
     return `
-      top: ${offsetX}px;
-      left: ${offsetY}px;
-      height: calc(100% - ${offsetX + scrollbar}px);
-      width: calc(100% - ${offsetY + scrollbar}px);
+      top: ${HEADER_HEIGHT}px;
+      left: ${HEADER_WIDTH}px;
+      height: calc(100% - ${HEADER_HEIGHT + SCROLLBAR_WIDTH}px);
+      width: calc(100% - ${HEADER_WIDTH + SCROLLBAR_WIDTH}px);
     `;
   }
 
@@ -269,8 +264,8 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       this.env.model.getters.getActiveSheetId()
     );
     return `
-      ${this.env.isDashboard() || yRatio >= 1 ? "width: 0px;" : ""}
-      top: ${y + (this.env.isDashboard() ? 0 : HEADER_HEIGHT)}px;`;
+      ${yRatio >= 1 ? "width: 0px;" : ""}
+      top: ${y + HEADER_HEIGHT}px;`;
   }
 
   get hScrollbarStyle() {
@@ -279,8 +274,8 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       this.env.model.getters.getActiveSheetId()
     );
     return `
-      ${this.env.isDashboard() || xRatio >= 1 ? "width: 0px;" : ""}
-      left: ${x + (this.env.isDashboard() ? 0 : HEADER_WIDTH)}px;`;
+      ${xRatio >= 1 ? "width: 0px;" : ""}
+      left: ${x + HEADER_WIDTH}px;`;
   }
 
   get cellPopover(): PositionedCellPopover | ClosedCellPopover {
@@ -527,14 +522,12 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   onGridResized({ height, width }: DOMDimension) {
     const { height: viewportHeight, width: viewportWidth } =
       this.env.model.getters.getSheetViewDimensionWithHeaders();
-    const headerHeight = this.env.isDashboard() ? 0 : HEADER_HEIGHT;
-    const headerWidth = this.env.isDashboard() ? 0 : HEADER_WIDTH;
-    if (height + headerHeight != viewportHeight || width + headerWidth !== viewportWidth) {
+    if (height + HEADER_HEIGHT != viewportHeight || width + HEADER_WIDTH !== viewportWidth) {
       this.env.model.dispatch("RESIZE_SHEETVIEW", {
         width: width,
         height: height,
-        gridOffsetX: headerWidth,
-        gridOffsetY: headerHeight,
+        gridOffsetX: HEADER_WIDTH,
+        gridOffsetY: HEADER_HEIGHT,
       });
     }
   }
@@ -582,11 +575,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   ) {
     if (ctrlKey) {
       this.env.model.dispatch("PREPARE_SELECTION_INPUT_EXPANSION");
-    }
-
-    if (this.env.model.getters.isDashboard()) {
-      this.env.model.selection.selectCell(col, row);
-      return;
     }
 
     this.closeOpenedPopover();
@@ -664,9 +652,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   }
 
   onKeydown(ev: KeyboardEvent) {
-    if (this.env.isDashboard()) {
-      return;
-    }
     if (ev.key.startsWith("Arrow")) {
       this.processArrows(ev);
       return;
@@ -722,9 +707,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
 
   toggleContextMenu(type: ContextMenuType, x: Pixel, y: Pixel) {
     this.closeOpenedPopover();
-    if (this.env.model.getters.isDashboard()) {
-      type = "DASHBOARD";
-    }
     this.menuState.isOpen = true;
     this.menuState.position = { x, y };
     this.menuState.menuItems = registries[type]

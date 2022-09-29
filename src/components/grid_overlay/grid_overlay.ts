@@ -102,6 +102,15 @@ interface Props {
 export class GridOverlay extends Component<Props> {
   static template = "o-spreadsheet-GridOverlay";
   static components = { FiguresContainer };
+  static defaultProps = {
+    onCellHovered: () => {},
+    onCellDoubleClicked: () => {},
+    onCellClicked: () => {},
+    onCellRightClicked: () => {},
+    onGridResized: () => {},
+    onFigureDeleted: () => {},
+    sidePanelIsOpen: false,
+  };
   private gridOverlay!: Ref<HTMLElement>;
 
   setup() {
