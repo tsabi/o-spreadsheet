@@ -6,7 +6,7 @@
       t-att-style="props.gridOverlayDimensions"
       t-on-mousedown="onMouseDown"
       t-on-dblclick="onDoubleClick"
-      t-on-contextmenu="onCanvasContextMenu">
+      t-on-contextmenu="onContextMenu">
       <FiguresContainer
         model="env.model"
         sidePanelIsOpen="props.sidePanelIsOpen"
