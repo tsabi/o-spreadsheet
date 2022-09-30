@@ -1,10 +1,5 @@
-import { Component, onMounted, onPatched, useExternalListener, useRef, useState } from "@odoo/owl";
-import {
-  BACKGROUND_GRAY_COLOR,
-  CANVAS_SHIFT,
-  DEFAULT_CELL_HEIGHT,
-  SCROLLBAR_WIDTH,
-} from "../../constants";
+import { Component, useExternalListener, useRef, useState } from "@odoo/owl";
+import { BACKGROUND_GRAY_COLOR, DEFAULT_CELL_HEIGHT, SCROLLBAR_WIDTH } from "../../constants";
 import { isInside } from "../../helpers/index";
 import { dashboardMenuRegistry } from "../../registries/menus/dashboard_menu_registry";
 import {
@@ -15,6 +10,7 @@ import {
   Ref,
   SpreadsheetChildEnv,
 } from "../../types/index";
+import { GridCanvas } from "../grid_canvas/grid_canvas";
 import { GridOverlay } from "../grid_overlay/grid_overlay";
 import { GridPopover } from "../grid_popover/grid_popover";
 import { css } from "../helpers/css";
@@ -65,6 +61,7 @@ interface Props {}
 export class SpreadsheetDashboard extends Component<Props, SpreadsheetChildEnv> {
   static template = "o-spreadsheet-SpreadsheetDashboard";
   static components = {
+    GridCanvas,
     GridOverlay,
     GridPopover,
     Menu,
@@ -75,7 +72,6 @@ export class SpreadsheetDashboard extends Component<Props, SpreadsheetChildEnv> 
 
   private menuState!: MenuState;
   private gridRef!: Ref<HTMLElement>;
-  private canvas!: Ref<HTMLElement>;
 
   canvasPosition!: DOMCoordinates;
   hoveredCell!: Partial<Position>;
@@ -87,22 +83,15 @@ export class SpreadsheetDashboard extends Component<Props, SpreadsheetChildEnv> 
       menuItems: [],
     });
     this.gridRef = useRef("grid");
-    this.canvas = useRef("canvas");
-    this.canvasPosition = useAbsolutePosition(this.canvas);
+    this.canvasPosition = useAbsolutePosition(this.gridRef);
     this.hoveredCell = useState({ col: undefined, row: undefined });
 
     useExternalListener(document.body, "copy", this.copy.bind(this));
-    onMounted(() => this.initGrid());
-    onPatched(() => this.drawGrid());
   }
 
   onCellHovered({ col, row }) {
     this.hoveredCell.col = col;
     this.hoveredCell.row = row;
-  }
-
-  private initGrid() {
-    this.drawGrid();
   }
 
   get gridOverlayDimensions() {
@@ -123,34 +112,6 @@ export class SpreadsheetDashboard extends Component<Props, SpreadsheetChildEnv> 
       throw new Error("Grid el is not defined.");
     }
     return this.gridRef.el;
-  }
-
-  drawGrid() {
-    // drawing grid on canvas
-    const canvas = this.canvas.el as HTMLCanvasElement;
-    const dpr = window.devicePixelRatio || 1;
-    const ctx = canvas.getContext("2d", { alpha: false })!;
-    const thinLineWidth = 0.4 * dpr;
-    const renderingContext = {
-      ctx,
-      dpr,
-      thinLineWidth,
-    };
-    const { width, height } = this.env.model.getters.getSheetViewDimensionWithHeaders();
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    canvas.setAttribute("style", `width:${width}px;height:${height}px;`);
-    // Imagine each pixel as a large square. The whole-number coordinates (0, 1, 2…)
-    // are the edges of the squares. If you draw a one-unit-wide line between whole-number
-    // coordinates, it will overlap opposite sides of the pixel square, and the resulting
-    // line will be drawn two pixels wide. To draw a line that is only one pixel wide,
-    // you need to shift the coordinates by 0.5 perpendicular to the line's direction.
-    // http://diveintohtml5.info/canvas.html#pixel-madness
-    ctx.translate(-CANVAS_SHIFT, -CANVAS_SHIFT);
-    ctx.scale(dpr, dpr);
-    this.env.model.drawGrid(renderingContext);
   }
 
   onGridResized({ height, width }: DOMDimension) {

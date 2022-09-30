@@ -31,7 +31,7 @@
           focus="props.focusComposer"
         />
       </t>
-      <canvas t-ref="canvas"/>
+      <GridCanvas/>
       <t
         t-if="!env.isDashboard()"
         t-foreach="env.model.getters.getClientsToDisplay()"

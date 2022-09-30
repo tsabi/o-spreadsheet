@@ -9,7 +9,7 @@
         onGridMoved.bind="moveCanvas"
         gridOverlayDimensions="gridOverlayDimensions"
       />
-      <canvas t-ref="canvas"/>
+      <GridCanvas/>
       <GridPopover
         t-if="!menuState.isOpen"
         gridPosition="canvasPosition"

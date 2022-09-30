@@ -89,6 +89,11 @@ describe("Grid component", () => {
   });
 
   test("simple rendering snapshot", async () => {
+    await nextTick();
+    await nextTick();
+    await nextTick();
+    await nextTick();
+    await nextTick();
     expect(fixture.querySelector(".o-grid")).toMatchSnapshot();
   });
 

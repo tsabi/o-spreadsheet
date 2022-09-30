@@ -133,6 +133,9 @@ export class Spreadsheet extends Component<SpreadsheetProps, SpreadsheetChildEnv
     useExternalListener(window as any, "resize", () => this.render(true));
     useExternalListener(window, "beforeunload", this.unbindModelEvents.bind(this));
     onMounted(() => {
+      // The first rendering fixed the grid size.
+      // It must be rerendered with with the new size
+      this.render(true);
       this.bindModelEvents();
       this.checkViewportSize();
     });

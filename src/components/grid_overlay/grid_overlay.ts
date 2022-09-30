@@ -1,4 +1,4 @@
-import { Component, onMounted, onPatched, onWillUnmount, useRef } from "@odoo/owl";
+import { Component, onMounted, onWillUnmount, useEffect, useRef } from "@odoo/owl";
 import {
   DOMCoordinates,
   DOMDimension,
@@ -166,8 +166,16 @@ export class GridOverlay extends Component<Props> {
   setup() {
     this.gridOverlay = useRef("gridOverlay");
     useCellHovered(this.env, this.gridOverlay, this.props.onCellHovered);
-    onMounted(() => this.resizeGrid());
-    onPatched(() => this.resizeGrid());
+    useEffect(
+      () => {
+        // console.log("effect resize");
+        this.props.onGridResized({
+          height: this.gridOverlayEl.clientHeight,
+          width: this.gridOverlayEl.clientWidth,
+        });
+      },
+      () => [this.gridOverlayEl.clientHeight, this.gridOverlayEl.clientWidth]
+    );
     useTouchMove(this.gridOverlay, this.props.onGridMoved, () => {
       const { offsetScrollbarY } = this.env.model.getters.getActiveSheetScrollInfo();
       return offsetScrollbarY > 0;
@@ -205,12 +213,5 @@ export class GridOverlay extends Component<Props> {
     const colIndex = this.env.model.getters.getColIndex(ev.offsetX);
     const rowIndex = this.env.model.getters.getRowIndex(ev.offsetY);
     return [colIndex, rowIndex];
-  }
-
-  private resizeGrid() {
-    this.props.onGridResized({
-      height: this.gridOverlayEl.clientHeight,
-      width: this.gridOverlayEl.clientWidth,
-    });
   }
 }
