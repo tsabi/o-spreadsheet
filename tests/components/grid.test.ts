@@ -133,8 +133,8 @@ describe("Grid component", () => {
     expect(document.querySelectorAll(".o-sidePanel").length).toBe(1);
   });
 
-  test("Can touch the canvas to move it", async () => {
-    const grid = fixture.querySelector("canvas")!;
+  test("Can touch the grid to move it", async () => {
+    const grid = fixture.querySelector(".o-grid-overlay")!;
     expect(getHorizontalScroll()).toBe(0);
     expect(getVerticalScroll()).toBe(0);
     grid.dispatchEvent(
@@ -181,7 +181,7 @@ describe("Grid component", () => {
     expect(getVerticalScroll()).toBe(50);
   });
   test("Event is stopped if not at the top", async () => {
-    const grid = fixture.querySelector("canvas")!;
+    const grid = fixture.querySelector(".o-grid-overlay")!;
     expect(getHorizontalScroll()).toBe(0);
     expect(getVerticalScroll()).toBe(0);
 

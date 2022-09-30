@@ -3,6 +3,7 @@ import {
   DOMCoordinates,
   DOMDimension,
   HeaderIndex,
+  Pixel,
   Position,
   Ref,
   SpreadsheetChildEnv,
@@ -84,6 +85,54 @@ function useCellHovered(
   return hoveredPosition;
 }
 
+function useTouchMove(
+  gridRef: Ref<HTMLElement>,
+  handler: (deltaX: Pixel, deltaY: Pixel) => void,
+  canMoveUp: () => boolean
+) {
+  let x = null as number | null;
+  let y = null as number | null;
+
+  function onTouchStart(ev: TouchEvent) {
+    if (ev.touches.length !== 1) return;
+    x = ev.touches[0].clientX;
+    y = ev.touches[0].clientY;
+  }
+
+  function onTouchEnd() {
+    x = null;
+    y = null;
+  }
+
+  function onTouchMove(ev: TouchEvent) {
+    if (ev.touches.length !== 1) return;
+    // On mobile browsers, swiping down is often associated with "pull to refresh".
+    // We only want this behavior if the grid is already at the top.
+    // Otherwise we only want to move the canvas up, without triggering any refresh.
+    if (canMoveUp()) {
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
+    const currentX = ev.touches[0].clientX;
+    const currentY = ev.touches[0].clientY;
+    handler(x! - currentX, y! - currentY);
+    x = currentX;
+    y = currentY;
+  }
+
+  onMounted(() => {
+    gridRef.el!.addEventListener("touchstart", onTouchStart);
+    gridRef.el!.addEventListener("touchend", onTouchEnd);
+    gridRef.el!.addEventListener("touchmove", onTouchMove);
+  });
+
+  onWillUnmount(() => {
+    gridRef.el!.removeEventListener("touchstart", onTouchStart);
+    gridRef.el!.removeEventListener("touchend", onTouchEnd);
+    gridRef.el!.removeEventListener("touchmove", onTouchMove);
+  });
+}
+
 interface Props {
   onCellHovered: (position: Partial<Position>) => void;
   onCellDoubleClicked: (col: HeaderIndex, row: HeaderIndex) => void;
@@ -94,6 +143,7 @@ interface Props {
   ) => void;
   onCellRightClicked: (col: HeaderIndex, row: HeaderIndex, coordinates: DOMCoordinates) => void;
   onGridResized: (dimension: DOMDimension) => void;
+  onGridMoved: (deltaX: Pixel, deltaY: Pixel) => void;
   gridOverlayDimensions: string;
   sidePanelIsOpen: boolean;
   onFigureDeleted: () => void;
@@ -118,6 +168,10 @@ export class GridOverlay extends Component<Props> {
     useCellHovered(this.env, this.gridOverlay, this.props.onCellHovered);
     onMounted(() => this.resizeGrid());
     onPatched(() => this.resizeGrid());
+    useTouchMove(this.gridOverlay, this.props.onGridMoved, () => {
+      const { offsetScrollbarY } = this.env.model.getters.getActiveSheetScrollInfo();
+      return offsetScrollbarY > 0;
+    });
   }
 
   get gridOverlayEl(): HTMLElement {

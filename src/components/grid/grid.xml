@@ -14,6 +14,7 @@
         onCellRightClicked.bind="onCellRightClicked"
         onCellHovered.bind="onCellHovered"
         onGridResized.bind="onGridResized"
+        onGridMoved.bind="moveCanvas"
         gridOverlayDimensions="gridOverlayDimensions"
         sidePanelIsOpen="props.sidePanelIsOpen"
         onFigureDeleted.bind="focus"

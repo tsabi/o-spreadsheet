@@ -1,12 +1,4 @@
-import {
-  Component,
-  onMounted,
-  onPatched,
-  onWillUnmount,
-  useExternalListener,
-  useRef,
-  useState,
-} from "@odoo/owl";
+import { Component, onMounted, onPatched, useExternalListener, useRef, useState } from "@odoo/owl";
 import {
   BACKGROUND_GRAY_COLOR,
   CANVAS_SHIFT,
@@ -19,7 +11,6 @@ import {
   DOMCoordinates,
   DOMDimension,
   HeaderIndex,
-  Pixel,
   Position,
   Ref,
   SpreadsheetChildEnv,
@@ -31,59 +22,6 @@ import { useAbsolutePosition } from "../helpers/position_hook";
 import { Menu, MenuState } from "../menu/menu";
 import { Popover } from "../popover/popover";
 import { HorizontalScrollBar, VerticalScrollBar } from "../scrollbar/";
-
-// -----------------------------------------------------------------------------
-// Error Tooltip Hook
-// -----------------------------------------------------------------------------
-
-function useTouchMove(handler: (deltaX: Pixel, deltaY: Pixel) => void, canMoveUp: () => boolean) {
-  const canvasRef = useRef("canvas");
-  let x = null as number | null;
-  let y = null as number | null;
-
-  function onTouchStart(ev: TouchEvent) {
-    if (ev.touches.length !== 1) return;
-    x = ev.touches[0].clientX;
-    y = ev.touches[0].clientY;
-  }
-
-  function onTouchEnd() {
-    x = null;
-    y = null;
-  }
-
-  function onTouchMove(ev: TouchEvent) {
-    if (ev.touches.length !== 1) return;
-    // On mobile browsers, swiping down is often associated with "pull to refresh".
-    // We only want this behavior if the grid is already at the top.
-    // Otherwise we only want to move the canvas up, without triggering any refresh.
-    if (canMoveUp()) {
-      ev.preventDefault();
-      ev.stopPropagation();
-    }
-    const currentX = ev.touches[0].clientX;
-    const currentY = ev.touches[0].clientY;
-    handler(x! - currentX, y! - currentY);
-    x = currentX;
-    y = currentY;
-  }
-
-  onMounted(() => {
-    canvasRef.el!.addEventListener("touchstart", onTouchStart);
-    canvasRef.el!.addEventListener("touchend", onTouchEnd);
-    canvasRef.el!.addEventListener("touchmove", onTouchMove);
-  });
-
-  onWillUnmount(() => {
-    canvasRef.el!.removeEventListener("touchstart", onTouchStart);
-    canvasRef.el!.removeEventListener("touchend", onTouchEnd);
-    canvasRef.el!.removeEventListener("touchmove", onTouchMove);
-  });
-}
-
-// -----------------------------------------------------------------------------
-// TEMPLATE
-// -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
 // STYLE
@@ -154,10 +92,6 @@ export class SpreadsheetDashboard extends Component<Props, SpreadsheetChildEnv> 
     this.hoveredCell = useState({ col: undefined, row: undefined });
 
     useExternalListener(document.body, "copy", this.copy.bind(this));
-    useTouchMove(this.moveCanvas.bind(this), () => {
-      const { offsetScrollbarY } = this.env.model.getters.getActiveSheetScrollInfo();
-      return offsetScrollbarY > 0;
-    });
     onMounted(() => this.initGrid());
     onPatched(() => this.drawGrid());
   }

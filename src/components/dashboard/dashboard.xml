@@ -6,6 +6,7 @@
         onCellRightClicked.bind="onCellRightClicked"
         onCellHovered.bind="onCellHovered"
         onGridResized.bind="onGridResized"
+        onGridMoved.bind="moveCanvas"
         gridOverlayDimensions="gridOverlayDimensions"
       />
       <canvas t-ref="canvas"/>
