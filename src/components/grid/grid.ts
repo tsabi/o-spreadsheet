@@ -11,7 +11,6 @@ import {
   AUTOFILL_EDGE_LENGTH,
   BACKGROUND_GRAY_COLOR,
   CANVAS_SHIFT,
-  ComponentsImportance,
   DEFAULT_CELL_HEIGHT,
   HEADER_HEIGHT,
   HEADER_WIDTH,
@@ -47,8 +46,7 @@ import { useAbsolutePosition } from "../helpers/position_hook";
 import { Highlight } from "../highlight/highlight/highlight";
 import { Menu, MenuState } from "../menu/menu";
 import { Popover } from "../popover/popover";
-import { ScrollBar } from "../scrollbar";
-import { HorizontalScrollBar, VerticalScrollBar } from "../scrollbar/vertical_scrollbar";
+import { HorizontalScrollBar, VerticalScrollBar } from "../scrollbar/";
 /**
  * The Grid component is the main part of the spreadsheet UI. It is responsible
  * for displaying the actual grid, rendering it, managing events, ...
@@ -145,21 +143,7 @@ css/* scss */ `
     .o-scrollbar {
       position: absolute;
       overflow: auto;
-      z-index: ${ComponentsImportance.ScrollBar};
-      background-color: ${BACKGROUND_GRAY_COLOR};
 
-      &.vertical {
-        right: 0;
-        bottom: ${SCROLLBAR_WIDTH}px;
-        width: ${SCROLLBAR_WIDTH}px;
-        overflow-x: hidden;
-      }
-      &.horizontal {
-        bottom: 0;
-        height: ${SCROLLBAR_WIDTH}px;
-        right: ${SCROLLBAR_WIDTH}px;
-        overflow-y: hidden;
-      }
       &.corner {
         right: 0px;
         bottom: 0px;
@@ -202,13 +186,10 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     VerticalScrollBar,
     HorizontalScrollBar,
   };
-
+  readonly HEADER_HEIGHT = HEADER_HEIGHT;
+  readonly HEADER_WIDTH = HEADER_WIDTH;
   private menuState!: MenuState;
-  private vScrollbarRef!: Ref<HTMLElement>;
-  private hScrollbarRef!: Ref<HTMLElement>;
   private gridRef!: Ref<HTMLElement>;
-  private vScrollbar!: ScrollBar;
-  private hScrollbar!: ScrollBar;
   private canvas!: Ref<HTMLElement>;
   private currentSheet!: UID;
 
@@ -221,20 +202,19 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       position: null,
       menuItems: [],
     });
-    this.vScrollbarRef = useRef("vscrollbar");
-    this.hScrollbarRef = useRef("hscrollbar");
     this.gridRef = useRef("grid");
     this.canvas = useRef("canvas");
     this.canvasPosition = useAbsolutePosition(this.canvas);
-    this.vScrollbar = new ScrollBar(this.vScrollbarRef.el, "vertical");
-    this.hScrollbar = new ScrollBar(this.hScrollbarRef.el, "horizontal");
     this.currentSheet = this.env.model.getters.getActiveSheetId();
     this.hoveredCell = useState({ col: undefined, row: undefined });
 
     useExternalListener(document.body, "cut", this.copy.bind(this, true));
     useExternalListener(document.body, "copy", this.copy.bind(this, false));
     useExternalListener(document.body, "paste", this.paste);
-    useTouchMove(this.moveCanvas.bind(this), () => this.vScrollbar.scroll > 0);
+    useTouchMove(this.moveCanvas.bind(this), () => {
+      const { offsetScrollbarY } = this.env.model.getters.getActiveSheetScrollInfo();
+      return offsetScrollbarY > 0;
+    });
     onMounted(() => this.initGrid());
     onPatched(() => this.drawGrid());
     this.props.exposeFocus(() => this.focus());
@@ -246,8 +226,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   }
 
   private initGrid() {
-    this.vScrollbar.el = this.vScrollbarRef.el!;
-    this.hScrollbar.el = this.hScrollbarRef.el!;
     this.focus();
     this.drawGrid();
   }
@@ -259,26 +237,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       height: calc(100% - ${HEADER_HEIGHT + SCROLLBAR_WIDTH}px);
       width: calc(100% - ${HEADER_WIDTH + SCROLLBAR_WIDTH}px);
     `;
-  }
-
-  get vScrollbarStyle() {
-    const { y } = this.env.model.getters.getMainViewportRect();
-    const { yRatio } = this.env.model.getters.getFrozenSheetViewRatio(
-      this.env.model.getters.getActiveSheetId()
-    );
-    return `
-      ${yRatio >= 1 ? "width: 0px;" : ""}
-      top: ${y + HEADER_HEIGHT}px;`;
-  }
-
-  get hScrollbarStyle() {
-    const { x } = this.env.model.getters.getMainViewportRect();
-    const { xRatio } = this.env.model.getters.getFrozenSheetViewRatio(
-      this.env.model.getters.getActiveSheetId()
-    );
-    return `
-      ${xRatio >= 1 ? "width: 0px;" : ""}
-      left: ${x + HEADER_WIDTH}px;`;
   }
 
   get cellPopover(): PositionedCellPopover | ClosedCellPopover {
@@ -444,21 +402,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     return this.gridRef.el;
   }
 
-  onScroll() {
-    const { offsetScrollbarX, offsetScrollbarY } =
-      this.env.model.getters.getActiveSheetScrollInfo();
-    if (
-      offsetScrollbarX !== this.hScrollbar.scroll ||
-      offsetScrollbarY !== this.vScrollbar.scroll
-    ) {
-      const { maxOffsetX, maxOffsetY } = this.env.model.getters.getMaximumSheetOffset();
-      this.env.model.dispatch("SET_VIEWPORT_OFFSET", {
-        offsetX: Math.min(this.hScrollbar.scroll, maxOffsetX),
-        offsetY: Math.min(this.vScrollbar.scroll, maxOffsetY),
-      });
-    }
-  }
-
   checkSheetChanges() {
     const currentSheet = this.env.model.getters.getActiveSheetId();
     if (currentSheet !== this.currentSheet) {
@@ -488,11 +431,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   }
 
   drawGrid() {
-    //reposition scrollbar
-    const { offsetScrollbarX, offsetScrollbarY } =
-      this.env.model.getters.getActiveSheetScrollInfo();
-    this.hScrollbar.scroll = offsetScrollbarX;
-    this.vScrollbar.scroll = offsetScrollbarY;
     // check for position changes
     this.checkSheetChanges();
     // drawing grid on canvas
@@ -535,12 +473,12 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
     }
   }
 
-  private moveCanvas(deltaX, deltaY) {
-    this.vScrollbar.scroll = this.vScrollbar.scroll + deltaY;
-    this.hScrollbar.scroll = this.hScrollbar.scroll + deltaX;
+  private moveCanvas(deltaX: number, deltaY: number) {
+    const { offsetScrollbarX, offsetScrollbarY } =
+      this.env.model.getters.getActiveSheetScrollInfo();
     this.env.model.dispatch("SET_VIEWPORT_OFFSET", {
-      offsetX: this.hScrollbar.scroll,
-      offsetY: this.vScrollbar.scroll,
+      offsetX: Math.max(offsetScrollbarX + deltaX, 0),
+      offsetY: Math.max(offsetScrollbarY + deltaY, 0),
     });
   }
 

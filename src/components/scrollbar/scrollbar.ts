@@ -1,6 +1,8 @@
-import { Component, onMounted, useRef } from "@odoo/owl";
+import { Component, onMounted, useEffect, useRef, xml } from "@odoo/owl";
+import { BACKGROUND_GRAY_COLOR, ComponentsImportance, SCROLLBAR_WIDTH } from "../../constants";
 import { CSSProperties, Pixel, Ref } from "../../types";
-import { cssPropertiesToCss } from "../helpers/dom_helpers";
+import { cssPropertiesToCss } from "../helpers";
+import { css } from "../helpers/css";
 import { ScrollBar as ScrollBarBRol, ScrollDirection } from "../scrollbar";
 
 interface Props {
@@ -12,8 +14,46 @@ interface Props {
   onScroll: (offset: Pixel) => void;
 }
 
+css/* scss */ `
+  .o-scrollbar {
+    position: absolute;
+    overflow: auto;
+    z-index: ${ComponentsImportance.ScrollBar};
+    background-color: ${BACKGROUND_GRAY_COLOR};
+
+    // &.vertical {
+    //   right: 0;
+    //   bottom: ${SCROLLBAR_WIDTH}px;
+    //   width: ${SCROLLBAR_WIDTH}px;
+    //   overflow-x: hidden;
+    // }
+    // &.horizontal {
+    //   bottom: 0;
+    //   height: ${SCROLLBAR_WIDTH}px;
+    //   right: ${SCROLLBAR_WIDTH}px;
+    //   overflow-y: hidden;
+    // }
+    &.corner {
+      right: 0px;
+      bottom: 0px;
+      height: ${SCROLLBAR_WIDTH}px;
+      width: ${SCROLLBAR_WIDTH}px;
+      border-top: 1px solid #e2e3e3;
+      border-left: 1px solid #e2e3e3;
+    }
+  }
+`;
+
 export class ScrollBar extends Component<Props> {
-  static template = "o-spreadsheet-ScrollBar";
+  static template = xml/*xml*/ `
+    <div
+        t-attf-class="o-scrollbar {{props.direction}}"
+        t-on-scroll="onScroll"
+        t-ref="scrollbar"
+        t-att-style="positionCss">
+      <div t-att-style="sizeCss"/>
+    </div>
+  `;
   static defaultProps = {
     width: 1,
     height: 1,
@@ -23,11 +63,19 @@ export class ScrollBar extends Component<Props> {
 
   setup() {
     this.scrollbarRef = useRef("scrollbar");
-    this.scrollbar = new ScrollBarBRol(this.scrollbarRef.el, "vertical");
+    this.scrollbar = new ScrollBarBRol(this.scrollbarRef.el, this.props.direction);
     onMounted(() => {
-      debugger;
       this.scrollbar.el = this.scrollbarRef.el!;
     });
+    // TODO improve useEffect dependencies typing in owl
+    useEffect(
+      () => {
+        if (this.scrollbar.scroll !== this.props.offset) {
+          this.scrollbar.scroll = this.props.offset;
+        }
+      },
+      () => [this.scrollbar.scroll, this.props.offset]
+    );
   }
 
   get sizeCss() {
@@ -41,14 +89,9 @@ export class ScrollBar extends Component<Props> {
     return cssPropertiesToCss(this.props.position);
   }
 
-  onScroll() {
+  onScroll(ev) {
     if (this.props.offset !== this.scrollbar.scroll) {
       this.props.onScroll(this.scrollbar.scroll);
-      //   const { maxOffsetX, maxOffsetY } = this.env.model.getters.getMaximumSheetOffset();
-      //   this.env.model.dispatch("SET_VIEWPORT_OFFSET", {
-      //     offsetX: Math.min(this.hScrollbar.scroll, maxOffsetX),
-      //     offsetY: Math.min(this.vScrollbar.scroll, maxOffsetY),
-      //   });
     }
   }
 }

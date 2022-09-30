@@ -10,7 +10,6 @@ import {
 import {
   BACKGROUND_GRAY_COLOR,
   CANVAS_SHIFT,
-  ComponentsImportance,
   DEFAULT_CELL_HEIGHT,
   SCROLLBAR_WIDTH,
 } from "../../constants";
@@ -31,7 +30,7 @@ import { css } from "../helpers/css";
 import { useAbsolutePosition } from "../helpers/position_hook";
 import { Menu, MenuState } from "../menu/menu";
 import { Popover } from "../popover/popover";
-import { ScrollBar } from "../scrollbar";
+import { HorizontalScrollBar, VerticalScrollBar } from "../scrollbar/";
 
 // -----------------------------------------------------------------------------
 // Error Tooltip Hook
@@ -105,21 +104,7 @@ css/* scss */ `
     .o-scrollbar {
       position: absolute;
       overflow: auto;
-      z-index: ${ComponentsImportance.ScrollBar};
-      background-color: ${BACKGROUND_GRAY_COLOR};
 
-      &.vertical {
-        right: 0;
-        bottom: ${SCROLLBAR_WIDTH}px;
-        width: ${SCROLLBAR_WIDTH}px;
-        overflow-x: hidden;
-      }
-      &.horizontal {
-        bottom: 0;
-        height: ${SCROLLBAR_WIDTH}px;
-        right: ${SCROLLBAR_WIDTH}px;
-        overflow-y: hidden;
-      }
       &.corner {
         right: 0px;
         bottom: 0px;
@@ -141,14 +126,10 @@ interface Props {}
 
 export class SpreadsheetDashboard extends Component<Props, SpreadsheetChildEnv> {
   static template = "o-spreadsheet-SpreadsheetDashboard";
-  static components = { GridOverlay, Menu, Popover };
+  static components = { GridOverlay, Menu, Popover, VerticalScrollBar, HorizontalScrollBar };
 
   private menuState!: MenuState;
-  private vScrollbarRef!: Ref<HTMLElement>;
-  private hScrollbarRef!: Ref<HTMLElement>;
   private gridRef!: Ref<HTMLElement>;
-  private vScrollbar!: ScrollBar;
-  private hScrollbar!: ScrollBar;
   private canvas!: Ref<HTMLElement>;
 
   private canvasPosition!: DOMCoordinates;
@@ -160,17 +141,16 @@ export class SpreadsheetDashboard extends Component<Props, SpreadsheetChildEnv> 
       position: null,
       menuItems: [],
     });
-    this.vScrollbarRef = useRef("vscrollbar");
-    this.hScrollbarRef = useRef("hscrollbar");
     this.gridRef = useRef("grid");
     this.canvas = useRef("canvas");
     this.canvasPosition = useAbsolutePosition(this.canvas);
-    this.vScrollbar = new ScrollBar(this.vScrollbarRef.el, "vertical");
-    this.hScrollbar = new ScrollBar(this.hScrollbarRef.el, "horizontal");
     this.hoveredCell = useState({ col: undefined, row: undefined });
 
     useExternalListener(document.body, "copy", this.copy.bind(this));
-    useTouchMove(this.moveCanvas.bind(this), () => this.vScrollbar.scroll > 0);
+    useTouchMove(this.moveCanvas.bind(this), () => {
+      const { offsetScrollbarY } = this.env.model.getters.getActiveSheetScrollInfo();
+      return offsetScrollbarY > 0;
+    });
     onMounted(() => this.initGrid());
     onPatched(() => this.drawGrid());
   }
@@ -181,8 +161,6 @@ export class SpreadsheetDashboard extends Component<Props, SpreadsheetChildEnv> 
   }
 
   private initGrid() {
-    // this.vScrollbar.el = this.vScrollbarRef.el!;
-    // this.hScrollbar.el = this.hScrollbarRef.el!;
     this.drawGrid();
   }
 
@@ -193,26 +171,6 @@ export class SpreadsheetDashboard extends Component<Props, SpreadsheetChildEnv> 
       height: calc(100% - ${SCROLLBAR_WIDTH}px);
       width: calc(100% - ${SCROLLBAR_WIDTH}px);
     `;
-  }
-
-  get vScrollbarStyle() {
-    const { y } = this.env.model.getters.getMainViewportRect();
-    const { yRatio } = this.env.model.getters.getFrozenSheetViewRatio(
-      this.env.model.getters.getActiveSheetId()
-    );
-    return `
-      ${yRatio >= 1 ? "width: 0px;" : ""}
-      top: ${y}px;`;
-  }
-
-  get hScrollbarStyle() {
-    const { x } = this.env.model.getters.getMainViewportRect();
-    const { xRatio } = this.env.model.getters.getFrozenSheetViewRatio(
-      this.env.model.getters.getActiveSheetId()
-    );
-    return `
-      ${xRatio >= 1 ? "width: 0px;" : ""}
-      left: ${x}px;`;
   }
 
   get cellPopover(): PositionedCellPopover | ClosedCellPopover {
@@ -245,27 +203,7 @@ export class SpreadsheetDashboard extends Component<Props, SpreadsheetChildEnv> 
     return this.gridRef.el;
   }
 
-  onScroll() {
-    const { offsetScrollbarX, offsetScrollbarY } =
-      this.env.model.getters.getActiveSheetScrollInfo();
-    if (
-      offsetScrollbarX !== this.hScrollbar.scroll ||
-      offsetScrollbarY !== this.vScrollbar.scroll
-    ) {
-      const { maxOffsetX, maxOffsetY } = this.env.model.getters.getMaximumSheetOffset();
-      this.env.model.dispatch("SET_VIEWPORT_OFFSET", {
-        offsetX: Math.min(this.hScrollbar.scroll, maxOffsetX),
-        offsetY: Math.min(this.vScrollbar.scroll, maxOffsetY),
-      });
-    }
-  }
-
   drawGrid() {
-    //reposition scrollbar
-    const { offsetScrollbarX, offsetScrollbarY } =
-      this.env.model.getters.getActiveSheetScrollInfo();
-    this.hScrollbar.scroll = offsetScrollbarX;
-    this.vScrollbar.scroll = offsetScrollbarY;
     // drawing grid on canvas
     const canvas = this.canvas.el as HTMLCanvasElement;
     const dpr = window.devicePixelRatio || 1;
@@ -308,11 +246,11 @@ export class SpreadsheetDashboard extends Component<Props, SpreadsheetChildEnv> 
   }
 
   private moveCanvas(deltaX, deltaY) {
-    this.vScrollbar.scroll = this.vScrollbar.scroll + deltaY;
-    this.hScrollbar.scroll = this.hScrollbar.scroll + deltaX;
+    const { offsetScrollbarX, offsetScrollbarY } =
+      this.env.model.getters.getActiveSheetScrollInfo();
     this.env.model.dispatch("SET_VIEWPORT_OFFSET", {
-      offsetX: this.hScrollbar.scroll,
-      offsetY: this.vScrollbar.scroll,
+      offsetX: Math.max(offsetScrollbarX + deltaX, 0),
+      offsetY: Math.max(offsetScrollbarY + deltaY, 0),
     });
   }
 

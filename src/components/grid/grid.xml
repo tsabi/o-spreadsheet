@@ -74,23 +74,8 @@
         position="menuState.position"
         onClose="() => this.closeMenu()"
       />
-      <t t-set="gridSize" t-value="env.model.getters.getMainViewportRect()"/>
-      <VerticalScrollBar/>
-      <HorizontalScrollBar/>
-      <!-- <div
-        class="o-scrollbar vertical"
-        t-on-scroll="onScroll"
-        t-ref="vscrollbar"
-        t-att-style="vScrollbarStyle">
-        <div t-attf-style="width:1px;height:{{gridSize.height}}px"/>
-      </div>
-      <div
-        class="o-scrollbar horizontal"
-        t-on-scroll="onScroll"
-        t-ref="hscrollbar"
-        t-att-style="hScrollbarStyle">
-        <div t-attf-style="height:1px;width:{{gridSize.width}}px"/>
-      </div> -->
+      <VerticalScrollBar position="{ top: HEADER_HEIGHT }"/>
+      <HorizontalScrollBar position="{ left: HEADER_WIDTH }"/>
       <div class="o-scrollbar corner"/>
     </div>
   </t>

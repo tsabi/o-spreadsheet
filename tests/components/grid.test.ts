@@ -1,7 +1,6 @@
 import { App } from "@odoo/owl";
 import { Spreadsheet, TransportService } from "../../src";
 import { ChartJsComponent } from "../../src/components/figures/chart/chartJs/chartjs";
-import { Grid } from "../../src/components/grid/grid";
 import {
   BACKGROUND_GRAY_COLOR,
   DEFAULT_CELL_HEIGHT,
@@ -37,7 +36,6 @@ import {
 } from "../test_helpers/dom_helper";
 import { getActiveXc, getCell, getCellContent, getCellText } from "../test_helpers/getters_helpers";
 import {
-  getChildFromComponent,
   makeTestFixture,
   MockClipboard,
   mountSpreadsheet,
@@ -49,16 +47,16 @@ import { MockTransportService } from "../__mocks__/transport_service";
 jest.mock("../../src/components/composer/content_editable_helper", () =>
   require("./__mocks__/content_editable_helper")
 );
-jest.mock("../../src/components/scrollbar", () => require("./__mocks__/scrollbar"));
+// jest.mock("../../src/components/scrollbar", () => require("./__mocks__/scrollbar"));
 
 function getVerticalScroll(): number {
-  const grid = getChildFromComponent(parent, Grid);
-  return grid["vScrollbar"].scroll;
+  const scrollbar = fixture.querySelector(".o-scrollbar.vertical") as HTMLElement;
+  return scrollbar.scrollTop;
 }
 
 function getHorizontalScroll(): number {
-  const grid = getChildFromComponent(parent, Grid);
-  return grid["hScrollbar"].scroll;
+  const scrollbar = fixture.querySelector(".o-scrollbar.horizontal") as HTMLElement;
+  return scrollbar.scrollLeft;
 }
 
 let fixture: HTMLElement;
@@ -163,6 +161,7 @@ describe("Grid component", () => {
         ],
       })
     );
+    await nextTick();
     expect(getHorizontalScroll()).toBe(50);
     expect(getVerticalScroll()).toBe(30);
     grid.dispatchEvent(
@@ -177,6 +176,7 @@ describe("Grid component", () => {
         ],
       })
     );
+    await nextTick();
     expect(getHorizontalScroll()).toBe(70);
     expect(getVerticalScroll()).toBe(50);
   });
@@ -605,7 +605,7 @@ describe("Grid component", () => {
   });
 
   describe("Grid Scroll", () => {
-    function scrollGrid(args: { deltaY?: number; shiftKey?: boolean }) {
+    async function scrollGrid(args: { deltaY?: number; shiftKey?: boolean }) {
       fixture.querySelector(".o-grid")!.dispatchEvent(
         new WheelEvent("wheel", {
           deltaY: args.deltaY || 0,
@@ -614,18 +614,17 @@ describe("Grid component", () => {
           bubbles: true,
         })
       );
-      // Need to do this manually since the scrollbars are mocked
-      fixture.querySelector(".o-scrollbar.vertical")!.dispatchEvent(new Event("scroll"));
+      await nextTick();
     }
 
     test("Can scroll vertically", async () => {
-      scrollGrid({ deltaY: 1000 });
+      await scrollGrid({ deltaY: 1000 });
       expect(getVerticalScroll()).toBe(1000);
       expect(getHorizontalScroll()).toBe(0);
     });
 
     test("Can scroll horizontally using shift key", async () => {
-      scrollGrid({ deltaY: 1500, shiftKey: true });
+      await scrollGrid({ deltaY: 1500, shiftKey: true });
       expect(getVerticalScroll()).toBe(0);
       expect(getHorizontalScroll()).toBe(1500);
     });
@@ -634,8 +633,7 @@ describe("Grid component", () => {
       setCellContent(model, "A10", "=1/0");
       await hoverCell(model, "A10", 400);
       expect(fixture.querySelector(".o-error-tooltip")).not.toBeNull();
-      scrollGrid({ deltaY: 100 });
-      await nextTick();
+      await scrollGrid({ deltaY: 100 });
       const sheetId = model.getters.getActiveSheetId();
       expect(model.getters.isVisibleInViewport(sheetId, 0, 9)).toBe(true);
       expect(fixture.querySelector(".o-error-tooltip")).toBeNull();
@@ -649,8 +647,7 @@ describe("Grid component", () => {
       });
       await nextTick();
       expect(fixture.querySelector(".o-link-editor")).not.toBeNull();
-      scrollGrid({ deltaY: DEFAULT_CELL_HEIGHT });
-      await nextTick();
+      await scrollGrid({ deltaY: DEFAULT_CELL_HEIGHT });
       const sheetId = model.getters.getActiveSheetId();
       expect(model.getters.isVisibleInViewport(sheetId, 0, 0)).toBe(false);
       expect(fixture.querySelector(".o-link-editor")).toBeNull();
@@ -664,8 +661,7 @@ describe("Grid component", () => {
       });
       await nextTick();
       expect(fixture.querySelector(".o-link-editor")).not.toBeNull();
-      scrollGrid({ deltaY: DEFAULT_CELL_HEIGHT - 5 });
-      await nextTick();
+      await scrollGrid({ deltaY: DEFAULT_CELL_HEIGHT - 5 });
       const sheetId = model.getters.getActiveSheetId();
       expect(model.getters.isVisibleInViewport(sheetId, 0, 0)).toBe(true);
       expect(fixture.querySelector(".o-link-editor")).not.toBeNull();
@@ -829,6 +825,7 @@ describe("error tooltip", () => {
     await hoverCell(model, "C1", 400);
     const ev = new WheelEvent("wheel", { deltaY: 300, deltaX: 300, deltaMode: 0, bubbles: true });
     document.querySelector(".o-error-tooltip")!.dispatchEvent(ev);
+    await nextTick();
     expect(getVerticalScroll()).toBe(300);
     expect(getHorizontalScroll()).toBe(300);
   });
