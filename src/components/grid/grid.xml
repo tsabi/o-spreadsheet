@@ -44,19 +44,13 @@
           active="isCellHovered(client.position.col, client.position.row)"
         />
       </t>
-      <Popover
-        t-if="cellPopover.isOpen"
-        position="cellPopover.coordinates"
-        childWidth="cellPopover.Component.size.width"
-        childHeight="cellPopover.Component.size.height"
-        flipHorizontalOffset="cellPopover.cellWidth"
-        flipVerticalOffset="cellPopover.cellHeight"
-        onMouseWheel="onMouseWheel.bind(this)">
-        <t
-          t-component="cellPopover.Component"
-          t-props="{...cellPopover.props, onClosed : () => onClosePopover()}"
-        />
-      </Popover>
+      <GridPopover
+        t-if="!menuState.isOpen"
+        gridPosition="canvasPosition"
+        hoveredCell="hoveredCell"
+        onMouseWheel.bind="onMouseWheel"
+        onClosePopover.bind="onClosePopover"
+      />
       <t
         t-if="env.model.getters.getEditionMode() === 'inactive' and isAutoFillActive() and !env.isDashboard()">
         <Autofill position="getAutofillPosition()"/>

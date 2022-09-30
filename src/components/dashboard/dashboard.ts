@@ -15,7 +15,6 @@ import {
 } from "../../constants";
 import { isInside } from "../../helpers/index";
 import { dashboardMenuRegistry } from "../../registries/menus/dashboard_menu_registry";
-import { ClosedCellPopover, PositionedCellPopover } from "../../types/cell_popovers";
 import {
   DOMCoordinates,
   DOMDimension,
@@ -26,6 +25,7 @@ import {
   SpreadsheetChildEnv,
 } from "../../types/index";
 import { GridOverlay } from "../grid_overlay/grid_overlay";
+import { GridPopover } from "../grid_popover/grid_popover";
 import { css } from "../helpers/css";
 import { useAbsolutePosition } from "../helpers/position_hook";
 import { Menu, MenuState } from "../menu/menu";
@@ -126,13 +126,20 @@ interface Props {}
 
 export class SpreadsheetDashboard extends Component<Props, SpreadsheetChildEnv> {
   static template = "o-spreadsheet-SpreadsheetDashboard";
-  static components = { GridOverlay, Menu, Popover, VerticalScrollBar, HorizontalScrollBar };
+  static components = {
+    GridOverlay,
+    GridPopover,
+    Menu,
+    Popover,
+    VerticalScrollBar,
+    HorizontalScrollBar,
+  };
 
   private menuState!: MenuState;
   private gridRef!: Ref<HTMLElement>;
   private canvas!: Ref<HTMLElement>;
 
-  private canvasPosition!: DOMCoordinates;
+  canvasPosition!: DOMCoordinates;
   hoveredCell!: Partial<Position>;
 
   setup() {
@@ -171,25 +178,6 @@ export class SpreadsheetDashboard extends Component<Props, SpreadsheetChildEnv> 
       height: calc(100% - ${SCROLLBAR_WIDTH}px);
       width: calc(100% - ${SCROLLBAR_WIDTH}px);
     `;
-  }
-
-  get cellPopover(): PositionedCellPopover | ClosedCellPopover {
-    if (this.menuState.isOpen) {
-      return { isOpen: false };
-    }
-    const popover = this.env.model.getters.getCellPopover(this.hoveredCell);
-    if (!popover.isOpen) {
-      return { isOpen: false };
-    }
-    const coordinates = popover.coordinates;
-    return {
-      ...popover,
-      // transform from the "canvas coordinate system" to the "body coordinate system"
-      coordinates: {
-        x: coordinates.x + this.canvasPosition.x,
-        y: coordinates.y + this.canvasPosition.y,
-      },
-    };
   }
 
   onClosePopover() {

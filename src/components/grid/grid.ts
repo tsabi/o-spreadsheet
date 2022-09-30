@@ -23,7 +23,6 @@ import { ComposerSelection } from "../../plugins/ui/edition";
 import { cellMenuRegistry } from "../../registries/menus/cell_menu_registry";
 import { colMenuRegistry } from "../../registries/menus/col_menu_registry";
 import { rowMenuRegistry } from "../../registries/menus/row_menu_registry";
-import { ClosedCellPopover, PositionedCellPopover } from "../../types/cell_popovers";
 import {
   Client,
   DOMCoordinates,
@@ -39,6 +38,7 @@ import { Autofill } from "../autofill/autofill";
 import { ClientTag } from "../collaborative_client_tag/collaborative_client_tag";
 import { GridComposer } from "../composer/grid_composer/grid_composer";
 import { GridOverlay } from "../grid_overlay/grid_overlay";
+import { GridPopover } from "../grid_popover/grid_popover";
 import { HeadersOverlay } from "../headers_overlay/headers_overlay";
 import { css } from "../helpers/css";
 import { dragAndDropBeyondTheViewport } from "../helpers/drag_and_drop";
@@ -177,6 +177,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   static components = {
     GridComposer,
     GridOverlay,
+    GridPopover,
     HeadersOverlay,
     Menu,
     Autofill,
@@ -193,7 +194,7 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
   private canvas!: Ref<HTMLElement>;
   private currentSheet!: UID;
 
-  private canvasPosition!: DOMCoordinates;
+  canvasPosition!: DOMCoordinates;
   hoveredCell!: Partial<Position>;
 
   setup() {
@@ -237,25 +238,6 @@ export class Grid extends Component<Props, SpreadsheetChildEnv> {
       height: calc(100% - ${HEADER_HEIGHT + SCROLLBAR_WIDTH}px);
       width: calc(100% - ${HEADER_WIDTH + SCROLLBAR_WIDTH}px);
     `;
-  }
-
-  get cellPopover(): PositionedCellPopover | ClosedCellPopover {
-    if (this.menuState.isOpen) {
-      return { isOpen: false };
-    }
-    const popover = this.env.model.getters.getCellPopover(this.hoveredCell);
-    if (!popover.isOpen) {
-      return { isOpen: false };
-    }
-    const coordinates = popover.coordinates;
-    return {
-      ...popover,
-      // transform from the "canvas coordinate system" to the "body coordinate system"
-      coordinates: {
-        x: coordinates.x + this.canvasPosition.x,
-        y: coordinates.y + this.canvasPosition.y,
-      },
-    };
   }
 
   get activeCellPosition(): Position {
