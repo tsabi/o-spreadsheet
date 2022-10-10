@@ -38,6 +38,7 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
   static getters = [
     "doesZonesContainFilter",
     "getFilter",
+    "getFilterById",
     "getFilters",
     "getFilterTable",
     "getFilterTables",
@@ -147,6 +148,14 @@ export class FiltersPlugin extends CorePlugin<FiltersState> implements FiltersSt
 
   getFilter(sheetId: UID, col: number, row: number): Filter | undefined {
     return this.getFilterTable(sheetId, col, row)?.filters.find((filter) => filter.col === col);
+  }
+
+  getFilterById(sheetId: UID, id: FilterId): Filter | undefined {
+    for (const table of this.getFilterTables(sheetId)) {
+      const filter = table.filters.find((filter) => filter.id === id);
+      if (filter) return filter;
+    }
+    return undefined;
   }
 
   getFilterId(sheetId: UID, col: number, row: number): FilterId | undefined {

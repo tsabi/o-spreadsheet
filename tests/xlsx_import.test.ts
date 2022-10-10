@@ -463,6 +463,13 @@ describe("Import xlsx data", () => {
     }
   });
 
+  test("tables with headers are imported as FilterTables", () => {
+    const sheet = getWorkbookSheet("jestTable", convertedData)!;
+    expect(sheet.filterTables).toHaveLength(2);
+    expect(sheet.filterTables[0]).toEqual({ range: "C3:J6" });
+    expect(sheet.filterTables[1]).toEqual({ range: "C11:D12" });
+  });
+
   describe("table styles", () => {
     /** Test tables for styles are 2x2 tables located at the right of the cell describing them */
     let tableTestSheet: SheetData;

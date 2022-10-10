@@ -5,8 +5,19 @@ import {
   range,
   removeFalsyAttributes,
   toLowerCase,
+  toZone,
+  zoneToDimension,
 } from "../../helpers";
-import { Border, Command, CommandResult, FilterId, Position, UID } from "../../types";
+import {
+  Border,
+  Command,
+  CommandResult,
+  ExcelFilterData,
+  ExcelWorkbookData,
+  FilterId,
+  Position,
+  UID,
+} from "../../types";
 import { UIPlugin } from "../ui_plugin";
 import { UpdateFilterCommand } from "./../../types/commands";
 
@@ -171,5 +182,24 @@ export class FilterEvaluationPlugin extends UIPlugin {
   private getCellValueAsString(sheetId: UID, col: number, row: number): string {
     const value = this.getters.getCell(sheetId, col, row)?.formattedValue;
     return value?.toLowerCase() || "";
+  }
+
+  exportForExcel(data: ExcelWorkbookData) {
+    for (const sheetData of data.sheets) {
+      if (sheetData.filterTables.length === 0) continue;
+      for (const tableData of sheetData.filterTables) {
+        const tableZone = toZone(tableData.range);
+        const filters: ExcelFilterData[] = [];
+        for (const i of range(0, zoneToDimension(tableZone).width)) {
+          const filter = this.getters.getFilter(sheetData.id, tableZone.left + i, tableZone.top);
+          const filteredValues: string[] =
+            filter && this.filterValues[sheetData.id]
+              ? this.filterValues[sheetData.id][filter.id] || []
+              : [];
+          filters.push({ colId: i, filteredValues });
+        }
+        tableData.filters = filters;
+      }
+    }
   }
 }

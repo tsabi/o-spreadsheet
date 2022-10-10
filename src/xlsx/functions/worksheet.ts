@@ -8,6 +8,7 @@ import {
 } from "../../helpers";
 import { ExcelSheetData, ExcelWorkbookData, HeaderData } from "../../types";
 import { XLSXStructure, XMLAttributes, XMLString } from "../../types/xlsx";
+import { XLSX_RELATION_TYPE } from "../constants";
 import {
   addRelsToFile,
   convertHeightToExcel,
@@ -131,7 +132,7 @@ export function addHyperlinks(
           `xl/worksheets/_rels/sheet${sheetIndex}.xml.rels`,
           {
             target: url,
-            type: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
+            type: XLSX_RELATION_TYPE.hyperlink,
             targetMode: "External",
           }
         );
