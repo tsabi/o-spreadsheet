@@ -34,6 +34,35 @@ function addAutoFilter(table: ExcelFilterTableData): XMLString {
   return escapeXml/*xml*/ `<autoFilter ${formatAttributes(autoFilterAttributes)} />`;
 }
 
+function addFilterColumns(table: ExcelFilterTableData): XMLString[] {
+  const tableZone = toZone(table.range);
+  const columns: XMLString[] = [];
+  for (const i of range(0, zoneToDimension(tableZone).width)) {
+    const filter = table.filters[i];
+    if (!filter || !filter.filteredValues.length) {
+      continue;
+    }
+    const colXml = escapeXml/*xml*/ `
+      <filterColumn ${formatAttributes([["colId", i]])}>
+        ${addFilter(filter)}
+      </filterColumn>
+      `;
+    columns.push(colXml);
+  }
+  return columns;
+}
+
+function addFilter(filter: ExcelFilterData): XMLString {
+  const filterValues = filter.filteredValues.map(
+    (val) => escapeXml/*xml*/ `<filter ${formatAttributes([["val", val]])}/>`
+  );
+  return escapeXml/*xml*/ `
+  <filters>
+      ${joinXmlNodes(filterValues)}
+  </filters>
+`;
+}
+
 function addTableColumns(table: ExcelFilterTableData, sheetData: ExcelSheetData): XMLString {
   const tableZone = toZone(table.range);
   const columns: XMLString[] = [];
