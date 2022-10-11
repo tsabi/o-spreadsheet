@@ -1,5 +1,5 @@
 import { range, toXC, toZone, zoneToDimension } from "../../helpers";
-import { ExcelFilterData, ExcelFilterTableData, ExcelSheetData } from "../../types";
+import { ExcelFilterTableData, ExcelSheetData } from "../../types";
 import { XMLAttributes, XMLString } from "../../types/xlsx";
 import { NAMESPACE } from "../constants";
 import { escapeXml, formatAttributes, joinXmlNodes, parseXML } from "../helpers/xml_helpers";
@@ -31,11 +31,7 @@ export function createTable(
 
 function addAutoFilter(table: ExcelFilterTableData): XMLString {
   const autoFilterAttributes: XMLAttributes = [["ref", table.range]];
-  return escapeXml/*xml*/ `
-        <autoFilter ${formatAttributes(autoFilterAttributes)}>
-            ${joinXmlNodes(addFilterColumns(table))}
-        </autoFilter>
-    `;
+  return escapeXml/*xml*/ `<autoFilter ${formatAttributes(autoFilterAttributes)} />`;
 }
 
 function addTableColumns(table: ExcelFilterTableData, sheetData: ExcelSheetData): XMLString {

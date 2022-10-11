@@ -185,6 +185,7 @@ export class FilterEvaluationPlugin extends UIPlugin {
   }
 
   exportForExcel(data: ExcelWorkbookData) {
+    //TODO : transform all filters headers to string. Excel does not accept formula/number as column header
     for (const sheetData of data.sheets) {
       if (sheetData.filterTables.length === 0) continue;
       for (const tableData of sheetData.filterTables) {
