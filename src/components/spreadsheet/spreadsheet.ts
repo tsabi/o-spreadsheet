@@ -156,7 +156,7 @@ export class Spreadsheet extends Component<SpreadsheetProps, SpreadsheetChildEnv
     this.sidePanel = useState({ isOpen: false, panelProps: {} });
     this.composer = useState({
       topBarFocus: "inactive",
-      gridFocusMode: "inactive",
+      gridFocusMode: "cellFocus",
     });
     this.keyDownMapping = {
       "CTRL+H": () => this.toggleSidePanel("FindAndReplace", {}),

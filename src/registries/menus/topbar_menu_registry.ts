@@ -1,9 +1,11 @@
 import { NumberFormatTerms } from "../../components/translations_terms";
 import { fontSizes } from "../../fonts";
+import { functionRegistry } from "../../functions/index";
+import { isDefined } from "../../helpers";
 import { interactiveFreezeColumnsRows } from "../../helpers/ui/freeze_interactive";
 import { _lt } from "../../translation";
 import { SpreadsheetChildEnv } from "../../types/env";
-import { MenuItemRegistry } from "../menu_items_registry";
+import { createFullMenuItem, FullMenuItem, MenuItemRegistry } from "../menu_items_registry";
 import * as ACTIONS from "./menu_items_actions";
 import { setStyle } from "./menu_items_actions";
 
@@ -175,15 +177,70 @@ topbarMenuRegistry
     sequence: 50,
     action: ACTIONS.CREATE_CHART,
   })
+  .addChild("insert_function", ["insert"], {
+    name: _lt("Function"),
+    sequence: 60,
+  })
+  .addChild("insert_function_sum", ["insert", "insert_function"], {
+    name: _lt("SUM"),
+    action: (env) => env.model.dispatch("START_EDITION", { text: `=SUM(` }),
+    sequence: 0,
+  })
+  .addChild("insert_function_average", ["insert", "insert_function"], {
+    name: _lt("AVERAGE"),
+    action: (env) => env.model.dispatch("START_EDITION", { text: `=AVERAGE(` }),
+    sequence: 10,
+  })
+  .addChild("insert_function_count", ["insert", "insert_function"], {
+    name: _lt("COUNT"),
+    action: (env) => env.model.dispatch("START_EDITION", { text: `=COUNT(` }),
+    sequence: 20,
+  })
+  .addChild("insert_function_max", ["insert", "insert_function"], {
+    name: _lt("MAX"),
+    action: (env) => env.model.dispatch("START_EDITION", { text: `=MAX(` }),
+    sequence: 30,
+  })
+  .addChild("insert_function_min", ["insert", "insert_function"], {
+    name: _lt("MIN"),
+    action: (env) => env.model.dispatch("START_EDITION", { text: `=MIN(` }),
+    sequence: 40,
+    separator: true,
+  })
+  .addChild("caregorie_function_all", ["insert", "insert_function"], {
+    name: _lt("All"),
+    sequence: 50,
+  })
+  .addChild("all_function_list", ["insert", "insert_function", "caregorie_function_all"], () => {
+    const fnNames = Object.keys(functionRegistry.content);
+    return createFormulaFunctionMenuItems(fnNames);
+  })
+  .addChild("caregories_function_list", ["insert", "insert_function"], () => {
+    const functions = functionRegistry.content;
+    const categories = [
+      ...new Set(Object.keys(functions).map((key) => functions[key].category)),
+    ].filter(isDefined);
+
+    return categories.sort().map((category, i) => {
+      const functionsInCategory = Object.keys(functions).filter(
+        (key) => functions[key].category === category
+      );
+      return createFullMenuItem(category, {
+        name: category,
+        sequence: 60 + i * 10,
+        children: createFormulaFunctionMenuItems(functionsInCategory),
+      });
+    });
+  })
   .addChild("insert_link", ["insert"], {
     name: _lt("Link"),
     separator: true,
-    sequence: 60,
+    sequence: 70,
     action: ACTIONS.INSERT_LINK,
   })
   .addChild("insert_sheet", ["insert"], {
     name: _lt("New sheet"),
-    sequence: 70,
+    sequence: 80,
     action: ACTIONS.CREATE_SHEET_ACTION,
     separator: true,
   })
@@ -434,4 +491,14 @@ for (let fs of fontSizes) {
     sequence: fs.pt,
     action: (env: SpreadsheetChildEnv) => ACTIONS.setStyle(env, { fontSize: fs.pt }),
   });
+}
+
+function createFormulaFunctionMenuItems(fnNames: string[]): FullMenuItem[] {
+  return fnNames.sort().map((fnName, i) =>
+    createFullMenuItem(fnName, {
+      name: fnName,
+      sequence: i * 10,
+      action: (env) => env.model.dispatch("START_EDITION", { text: `=${fnName}(` }),
+    })
+  );
 }
