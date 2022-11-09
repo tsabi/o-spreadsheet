@@ -1,9 +1,17 @@
-import { Component, onMounted, onPatched, useRef, useState } from "@odoo/owl";
+import {
+  Component,
+  onMounted,
+  onPatched,
+  onWillUpdateProps,
+  useExternalListener,
+  useRef,
+  useState,
+} from "@odoo/owl";
 import { BACKGROUND_GRAY_COLOR, BOTTOMBAR_HEIGHT, HEADER_WIDTH } from "../../constants";
 import { formatValue } from "../../helpers/format";
 import { interactiveRenameSheet } from "../../helpers/ui/sheet_interactive";
 import { MenuItemRegistry, sheetMenuRegistry } from "../../registries/index";
-import { Pixel, SpreadsheetChildEnv, UID } from "../../types";
+import { Pixel, Sheet, SpreadsheetChildEnv, UID } from "../../types";
 import { css } from "../helpers/css";
 import { Menu, MenuState } from "../menu/menu";
 
@@ -56,9 +64,18 @@ css/* scss */ `
       user-select: none;
       white-space: nowrap;
       border-left: 1px solid #c1c1c1;
+      background-color: ${BACKGROUND_GRAY_COLOR};
 
       &:last-child {
         border-right: 1px solid #c1c1c1;
+      }
+
+      &.dragging {
+        cursor: grab;
+      }
+
+      &.selected {
+        background-color: rgba(0, 0, 0, 0.08);
       }
 
       &.active {
@@ -102,6 +119,11 @@ css/* scss */ `
   }
 `;
 
+export interface SheetState {
+  draggedSheetId: UID | undefined;
+  sheetList: Sheet[];
+}
+
 interface Props {
   onClick: () => void;
 }
@@ -112,12 +134,27 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
 
   private bottomBarRef = useRef("bottomBar");
 
+  private sheetPositionList: number[] = [];
+
   menuState: MenuState = useState({ isOpen: false, position: null, menuItems: [] });
+  sheetState: SheetState = useState({
+    draggedSheetId: undefined,
+    sheetList: this.getUpdatedSheetsOrder(),
+  });
   selectedStatisticFn: string = "";
 
   setup() {
     onMounted(() => this.focusSheet());
     onPatched(() => this.focusSheet());
+    onWillUpdateProps(() => (this.sheetState.sheetList = this.getUpdatedSheetsOrder()));
+    // listening the mouse events on window rather than the sheet element allows for the events mousemove/up
+    // to be captured after a mousedown even after the mouse has left the window
+    useExternalListener(window, "mousemove", this.onSheetMouseMove);
+    useExternalListener(window, "mouseup", this.onSheetMouseUp);
+  }
+
+  get dragging(): boolean {
+    return this.sheetState.draggedSheetId !== undefined;
   }
 
   focusSheet() {
@@ -139,10 +176,14 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
     this.env.model.dispatch("ACTIVATE_SHEET", { sheetIdFrom: activeSheetId, sheetIdTo: sheetId });
   }
 
-  getVisibleSheets() {
+  private getUpdatedSheetsOrder() {
     return this.env.model.getters
       .getVisibleSheetIds()
       .map((sheetId) => this.env.model.getters.getSheet(sheetId));
+  }
+
+  getSheets() {
+    return this.sheetState.sheetList;
   }
 
   listSheets(ev: MouseEvent) {
@@ -204,6 +245,84 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
     const target = ev.currentTarget as HTMLElement;
     const { top, left } = target.getBoundingClientRect();
     this.openContextMenu(left, top, sheetMenuRegistry);
+  }
+
+  onSheetMouseDown(sheetId: UID, event: MouseEvent) {
+    if (event.button !== 0) return;
+
+    document.body.style.cursor = "grab";
+    this.sheetState.draggedSheetId = sheetId;
+    if (this.sheetPositionList.length === 0) {
+      this.updateSheetsPositions();
+    }
+  }
+
+  onSheetMouseMove(event: MouseEvent) {
+    if (!this.dragging || event.clientX === 0) return;
+    if (event.button !== 0) {
+      this.stopDragging();
+      return;
+    }
+    let hoveredSheetIndex = -1;
+    for (let sheetPositionX of this.sheetPositionList) {
+      if (sheetPositionX > event.clientX) {
+        break;
+      }
+      hoveredSheetIndex++;
+    }
+    hoveredSheetIndex = Math.max(0, hoveredSheetIndex);
+    const draggedSheetIndex = this.sheetState.sheetList.findIndex(
+      (sheet) => sheet.id === this.sheetState.draggedSheetId
+    );
+    if (draggedSheetIndex !== hoveredSheetIndex) {
+      this.sheetState.sheetList.splice(
+        hoveredSheetIndex,
+        0,
+        this.sheetState.sheetList.splice(draggedSheetIndex, 1)[0]
+      );
+    }
+  }
+
+  onSheetMouseUp(event: MouseEvent) {
+    if (!this.dragging && event.button !== 0) return;
+    const sheetId = this.sheetState.draggedSheetId;
+    const draggedSheetIndex = this.env.model.getters
+      .getVisibleSheetIds()
+      .findIndex((id) => id === sheetId);
+    const targetSheetIndex = this.sheetState.sheetList.findIndex((sheet) => sheet.id === sheetId);
+    const delta = targetSheetIndex - draggedSheetIndex;
+    if (sheetId && delta !== 0) {
+      this.env.model.dispatch("MOVE_SHEET", {
+        sheetId: sheetId,
+        delta: delta,
+      });
+    }
+    this.stopDragging();
+  }
+
+  private stopDragging() {
+    document.body.style.cursor = "";
+    this.sheetState.sheetList = this.getUpdatedSheetsOrder();
+    this.updateSheetsPositions();
+    this.sheetState.draggedSheetId = undefined;
+  }
+
+  private updateSheetsPositions() {
+    const sheets = this.env.model.getters.getVisibleSheetIds();
+    this.sheetPositionList = [];
+    for (let sheet of sheets) {
+      const position = this.getSheetPosition(sheet);
+      if (position) {
+        this.sheetPositionList.push(position);
+      }
+    }
+  }
+
+  private getSheetPosition(sheetId: UID): number | undefined {
+    const sheet = document.querySelector<HTMLElement>(`.o-sheet[data-id="${sheetId}"]`);
+    if (!sheet) return undefined;
+    const position = sheet.getBoundingClientRect();
+    return position.left;
   }
 
   getSelectedStatistic() {

@@ -1,17 +1,25 @@
 import { App, Component, onMounted, onWillUnmount, xml } from "@odoo/owl";
 import { BottomBar } from "../../src/components/bottom_bar/bottom_bar";
 import { Model } from "../../src/model";
-import { SpreadsheetChildEnv } from "../../src/types";
+import { SpreadsheetChildEnv, UID } from "../../src/types";
 import { OWL_TEMPLATES } from "../setup/jest.setup";
 import {
   activateSheet,
   createSheet,
   hideSheet,
+  redo,
   selectCell,
   setCellContent,
+  undo,
 } from "../test_helpers/commands_helpers";
 import { triggerMouseEvent } from "../test_helpers/dom_helper";
-import { makeTestEnv, makeTestFixture, mockUuidV4To, nextTick } from "../test_helpers/helpers";
+import {
+  makeTestEnv,
+  makeTestFixture,
+  mockUuidV4To,
+  mountSpreadsheet,
+  nextTick,
+} from "../test_helpers/helpers";
 jest.mock("../../src/helpers/uuid", () => require("../__mocks__/uuid"));
 
 let fixture: HTMLElement;
@@ -150,7 +158,7 @@ describe("BottomBar component", () => {
     triggerMouseEvent(".o-menu-item[data-name='move_right'", "click");
     expect(dispatch).toHaveBeenCalledWith("MOVE_SHEET", {
       sheetId,
-      direction: "right",
+      delta: 1,
     });
     app.destroy();
   });
@@ -167,7 +175,7 @@ describe("BottomBar component", () => {
     triggerMouseEvent(".o-menu-item[data-name='move_left'", "click");
     expect(dispatch).toHaveBeenCalledWith("MOVE_SHEET", {
       sheetId,
-      direction: "left",
+      delta: -1,
     });
     app.destroy();
   });
@@ -367,4 +375,75 @@ describe("BottomBar component", () => {
     expect(fixture.querySelector(".o-selection-statistic")?.textContent).toBe("Count Numbers: 1");
     app.destroy();
   });
+
+  describe("drag&drop sheet", () => {
+    let sheetIds;
+    let model;
+    let app;
+
+    beforeAll(async () => {
+      sheetIds = ["Sheet1", "Sheet2", "Sheet3", "Sheet4"];
+      const originalGetBoundingClientRect = HTMLDivElement.prototype.getBoundingClientRect;
+      jest
+        .spyOn(HTMLDivElement.prototype, "getBoundingClientRect")
+        // @ts-ignore the mock should return a complete DOMRect, not only { top, left }
+        .mockImplementation(function (this: HTMLDivElement) {
+          for (let sheetId of sheetIds) {
+            if (this.dataset.id == sheetId) {
+              return { top: 100, left: (sheetIds.indexOf(sheetId) + 1) * 100 };
+            }
+          }
+          return originalGetBoundingClientRect.call(this);
+        });
+    });
+
+    beforeEach(async () => {
+      model = new Model({
+        sheets: sheetIds.map((sheetId) => {
+          name: sheetId;
+        }),
+      });
+      ({ app } = await mountSpreadsheet(fixture, { model }));
+    });
+    afterEach(async () => {
+      app.destroy();
+    });
+    test("Can drag&drop a sheet forward", async () => {
+      dragSheet(sheetIds[0], { x: 1000 });
+      expect(model.getters.getVisibleSheetIds()).toEqual(["Sheet2", "Sheet3", "Sheet4", "Sheet1"]);
+    });
+    test("Can drag&drop a sheet backward", async () => {
+      dragSheet(sheetIds[2], { x: 10 });
+      expect(model.getters.getVisibleSheetIds()).toEqual(["Sheet3", "Sheet1", "Sheet2", "Sheet4"]);
+    });
+    test("Can drag&drop a sheet on itself", async () => {
+      dragSheet(sheetIds[0], { x: 50 });
+      expect(model.getters.getVisibleSheetIds()).toEqual(["Sheet1", "Sheet2", "Sheet3", "Sheet4"]);
+    });
+
+    test("undo/redo drag&drop of a sheet", async () => {
+      dragSheet(sheetIds[2], { x: 10 });
+      undo(model);
+      expect(model.getters.getVisibleSheetIds()).toEqual(["Sheet1", "Sheet2", "Sheet3", "Sheet4"]);
+      redo(model);
+      expect(model.getters.getVisibleSheetIds()).toEqual(["Sheet3", "Sheet1", "Sheet2", "Sheet4"]);
+    });
+  });
 });
+
+function dragSheet(sheetId: UID, position: { x: number; y?: number }) {
+  position.y = position.y! | 10;
+  const sheet = document.querySelector<HTMLElement>(`.o-sheet[data-id="${sheetId}"]`)!;
+  sheet.dispatchEvent(new MouseEvent("mousedown", { which: 1 }));
+  document.body.dispatchEvent(
+    new MouseEvent("mousemove", {
+      clientX: position.x,
+      clientY: position.y,
+      which: 1,
+      bubbles: true,
+    })
+  );
+  document.body.dispatchEvent(
+    new MouseEvent("mouseup", { clientX: position.x, clientY: position.y, which: 1, bubbles: true })
+  );
+}
