@@ -1,4 +1,4 @@
-import { Component, useEffect, useRef } from "@odoo/owl";
+import { Component, useEffect, useRef, useState } from "@odoo/owl";
 import {
   ComponentsImportance,
   FIGURE_BORDER_COLOR,
@@ -10,11 +10,14 @@ import { Figure, Pixel, SpreadsheetChildEnv, UID } from "../../../types/index";
 import { css, cssPropertiesToCss } from "../../helpers/css";
 import { gridOverlayPosition } from "../../helpers/dom_helpers";
 import { startDnd } from "../../helpers/drag_and_drop";
+import { FigureDndManager } from "../../helpers/figure_dnd_manager";
+import { dragFigureForMove, dragFigureForResize } from "../../helpers/figure_drag_helper";
 import {
-  FigureDndManager,
-  FigureDnDMoveManager,
-  FigureDnDResizeManager,
-} from "../../helpers/figure_dnd_manager";
+  HorizontalSnapLine,
+  snapForMove,
+  snapForResize,
+  VerticalSnapLine,
+} from "../../helpers/figure_snap_helper";
 
 type Anchor =
   | "top left"
@@ -120,6 +123,12 @@ interface Props {
   figure: Figure;
 }
 
+interface State {
+  dnd?: Figure;
+  horizontalSnapLine?: HorizontalSnapLine;
+  verticalSnapLine?: VerticalSnapLine;
+}
+
 export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
   static template = "o-spreadsheet-FigureComponent";
   static components = {};
@@ -127,12 +136,15 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
 
   private figureRef = useRef("figure");
 
-  private dndManager: FigureDndManager | undefined = undefined;
+  dndManager: FigureDndManager | undefined = undefined;
+  state: State = useState({
+    dnd: undefined,
+    horizontalSnapLine: undefined,
+    verticalSnapLine: undefined,
+  });
 
   get displayedFigure(): Figure {
-    return this.dndManager
-      ? { ...this.props.figure, ...this.dndManager.getDnd() }
-      : this.props.figure;
+    return this.state.dnd ? this.state.dnd : this.props.figure;
   }
 
   get isSelected(): boolean {
@@ -281,35 +293,42 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     const figure = this.props.figure;
 
     ev.stopPropagation();
-    const visibleFigures = this.env.model.getters.getVisibleFigures();
-    const otherFigures = visibleFigures.filter((fig) => fig.id !== figure.id);
-    const mousePosition = { x: ev.clientX, y: ev.clientY };
-    const dndManager = new FigureDnDResizeManager(figure, otherFigures, mousePosition);
-    this.dndManager = dndManager;
+    const initialMousePosition = { x: ev.clientX, y: ev.clientY };
 
     const onMouseMove = (ev: MouseEvent) => {
-      dndManager.resize(dirX, dirY, { x: ev.clientX, y: ev.clientY });
-      this.render();
+      const currentMousePosition = { x: ev.clientX, y: ev.clientY };
+      const dnd = dragFigureForResize(
+        this.props.figure,
+        dirX,
+        dirY,
+        initialMousePosition,
+        currentMousePosition
+      );
+
+      const visibleFigures = this.env.model.getters.getVisibleFigures();
+      const otherFigures = visibleFigures.filter((fig) => fig.id !== figure.id);
+      const snapResult = snapForResize(dirX, dirY, dnd, otherFigures);
+
+      this.state.dnd = snapResult.snappedFigure;
+      this.state.horizontalSnapLine = snapResult.horizontalSnapLine;
+      this.state.verticalSnapLine = snapResult.verticalSnapLine;
     };
     const onMouseUp = (ev: MouseEvent) => {
-      const dnd = dndManager.getDnd();
+      if (!this.state.dnd) return;
       const update: Partial<Figure> = {
-        x: dnd.x,
-        y: dnd.y,
+        x: this.state.dnd.x,
+        y: this.state.dnd.y,
+        width: this.state.dnd.width,
+        height: this.state.dnd.height,
       };
-      if (dirX) {
-        update.width = dnd.width;
-      }
-      if (dirY) {
-        update.height = dnd.height;
-      }
       this.env.model.dispatch("UPDATE_FIGURE", {
         sheetId: this.env.model.getters.getActiveSheetId(),
         id: figure.id,
         ...update,
       });
-      this.dndManager = undefined;
-      this.render();
+      this.state.dnd = undefined;
+      this.state.verticalSnapLine = undefined;
+      this.state.horizontalSnapLine = undefined;
     };
     startDnd(onMouseMove, onMouseUp);
   }
@@ -329,37 +348,41 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     if (this.props.sidePanelIsOpen) {
       this.env.openSidePanel("ChartPanel");
     }
-    const visibleFigures = this.env.model.getters.getVisibleFigures();
-    const otherFigures = visibleFigures.filter((fig) => fig.id !== figure.id);
-    const mousePosition = { x: ev.clientX, y: ev.clientY };
+    const initialMousePosition = { x: ev.clientX, y: ev.clientY };
     const mainViewportPosition = this.env.model.getters.getMainViewportCoordinates();
-    mainViewportPosition.x += gridPosition.left;
-    mainViewportPosition.y += gridPosition.top;
-
-    const dndManager = new FigureDnDMoveManager(
-      figure,
-      otherFigures,
-      mousePosition,
-      mainViewportPosition
-    );
-    this.dndManager = dndManager;
-
+    const mainViewportOffset = {
+      x: mainViewportPosition.x + gridPosition.left,
+      y: mainViewportPosition.y + gridPosition.top,
+    };
     const onMouseMove = (ev: MouseEvent) => {
-      dndManager.drag(
-        { x: ev.clientX, y: ev.clientY },
+      const currentMousePosition = { x: ev.clientX, y: ev.clientY };
+      const dnd = dragFigureForMove(
+        initialMousePosition,
+        currentMousePosition,
+        this.props.figure,
+        mainViewportOffset,
         this.env.model.getters.getActiveSheetScrollInfo()
       );
-      this.render();
+
+      const visibleFigures = this.env.model.getters.getVisibleFigures();
+      const otherFigures = visibleFigures.filter((fig) => fig.id !== figure.id);
+      const snapResult = snapForMove(dnd, otherFigures);
+
+      this.state.dnd = snapResult.snappedFigure;
+      this.state.horizontalSnapLine = snapResult.horizontalSnapLine;
+      this.state.verticalSnapLine = snapResult.verticalSnapLine;
     };
     const onMouseUp = (ev: MouseEvent) => {
-      const dnd = dndManager.getDnd();
+      if (!this.state.dnd) return;
       this.env.model.dispatch("UPDATE_FIGURE", {
         sheetId: this.env.model.getters.getActiveSheetId(),
         id: figure.id,
-        x: dnd.x,
-        y: dnd.y,
+        x: this.state.dnd.x,
+        y: this.state.dnd.y,
       });
-      this.dndManager = undefined;
+      this.state.dnd = undefined;
+      this.state.verticalSnapLine = undefined;
+      this.state.horizontalSnapLine = undefined;
       this.render();
     };
     startDnd(onMouseMove, onMouseUp);
@@ -402,10 +425,10 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
   }
 
   get horizontalSnapLineStyle(): string {
-    if (!this.dndManager) return "";
+    if (!this.state.horizontalSnapLine || !this.state.dnd) return "";
 
-    const snap = this.dndManager.getCurrentHorizontalSnapLine();
-    const dnd = this.dndManager.getDnd();
+    const snap = this.state.horizontalSnapLine;
+    const dnd = this.state.dnd;
     const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
 
     if (!snap || snap.y < offsetY) return "";
@@ -420,15 +443,18 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     const overflowY = offsetY - dnd.y > 0 ? offsetY - dnd.y : 0;
 
     const left = leftMost === dnd.x ? 0 : leftMost - dnd.x + overflowX;
-    return `left: ${left}px;width: ${rightMost - leftMost - overflowX}px;top:${
-      snap.y - dnd.y + FIGURE_BORDER_WIDTH - overflowY
-    }px`;
+
+    return cssPropertiesToCss({
+      left: left + "px",
+      width: rightMost - leftMost - overflowX + "px",
+      top: snap.y - dnd.y + FIGURE_BORDER_WIDTH - overflowY + "px",
+    });
   }
 
   get verticalSnapLineStyle(): string {
-    if (!this.dndManager) return "";
-    const snap = this.dndManager.getCurrentVerticalSnapLine();
-    const dnd = this.dndManager.getDnd();
+    if (!this.state.verticalSnapLine || !this.state.dnd) return "";
+    const snap = this.state.verticalSnapLine;
+    const dnd = this.state.dnd;
 
     const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
 
@@ -444,9 +470,12 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     const overflowX = offsetX - dnd.x > 0 ? offsetX - dnd.x : 0;
 
     const top = topMost === dnd.y ? 0 : topMost - dnd.y + overflowY;
-    return `top: ${top}px;height: ${bottomMost - topMost - overflowY}px;left:${
-      snap.x - dnd.x + FIGURE_BORDER_WIDTH - overflowX
-    }px`;
+
+    return cssPropertiesToCss({
+      top: top + "px",
+      height: bottomMost - topMost - overflowY + "px",
+      left: snap.x - dnd.x + FIGURE_BORDER_WIDTH - overflowX + "px",
+    });
   }
 }
 
