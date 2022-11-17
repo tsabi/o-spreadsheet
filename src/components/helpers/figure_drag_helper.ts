@@ -7,7 +7,7 @@ export function dragFigureForMove(
   initialFigure: Figure,
   mainViewportOffset: PixelPosition,
   scrollInfo: SheetScrollInfo
-) {
+): Figure {
   const initialMouseX = initialMousePosition.x;
   const mouseX = currentMousePosition.x;
   const viewportOffsetX = mainViewportOffset.x;
@@ -45,7 +45,7 @@ export function dragFigureForResize(
   dirY: -1 | 0 | 1,
   initialMousePosition: PixelPosition,
   currentMousePosition: PixelPosition
-) {
+): Figure {
   const deltaX = dirX * (currentMousePosition.x - initialMousePosition.x);
   const deltaY = dirY * (currentMousePosition.y - initialMousePosition.y);
 

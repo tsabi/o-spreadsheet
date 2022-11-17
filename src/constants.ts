@@ -198,7 +198,8 @@ export enum ComponentsImportance {
   ColorPicker = 25,
   IconPicker = 25,
   Popover = 30,
-  ChartAnchor = 1000,
+  FigureAnchor = 1000,
+  FigureSnapLine = 1001,
 }
 
 export const DEFAULT_SHEETVIEW_SIZE = 1000;

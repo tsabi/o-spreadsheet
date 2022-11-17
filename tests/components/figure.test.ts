@@ -98,7 +98,7 @@ describe("figures", () => {
 
   test("can create a figure with some data", () => {
     createFigure(model);
-    expect(model.getters.getFigures(model.getters.getActiveSheetId())).toEqual([
+    expect(model.getters.getFigures(sheetId)).toEqual([
       { id: "someuuid", height: 100, tag: "text", width: 100, x: 1, y: 1 },
     ]);
   });
@@ -147,7 +147,6 @@ describe("figures", () => {
   });
 
   test("Can move a figure with keyboard", async () => {
-    const sheetId = model.getters.getActiveSheetId();
     createFigure(model);
     let figure = model.getters.getFigure(sheetId, "someuuid");
     expect(figure).toMatchObject({ id: "someuuid", x: 1, y: 1 });
@@ -229,7 +228,6 @@ describe("figures", () => {
     ["topLeft", { mouseOffsetX: -50, mouseOffsetY: -50 }, { width: 150, height: 150 }],
   ])("Can resize a figure through its anchors", async (anchor: string, mouseMove, expectedSize) => {
     const figureId = "someuuid";
-    const sheetId = model.getters.getActiveSheetId();
     createFigure(model, { id: figureId, y: 200, x: 200, width: 100, height: 100 });
     await nextTick();
     await simulateClick(".o-figure");
@@ -244,7 +242,7 @@ describe("figures", () => {
       const figureEl = fixture.querySelector(".o-figure")!;
       await dragElement(figureEl, 150, 100, true);
       await nextTick();
-      expect(model.getters.getFigure(model.getters.getActiveSheetId(), "someuuid")).toMatchObject({
+      expect(model.getters.getFigure(sheetId, "someuuid")).toMatchObject({
         x: 350,
         y: 200,
       });
@@ -264,7 +262,7 @@ describe("figures", () => {
       };
       await dragElement(figureEl, 0, -2 * DEFAULT_CELL_HEIGHT, true, figurePositionInViewport);
       await nextTick();
-      expect(model.getters.getFigure(model.getters.getActiveSheetId(), "someuuid")).toMatchObject({
+      expect(model.getters.getFigure(sheetId, "someuuid")).toMatchObject({
         x: 200,
         y: 4 * DEFAULT_CELL_HEIGHT,
       });
@@ -284,7 +282,7 @@ describe("figures", () => {
       };
       await dragElement(figureEl, -2 * DEFAULT_CELL_WIDTH, 0, true, figurePositionInViewport);
       await nextTick();
-      expect(model.getters.getFigure(model.getters.getActiveSheetId(), "someuuid")).toMatchObject({
+      expect(model.getters.getFigure(sheetId, "someuuid")).toMatchObject({
         x: 4 * DEFAULT_CELL_WIDTH,
         y: 200,
       });
@@ -349,7 +347,7 @@ describe("figures", () => {
 
   describe("Figure drag & drop snap", () => {
     function expectFigureIsAtPosition(id: UID, x: Pixel, y: Pixel) {
-      expect(model.getters.getFigure(model.getters.getActiveSheetId(), id)).toMatchObject({ x, y });
+      expect(model.getters.getFigure(sheetId, id)).toMatchObject({ x, y });
     }
 
     describe("Move figure", () => {

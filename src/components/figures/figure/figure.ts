@@ -63,7 +63,7 @@ css/*SCSS*/ `
       height: 100%;
     }
     .o-anchor {
-      z-index: ${ComponentsImportance.ChartAnchor};
+      z-index: ${ComponentsImportance.FigureAnchor};
       position: absolute;
       width: ${ANCHOR_SIZE}px;
       height: ${ANCHOR_SIZE}px;
@@ -99,7 +99,7 @@ css/*SCSS*/ `
 
   .o-figure-snap-border {
     position: absolute;
-    z-index: ${ComponentsImportance.ChartAnchor + 1};
+    z-index: ${ComponentsImportance.FigureSnapLine};
     &.vertical {
       width: 0px;
       border-left: 1px dashed black;
@@ -282,6 +282,15 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     );
   }
 
+  /**
+   * Initialize the resize of a figure with mouse movements
+   *
+   * @param dirX X direction of the resize. -1 : resize from the left border of the figure, 0 : no resize in X, 1 :
+   * resize from the right border of the figure
+   * @param dirY Y direction of the resize. -1 : resize from the top border of the figure, 0 : no resize in Y, 1 :
+   * resize from the bottom border of the figure
+   * @param ev Mouse Event
+   */
   resize(dirX: -1 | 0 | 1, dirY: -1 | 0 | 1, ev: MouseEvent) {
     const figure = this.props.figure;
 
@@ -291,7 +300,7 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     const onMouseMove = (ev: MouseEvent) => {
       const currentMousePosition = { x: ev.clientX, y: ev.clientY };
       const dnd = dragFigureForResize(
-        this.props.figure,
+        figure,
         dirX,
         dirY,
         initialMousePosition,
@@ -352,7 +361,7 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
       const dnd = dragFigureForMove(
         initialMousePosition,
         currentMousePosition,
-        this.props.figure,
+        figure,
         mainViewportOffset,
         this.env.model.getters.getActiveSheetScrollInfo()
       );
@@ -376,7 +385,6 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
       this.state.dnd = undefined;
       this.state.verticalSnapLine = undefined;
       this.state.horizontalSnapLine = undefined;
-      this.render();
     };
     startDnd(onMouseMove, onMouseUp);
   }

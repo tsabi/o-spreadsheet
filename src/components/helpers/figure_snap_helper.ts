@@ -3,12 +3,8 @@ import { Figure, Pixel } from "../../types";
 
 const SNAP_MARGIN: Pixel = 5;
 
-type SnappingAxis = "top" | "bottom" | "vCenter" | "right" | "left" | "hCenter";
-
-interface BorderPosition {
-  border: SnappingAxis;
-  position: Pixel;
-}
+type HSnapAxis = "top" | "bottom" | "vCenter";
+type VSnapAxis = "right" | "left" | "hCenter";
 
 export interface SnapLine {
   matchedFigs: Figure[];
@@ -16,7 +12,20 @@ export interface SnapLine {
   snapOffset: number;
 }
 
-export function snapForMove(figureToSnap: Figure, otherFigures: Figure[]) {
+interface SnapReturn {
+  snappedFigure: Figure;
+  verticalSnapLine?: SnapLine;
+  horizontalSnapLine?: SnapLine;
+}
+
+/**
+ * Try to snap the given figure to the other figures when moving the figure, and return the snapped
+ * figure and the possible snap lines, if any were found
+ *
+ * @param figureToSnap figure to snap
+ * @param otherFigures other figure the main figure can snap to
+ */
+export function snapForMove(figureToSnap: Figure, otherFigures: Figure[]): SnapReturn {
   const snappedFigure = { ...figureToSnap };
 
   const verticalSnapLine = getSnapLine(snappedFigure, ["left", "right", "hCenter"], otherFigures, [
@@ -38,14 +47,26 @@ export function snapForMove(figureToSnap: Figure, otherFigures: Figure[]) {
   return { snappedFigure, verticalSnapLine, horizontalSnapLine };
 }
 
+/**
+ * Try to snap the given figure to the other figures when resizing the figure, and return the snapped
+ * figure and the possible snap lines, if any were found
+ *
+ * @param resizeDirX X direction of the resize. -1 : resize from the left border of the figure, 0 : no resize in X, 1 :
+ * resize from the right border of the figure
+ * @param resizeDirY Y direction of the resize. -1 : resize from the top border of the figure, 0 : no resize in Y, 1 :
+ * resize from the bottom border of the figure
+ * @param figureToSnap figure to snap
+ * @param otherFigures other figure the main figure can snap to
+ */
 export function snapForResize(
   resizeDirX: -1 | 0 | 1,
   resizeDirY: -1 | 0 | 1,
   figureToSnap: Figure,
   otherFigures: Figure[]
-) {
+): SnapReturn {
   const snappedFigure = { ...figureToSnap };
 
+  // Vertical snap line
   const verticalSnapLine = getSnapLine(
     snappedFigure,
     [resizeDirX < 0 ? "left" : "right"],
@@ -61,6 +82,7 @@ export function snapForResize(
     }
   }
 
+  // Horizontal snap line
   const horizontalSnapLine = getSnapLine(
     snappedFigure,
     [resizeDirY < 0 ? "top" : "bottom"],
@@ -85,46 +107,54 @@ export function snapForResize(
 }
 
 /**
- * Get the position of borders for the given figure
+ * Get the position of snap axes for the given figure
  *
  * @param figure the figure
- * @param borders the list of border names to return the positions of
+ * @param snapAxes the list of snap axis to return the positions of
  */
-function getFigureBordersPositions(figure: Figure, borders: SnappingAxis[]): BorderPosition[] {
-  return borders.map((border) => ({ border, position: getBorderPosition(figure, border) }));
+function getFigureSnapAxisPositions<T extends HSnapAxis | VSnapAxis>(
+  figure: Figure,
+  snapAxes: T[]
+): {
+  axis: T;
+  position: Pixel;
+}[] {
+  return snapAxes.map((axis) => ({ axis, position: getSnapAxisPosition(figure, axis) }));
 }
 
 /**
  * Get a snap line for the given figure, if the figure can snap to any other figure
  *
  * @param snapFigure figure to get the snap line for
- * @param bordersOfSnappedFigToMatch borders of the given figure to be considered to find a snap match
+ * @param axesOfSnappedFigToMatch snap axes of the given figure to be considered to find a snap line
  * @param otherFigures figures to match against the snapped figure to find a snap line
- * @param bordersOfOtherFigsToMatch borders of the other figures to be considered to find a snap match
+ * @param axesOfOtherFigsToMatch snap axes of the other figures to be considered to find a snap line
  */
-function getSnapLine(
+
+function getSnapLine<T extends HSnapAxis[] | VSnapAxis[]>(
   snapFigure: Figure,
-  bordersOfSnappedFigToMatch: SnappingAxis[],
+  axesOfSnappedFigToMatch: T,
   otherFigures: Figure[],
-  bordersOfOtherFigsToMatch: SnappingAxis[]
+  axesOfOtherFigsToMatch: T
 ): SnapLine | undefined {
-  const snapFigureBorders = getFigureBordersPositions(snapFigure, bordersOfSnappedFigToMatch);
+  const snapFigureAxes = getFigureSnapAxisPositions(snapFigure, axesOfSnappedFigToMatch);
   let closestSnap: SnapLine | undefined = undefined;
+
   for (const matchedFig of otherFigures) {
-    const matchedBorders = getFigureBordersPositions(matchedFig, bordersOfOtherFigsToMatch);
+    const matchedAxes = getFigureSnapAxisPositions(matchedFig, axesOfOtherFigsToMatch);
 
-    for (const snapFigureBorder of snapFigureBorders) {
-      for (const matchedBorder of matchedBorders) {
-        if (canSnap(snapFigureBorder.position, matchedBorder.position)) {
-          const offset = snapFigureBorder.position - matchedBorder.position;
+    for (const snapFigureAxis of snapFigureAxes) {
+      for (const matchedAxis of matchedAxes) {
+        if (canSnap(snapFigureAxis.position, matchedAxis.position)) {
+          const snapOffset = snapFigureAxis.position - matchedAxis.position;
 
-          if (closestSnap && Math.abs(offset) === Math.abs(closestSnap.snapOffset)) {
+          if (closestSnap && Math.abs(snapOffset) === Math.abs(closestSnap.snapOffset)) {
             closestSnap.matchedFigs.push(matchedFig);
-          } else if (!closestSnap || Math.abs(offset) <= Math.abs(closestSnap.snapOffset)) {
+          } else if (!closestSnap || Math.abs(snapOffset) <= Math.abs(closestSnap.snapOffset)) {
             closestSnap = {
               matchedFigs: [matchedFig],
-              position: matchedBorder.position,
-              snapOffset: offset,
+              position: matchedAxis.position,
+              snapOffset,
             };
           }
         }
@@ -134,14 +164,14 @@ function getSnapLine(
   return closestSnap;
 }
 
-/** Check if two borders are close enough to snap */
-function canSnap(borderPosition1: Pixel, borderPosition2: Pixel) {
-  return Math.abs(borderPosition1 - borderPosition2) <= SNAP_MARGIN;
+/** Check if two snap axes are close enough to snap */
+function canSnap(snapAxisPosition1: Pixel, snapAxisPosition2: Pixel) {
+  return Math.abs(snapAxisPosition1 - snapAxisPosition2) <= SNAP_MARGIN;
 }
 
-/** Get the position of a border of a figure */
-function getBorderPosition(fig: Figure, border: SnappingAxis): Pixel {
-  switch (border) {
+/** Get the position of a snap axis of a figure */
+function getSnapAxisPosition(fig: Figure, axis: HSnapAxis | VSnapAxis): Pixel {
+  switch (axis) {
     case "top":
       return fig.y;
     case "bottom":
