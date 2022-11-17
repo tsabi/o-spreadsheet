@@ -10,7 +10,6 @@ import { Figure, Pixel, SpreadsheetChildEnv, UID } from "../../../types/index";
 import { css, cssPropertiesToCss } from "../../helpers/css";
 import { gridOverlayPosition } from "../../helpers/dom_helpers";
 import { startDnd } from "../../helpers/drag_and_drop";
-import { FigureDndManager } from "../../helpers/figure_dnd_manager";
 import { dragFigureForMove, dragFigureForResize } from "../../helpers/figure_drag_helper";
 import {
   HorizontalSnapLine,
@@ -136,7 +135,6 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
 
   private figureRef = useRef("figure");
 
-  dndManager: FigureDndManager | undefined = undefined;
   state: State = useState({
     dnd: undefined,
     horizontalSnapLine: undefined,
