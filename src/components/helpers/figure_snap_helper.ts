@@ -3,9 +3,10 @@ import { Figure, Pixel } from "../../types";
 
 const SNAP_MARGIN: Pixel = 5;
 
-type BorderName = "top" | "bottom" | "vCenter" | "right" | "left" | "hCenter";
+type SnappingAxis = "top" | "bottom" | "vCenter" | "right" | "left" | "hCenter";
+
 interface BorderPosition {
-  border: BorderName;
+  border: SnappingAxis;
   position: Pixel;
 }
 
@@ -89,7 +90,7 @@ export function snapForResize(
  * @param figure the figure
  * @param borders the list of border names to return the positions of
  */
-function getFigureBordersPositions(figure: Figure, borders: BorderName[]): BorderPosition[] {
+function getFigureBordersPositions(figure: Figure, borders: SnappingAxis[]): BorderPosition[] {
   return borders.map((border) => ({ border, position: getBorderPosition(figure, border) }));
 }
 
@@ -103,9 +104,9 @@ function getFigureBordersPositions(figure: Figure, borders: BorderName[]): Borde
  */
 function getSnapLine(
   snapFigure: Figure,
-  bordersOfSnappedFigToMatch: BorderName[],
+  bordersOfSnappedFigToMatch: SnappingAxis[],
   otherFigures: Figure[],
-  bordersOfOtherFigsToMatch: BorderName[]
+  bordersOfOtherFigsToMatch: SnappingAxis[]
 ): SnapLine | undefined {
   const snapFigureBorders = getFigureBordersPositions(snapFigure, bordersOfSnappedFigToMatch);
   let closestSnap: SnapLine | undefined = undefined;
@@ -117,7 +118,7 @@ function getSnapLine(
         if (canSnap(snapFigureBorder.position, matchedBorder.position)) {
           const offset = snapFigureBorder.position - matchedBorder.position;
 
-          if (closestSnap && offset === closestSnap.snapOffset) {
+          if (closestSnap && Math.abs(offset) === Math.abs(closestSnap.snapOffset)) {
             closestSnap.matchedFigs.push(matchedFig);
           } else if (!closestSnap || Math.abs(offset) <= Math.abs(closestSnap.snapOffset)) {
             closestSnap = {
@@ -139,7 +140,7 @@ function canSnap(borderPosition1: Pixel, borderPosition2: Pixel) {
 }
 
 /** Get the position of a border of a figure */
-function getBorderPosition(fig: Figure, border: BorderName): Pixel {
+function getBorderPosition(fig: Figure, border: SnappingAxis): Pixel {
   switch (border) {
     case "top":
       return fig.y;

@@ -581,7 +581,7 @@ describe("figures", () => {
         test("If there are multiple vertical matches, the snap line include all of them", async () => {
           createFigure(model, { id: "f1", x: 0, y: 0, width: 20, height: 20 });
           createFigure(model, { id: "f2", x: 50, y: 50, width: 50, height: 50 });
-          createFigure(model, { id: "f2", x: 50, y: 200, width: 50, height: 50 });
+          createFigure(model, { id: "f3", x: 50, y: 200, width: 50, height: 50 });
           await nextTick();
 
           const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
