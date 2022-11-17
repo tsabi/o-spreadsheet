@@ -11,12 +11,7 @@ import { css, cssPropertiesToCss } from "../../helpers/css";
 import { gridOverlayPosition } from "../../helpers/dom_helpers";
 import { startDnd } from "../../helpers/drag_and_drop";
 import { dragFigureForMove, dragFigureForResize } from "../../helpers/figure_drag_helper";
-import {
-  HorizontalSnapLine,
-  snapForMove,
-  snapForResize,
-  VerticalSnapLine,
-} from "../../helpers/figure_snap_helper";
+import { snapForMove, snapForResize, SnapLine } from "../../helpers/figure_snap_helper";
 
 type Anchor =
   | "top left"
@@ -124,8 +119,8 @@ interface Props {
 
 interface State {
   dnd?: Figure;
-  horizontalSnapLine?: HorizontalSnapLine;
-  verticalSnapLine?: VerticalSnapLine;
+  horizontalSnapLine?: SnapLine;
+  verticalSnapLine?: SnapLine;
 }
 
 export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
@@ -429,7 +424,7 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     const dnd = this.state.dnd;
     const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
 
-    if (!snap || snap.y < offsetY) return "";
+    if (!snap || snap.position < offsetY) return "";
 
     const leftMost = Math.min(dnd.x, ...snap.matchedFigs.map((fig) => fig.x));
     const rightMost = Math.max(
@@ -445,7 +440,7 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     return cssPropertiesToCss({
       left: left + "px",
       width: rightMost - leftMost - overflowX + "px",
-      top: snap.y - dnd.y + FIGURE_BORDER_WIDTH - overflowY + "px",
+      top: snap.position - dnd.y + FIGURE_BORDER_WIDTH - overflowY + "px",
     });
   }
 
@@ -456,7 +451,7 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
 
     const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
 
-    if (!snap || snap.x < offsetX) return "";
+    if (!snap || snap.position < offsetX) return "";
 
     const topMost = Math.min(dnd.y, ...snap.matchedFigs.map((fig) => fig.y));
     const bottomMost = Math.max(
@@ -472,7 +467,7 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     return cssPropertiesToCss({
       top: top + "px",
       height: bottomMost - topMost - overflowY + "px",
-      left: snap.x - dnd.x + FIGURE_BORDER_WIDTH - overflowX + "px",
+      left: snap.position - dnd.x + FIGURE_BORDER_WIDTH - overflowX + "px",
     });
   }
 }

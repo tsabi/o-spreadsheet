@@ -3,42 +3,28 @@ import { Figure, Pixel } from "../../types";
 
 const SNAP_MARGIN: Pixel = 5;
 
-type HorizontalBorderName = "top" | "bottom" | "vCenter";
-type VerticalBorderName = "right" | "left" | "hCenter";
-
-interface HorizontalBorderPosition {
-  border: HorizontalBorderName;
+type BorderName = "top" | "bottom" | "vCenter" | "right" | "left" | "hCenter";
+interface BorderPosition {
+  border: BorderName;
   position: Pixel;
 }
 
-interface VerticalBorderPosition {
-  border: VerticalBorderName;
+export interface SnapLine {
+  matchedFigs: Figure[];
   position: Pixel;
-}
-
-export interface VerticalSnapLine {
-  matchedFigs: Figure[];
-  x: Pixel;
-  snapOffset: number;
-}
-
-export interface HorizontalSnapLine {
-  matchedFigs: Figure[];
-  y: Pixel;
   snapOffset: number;
 }
 
 export function snapForMove(figureToSnap: Figure, otherFigures: Figure[]) {
   const snappedFigure = { ...figureToSnap };
 
-  const verticalSnapLine = getVerticalSnapLine(
-    snappedFigure,
-    ["left", "right", "hCenter"],
-    otherFigures,
-    ["left", "right", "hCenter"]
-  );
+  const verticalSnapLine = getSnapLine(snappedFigure, ["left", "right", "hCenter"], otherFigures, [
+    "left",
+    "right",
+    "hCenter",
+  ]);
 
-  const horizontalSnapLine = getHorizontalSnapLine(
+  const horizontalSnapLine = getSnapLine(
     snappedFigure,
     ["top", "bottom", "vCenter"],
     otherFigures,
@@ -59,7 +45,7 @@ export function snapForResize(
 ) {
   const snappedFigure = { ...figureToSnap };
 
-  const verticalSnapLine = getVerticalSnapLine(
+  const verticalSnapLine = getSnapLine(
     snappedFigure,
     [resizeDirX < 0 ? "left" : "right"],
     otherFigures,
@@ -74,7 +60,7 @@ export function snapForResize(
     }
   }
 
-  const horizontalSnapLine = getHorizontalSnapLine(
+  const horizontalSnapLine = getSnapLine(
     snappedFigure,
     [resizeDirY < 0 ? "top" : "bottom"],
     otherFigures,
@@ -98,65 +84,33 @@ export function snapForResize(
 }
 
 /**
- * Get the position of horizontal borders for the given figure
+ * Get the position of borders for the given figure
  *
  * @param figure the figure
  * @param borders the list of border names to return the positions of
  */
-function getHorizontalFigureBordersPositions(
-  figure: Figure,
-  borders: HorizontalBorderName[]
-): HorizontalBorderPosition[] {
-  const allBorders: HorizontalBorderPosition[] = [
-    { border: "top", position: getBorderPosition(figure, "top") },
-    { border: "vCenter", position: getBorderPosition(figure, "vCenter") },
-    { border: "bottom", position: getBorderPosition(figure, "bottom") },
-  ];
-  return allBorders.filter((p) => borders.includes(p.border));
+function getFigureBordersPositions(figure: Figure, borders: BorderName[]): BorderPosition[] {
+  return borders.map((border) => ({ border, position: getBorderPosition(figure, border) }));
 }
 
 /**
- * Get the position of vertical borders for the given figure
- *
- * @param figure the figure
- * @param borders the list of border names to return the positions of
- */
-function getVerticalFigureBorders(
-  figure: Figure,
-  borders: VerticalBorderName[]
-): VerticalBorderPosition[] {
-  const allBorders: VerticalBorderPosition[] = [
-    { border: "left", position: getBorderPosition(figure, "left") },
-    { border: "hCenter", position: getBorderPosition(figure, "hCenter") },
-    { border: "right", position: getBorderPosition(figure, "right") },
-  ];
-  return allBorders.filter((p) => borders.includes(p.border));
-}
-
-/**
- * Get a horizontal snap line for the given figure, if the figure can snap to any other figure
+ * Get a snap line for the given figure, if the figure can snap to any other figure
  *
  * @param snapFigure figure to get the snap line for
  * @param bordersOfSnappedFigToMatch borders of the given figure to be considered to find a snap match
  * @param otherFigures figures to match against the snapped figure to find a snap line
  * @param bordersOfOtherFigsToMatch borders of the other figures to be considered to find a snap match
  */
-function getHorizontalSnapLine(
+function getSnapLine(
   snapFigure: Figure,
-  bordersOfSnappedFigToMatch: HorizontalBorderName[],
+  bordersOfSnappedFigToMatch: BorderName[],
   otherFigures: Figure[],
-  bordersOfOtherFigsToMatch: HorizontalBorderName[]
-): HorizontalSnapLine | undefined {
-  const snapFigureBorders = getHorizontalFigureBordersPositions(
-    snapFigure,
-    bordersOfSnappedFigToMatch
-  );
-  let closestSnap: HorizontalSnapLine | undefined = undefined;
+  bordersOfOtherFigsToMatch: BorderName[]
+): SnapLine | undefined {
+  const snapFigureBorders = getFigureBordersPositions(snapFigure, bordersOfSnappedFigToMatch);
+  let closestSnap: SnapLine | undefined = undefined;
   for (const matchedFig of otherFigures) {
-    const matchedBorders = getHorizontalFigureBordersPositions(
-      matchedFig,
-      bordersOfOtherFigsToMatch
-    );
+    const matchedBorders = getFigureBordersPositions(matchedFig, bordersOfOtherFigsToMatch);
 
     for (const snapFigureBorder of snapFigureBorders) {
       for (const matchedBorder of matchedBorders) {
@@ -168,47 +122,7 @@ function getHorizontalSnapLine(
           } else if (!closestSnap || Math.abs(offset) <= Math.abs(closestSnap.snapOffset)) {
             closestSnap = {
               matchedFigs: [matchedFig],
-              y: matchedBorder.position,
-              snapOffset: offset,
-            };
-          }
-        }
-      }
-    }
-  }
-  return closestSnap;
-}
-
-/**
- * Get a vertical snap line for the given figure, if the figure can snap to any other figure
- *
- * @param snapFigure figure to get the snap line for
- * @param bordersOfSnappedFigToMatch borders of the given figure to be considered to find  snap match
- * @param otherFigures figures to match against the snapped figure to find a snap line
- * @param bordersOfOtherFigsToMatch borders of the other figures to be considered to find a snap match
- */
-function getVerticalSnapLine(
-  snapFigure: Figure,
-  bordersOfSnappedFigToMatch: VerticalBorderName[],
-  otherFigures: Figure[],
-  bordersOfOtherFigsToMatch: VerticalBorderName[]
-): VerticalSnapLine | undefined {
-  const snapFigureBorders = getVerticalFigureBorders(snapFigure, bordersOfSnappedFigToMatch);
-  let closestSnap: VerticalSnapLine | undefined = undefined;
-  for (const matchedFig of otherFigures) {
-    const matchedBorders = getVerticalFigureBorders(matchedFig, bordersOfOtherFigsToMatch);
-
-    for (const snapFigureBorder of snapFigureBorders) {
-      for (const matchedBorder of matchedBorders) {
-        if (canSnap(snapFigureBorder.position, matchedBorder.position)) {
-          const offset = snapFigureBorder.position - matchedBorder.position;
-
-          if (closestSnap && offset === closestSnap.snapOffset) {
-            closestSnap.matchedFigs.push(matchedFig);
-          } else if (!closestSnap || Math.abs(offset) <= Math.abs(closestSnap.snapOffset)) {
-            closestSnap = {
-              matchedFigs: [matchedFig],
-              x: matchedBorder.position,
+              position: matchedBorder.position,
               snapOffset: offset,
             };
           }
@@ -225,7 +139,7 @@ function canSnap(borderPosition1: Pixel, borderPosition2: Pixel) {
 }
 
 /** Get the position of a border of a figure */
-function getBorderPosition(fig: Figure, border: HorizontalBorderName | VerticalBorderName): Pixel {
+function getBorderPosition(fig: Figure, border: BorderName): Pixel {
   switch (border) {
     case "top":
       return fig.y;
