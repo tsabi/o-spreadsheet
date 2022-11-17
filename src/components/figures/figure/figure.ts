@@ -6,7 +6,7 @@ import {
 } from "../../../constants";
 import { figureRegistry } from "../../../registries/index";
 import { Figure, Pixel, SpreadsheetChildEnv, UID } from "../../../types/index";
-import { css } from "../../helpers/css";
+import { css, cssPropertiesToCss } from "../../helpers/css";
 import { gridOverlayPosition } from "../../helpers/dom_helpers";
 import { startDnd } from "../../helpers/drag_and_drop";
 
@@ -144,7 +144,11 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
 
   getFigureStyle() {
     const { width, height } = this.displayedFigure;
-    return `width:${width}px;height:${height}px;border-width: ${this.getBorderWidth()}px;`;
+    return cssPropertiesToCss({
+      width: width + "px",
+      height: height + "px",
+      "border-width": this.getBorderWidth() + "px",
+    });
   }
 
   getContainerStyle() {
@@ -179,17 +183,17 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     }
 
     if (width < 0 || height < 0) {
-      return `display:none;`;
+      return cssPropertiesToCss({ display: "none" });
     }
     const borderOffset = BORDER_WIDTH - this.getBorderWidth();
-    // TODO : remove the +1 once 2951210 is fixed
-    return (
-      `top:${y + borderOffset + 1}px;` +
-      `left:${x + borderOffset}px;` +
-      `width:${width}px;` +
-      `height:${height}px;` +
-      `z-index: ${ComponentsImportance.Figure + (this.isSelected ? 1 : 0)}`
-    );
+    return cssPropertiesToCss({
+      // TODO : remove the +1 once 2951210 is fixed
+      top: y + borderOffset + 1 + "px",
+      left: x + borderOffset + "px",
+      width: width + "px",
+      height: height + "px",
+      "z-index": (ComponentsImportance.Figure + (this.isSelected ? 1 : 0)).toString(),
+    });
   }
 
   getAnchorPosition(anchor: Anchor) {
@@ -242,7 +246,11 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     if (x < -anchorCenteringOffset || y < -anchorCenteringOffset) {
       visibility = "hidden";
     }
-    return `visibility:${visibility};top:${y}px; left:${x}px;`;
+    return cssPropertiesToCss({
+      visibility,
+      top: y + "px",
+      left: x + "px",
+    });
   }
 
   setup() {

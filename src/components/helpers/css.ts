@@ -122,6 +122,9 @@ export function cellTextStyleToCss(style: Style | undefined): CSSProperties {
   return attributes;
 }
 
+/**
+ * Transform CSS properties into a CSS string.
+ */
 export function cssPropertiesToCss(attributes: CSSProperties): string {
   const str = Object.entries(attributes)
     .map(([attName, attValue]) => `${attName}: ${attValue};`)
