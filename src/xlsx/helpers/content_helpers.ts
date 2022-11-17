@@ -99,8 +99,8 @@ function convertBorderDescr(descr: BorderDescr | undefined): XLSXBorderDescr | u
     return undefined;
   }
   return {
-    style: descr[0],
-    color: { rgb: descr[1] },
+    style: descr.style,
+    color: { rgb: descr.color },
   };
 }
 

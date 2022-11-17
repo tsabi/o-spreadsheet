@@ -1,0 +1,65 @@
+<templates>
+  <t t-name="o-spreadsheet-BorderEditor" owl="1">
+    <div class="o-dropdown-content o-border-dropdown" t-on-click.stop="">
+      <div class="o-border-dropdown-section">
+        <div
+          t-foreach="BORDER_POSITIONS"
+          t-as="borderPositions"
+          t-key="borderPositions"
+          class="o-dropdown-line">
+          <span
+            t-foreach="borderPositions"
+            t-as="borderPosition"
+            t-key="borderPosition"
+            class="o-line-item"
+            t-att-class="{active:state.borderPosition == borderPosition[0]}"
+            t-att-foo="borderPosition[0]"
+            t-on-click.stop="() => this.setBorderPosition(borderPosition[0])">
+            <t t-call="{{borderPosition[1]}}"/>
+          </span>
+        </div>
+      </div>
+      <div class="o-divider"/>
+      <div class="o-border-dropdown-section">
+        <div
+          class="o-tool o-border-color-tool o-dropdown o-with-color"
+          title="Border color"
+          t-on-click.stop="(ev) => this.toggleDropdownTool('borderColorTool', ev)">
+          <span t-attf-style="border-color:{{state.borderColor}}">
+            <t t-call="o-spreadsheet-Icon.BORDER_COLOR"/>
+          </span>
+          <t t-call="o-spreadsheet-Icon.TRIANGLE_DOWN"/>
+          <ColorPicker
+            t-if="state.activeTool === 'borderColorTool'"
+            onColorPicked="(color) => this.setBorderColor(color)"
+            currentColor="state.borderColor"
+            t-key="borderColor"
+          />
+        </div>
+        <div
+          class="o-tool o-border-style-tool o-dropdown"
+          title="Line style"
+          t-on-click.stop="(ev) => this.toggleDropdownTool('borderTypeTool', ev)">
+          <t t-call="o-spreadsheet-Icon.BORDER_TYPE"/>
+          <t t-call="o-spreadsheet-Icon.TRIANGLE_DOWN"/>
+          <div class="o-dropdown-content" t-if="state.activeTool === 'borderTypeTool'">
+            <t t-foreach="borderStyles" t-as="borderStyle" t-key="borderStyle">
+              <div
+                t-if="borderStyle !== 'double'"
+                class="o-dropdown-item"
+                t-att-title="borderStyle"
+                t-on-click="() => this.setBorderStyle(borderStyle)">
+                <div class="o-dropdown-border-type">
+                  <div class="o-dropdown-border-check">
+                    <t t-if="this.state.borderStyle == borderStyle">&#10004;</t>
+                  </div>
+                  <div t-attf-class="o-style-preview o-style-{{borderStyle}}"/>
+                </div>
+              </div>
+            </t>
+          </div>
+        </div>
+      </div>
+    </div>
+  </t>
+</templates>

@@ -15,14 +15,8 @@ import { setFormatter, setStyle, topbarComponentRegistry } from "../../registrie
 import { getMenuChildren, getMenuName } from "../../registries/menus/helpers";
 import { topbarMenuRegistry } from "../../registries/menus/topbar_menu_registry";
 import { FullMenuItem } from "../../registries/menu_items_registry";
-import {
-  Align,
-  BorderCommand,
-  Format,
-  SetDecimalStep,
-  SpreadsheetChildEnv,
-  Style,
-} from "../../types/index";
+import { Align, Format, SetDecimalStep, SpreadsheetChildEnv, Style } from "../../types/index";
+import { BorderEditor } from "../border_editor/border_editor";
 import { ColorPicker } from "../color_picker/color_picker";
 import { Composer } from "../composer/composer/composer";
 import { css } from "../helpers/css";
@@ -182,16 +176,21 @@ css/* scss */ `
           margin-top: 2px;
         }
 
-        .o-with-color {
-          .o-line-item:hover {
-            outline: 1px solid gray;
-          }
-        }
-
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
         .o-border-dropdown {
           padding: 4px;
+          display: flex;
         }
 
+        .o-border-dropdown-section {
+          display: block;
+        }
+
+>>>>>>> [IMP] Rendering/Toolbar: add support for different border styles
+=======
+>>>>>>> [IMP] Component: add BorderEditor component
         .o-divider {
           display: inline-block;
           border-right: 1px solid #e0e2e4;
@@ -295,11 +294,12 @@ css/* scss */ `
     }
   }
 `;
+
 export class TopBar extends Component<Props, SpreadsheetChildEnv> {
   static template = "o-spreadsheet-TopBar";
   DEFAULT_FONT_SIZE = DEFAULT_FONT_SIZE;
 
-  static components = { ColorPicker, Menu, Composer };
+  static components = { ColorPicker, Menu, Composer, BorderEditor };
   commonFormats = FORMATS;
   customFormats = CUSTOM_FORMATS;
   currentFormatName = "automatic";
@@ -460,15 +460,6 @@ export class TopBar extends Component<Props, SpreadsheetChildEnv> {
 
   setColor(target: string, color: string) {
     setStyle(this.env, { [target]: color });
-    this.onClick();
-  }
-
-  setBorder(command: BorderCommand) {
-    this.env.model.dispatch("SET_FORMATTING", {
-      sheetId: this.env.model.getters.getActiveSheetId(),
-      target: this.env.model.getters.getSelectedZones(),
-      border: command,
-    });
     this.onClick();
   }
 

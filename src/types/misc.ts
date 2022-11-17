@@ -131,9 +131,17 @@ export interface CellPosition {
   sheetId: UID;
 }
 
-// A border description is a pair [style, ]
-export type BorderStyle = "thin" | "medium" | "thick" | "dashed" | "dotted" | "double";
-export type BorderDescr = [BorderStyle, Color];
+export const borderStyles = ["thin", "medium", "thick", "dashed", "dotted", "double"] as const;
+export type BorderStyle = typeof borderStyles[number];
+// A complete border description is a pair [style, color]
+export type BorderDescr = { style: BorderStyle; color: Color };
+
+// A complete border(s) data is a set of position-color-style informations
+export type borderData = {
+  position: BorderPosition;
+  color?: Color;
+  style?: BorderStyle;
+};
 
 export interface Border {
   top?: BorderDescr;
@@ -220,7 +228,7 @@ export interface PaneDivision {
   ySplit: number;
 }
 
-export type BorderCommand =
+export type BorderPosition =
   | "all"
   | "hv"
   | "h"

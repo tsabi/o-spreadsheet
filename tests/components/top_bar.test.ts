@@ -15,6 +15,7 @@ import {
   setAnchorCorner,
   setCellContent,
   setSelection,
+  setZoneBorders,
 } from "../test_helpers/commands_helpers";
 import { simulateClick, triggerMouseEvent } from "../test_helpers/dom_helper";
 import { getBorder, getCell, getStyle } from "../test_helpers/getters_helpers";
@@ -255,11 +256,7 @@ describe("TopBar component", () => {
   test("can clear formatting", async () => {
     const model = new Model();
     selectCell(model, "B1");
-    model.dispatch("SET_FORMATTING", {
-      sheetId: model.getters.getActiveSheetId(),
-      target: model.getters.getSelectedZones(),
-      border: "all",
-    });
+    setZoneBorders(model, { position: "all" });
     expect(getBorder(model, "B1")).toBeDefined();
     const { app } = await mountParent(model);
     const clearFormatTool = fixture.querySelector('.o-tool[title="Clear Format"]')!;

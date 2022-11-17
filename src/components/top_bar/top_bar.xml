@@ -191,54 +191,14 @@
               t-key="fillColor"
             />
           </div>
-          <div class="o-dropdown">
-            <div
-              class="o-tool o-dropdown-button"
-              title="Borders"
-              t-on-click="(ev) => this.toggleDropdownTool('borderTool', ev)">
-              <span>
-                <t t-call="o-spreadsheet-Icon.BORDERS"/>
-              </span>
-            </div>
-            <div
-              class="o-dropdown-content o-border-dropdown"
-              t-if="state.activeTool === 'borderTool'"
-              t-on-click.stop="">
-              <div class="o-dropdown-line">
-                <span class="o-line-item" t-on-click="(ev) => this.setBorder('all')">
-                  <t t-call="o-spreadsheet-Icon.BORDERS"/>
-                </span>
-                <span class="o-line-item" t-on-click="(ev) => this.setBorder('hv')">
-                  <t t-call="o-spreadsheet-Icon.BORDER_HV"/>
-                </span>
-                <span class="o-line-item" t-on-click="(ev) => this.setBorder('h')">
-                  <t t-call="o-spreadsheet-Icon.BORDER_H"/>
-                </span>
-                <span class="o-line-item" t-on-click="(ev) => this.setBorder('v')">
-                  <t t-call="o-spreadsheet-Icon.BORDER_V"/>
-                </span>
-                <span class="o-line-item" t-on-click="(ev) => this.setBorder('external')">
-                  <t t-call="o-spreadsheet-Icon.BORDER_EXTERNAL"/>
-                </span>
-              </div>
-              <div class="o-dropdown-line">
-                <span class="o-line-item" t-on-click="(ev) => this.setBorder('left')">
-                  <t t-call="o-spreadsheet-Icon.BORDER_LEFT"/>
-                </span>
-                <span class="o-line-item" t-on-click="(ev) => this.setBorder('top')">
-                  <t t-call="o-spreadsheet-Icon.BORDER_TOP"/>
-                </span>
-                <span class="o-line-item" t-on-click="(ev) => this.setBorder('right')">
-                  <t t-call="o-spreadsheet-Icon.BORDER_RIGHT"/>
-                </span>
-                <span class="o-line-item" t-on-click="(ev) => this.setBorder('bottom')">
-                  <t t-call="o-spreadsheet-Icon.BORDER_BOTTOM"/>
-                </span>
-                <span class="o-line-item" t-on-click="(ev) => this.setBorder('clear')">
-                  <t t-call="o-spreadsheet-Icon.BORDER_CLEAR"/>
-                </span>
-              </div>
-            </div>
+          <div
+            class="o-tool o-dropdown"
+            title="Borders"
+            t-on-click="(ev) => this.toggleDropdownTool('borderTool', ev)">
+            <span>
+              <t t-call="o-spreadsheet-Icon.BORDERS"/>
+            </span>
+            <BorderEditor t-if="state.activeTool === 'borderTool'"/>
           </div>
           <div
             class="o-tool o-merge-tool"

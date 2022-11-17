@@ -202,7 +202,7 @@ export class RendererPlugin extends UIPlugin {
   }
 
   private drawBorders(renderingContext: GridRenderingContext) {
-    const { ctx, thinLineWidth } = renderingContext;
+    const { ctx } = renderingContext;
     for (let box of this.boxes) {
       const border = box.border;
       if (border) {
@@ -222,13 +222,59 @@ export class RendererPlugin extends UIPlugin {
       }
     }
 
-    function drawBorder([style, color], x1, y1, x2, y2) {
+    function drawBorder({ style, color }, x1, y1, x2, y2) {
       ctx.strokeStyle = color;
-      ctx.lineWidth = (style === "thin" ? 2 : 3) * thinLineWidth;
+      switch (style) {
+        case "medium":
+          ctx.lineWidth = 2;
+          x1 = Math.floor(x1) + (y1 === y2 ? -0.5 : 0.5);
+          x2 = Math.floor(x2) + (y1 === y2 ? 1.5 : 0.5);
+          y1 = Math.floor(y1) + (x1 === x2 ? -0.5 : 0.5);
+          y2 = Math.floor(y2) + (x1 === x2 ? 1.5 : 0.5);
+          break;
+        case "thick":
+          ctx.lineWidth = 3;
+          //@ts-ignore
+          x1 = Math.floor(x1) + (y1 === y2 ? -1 : 0);
+          //@ts-ignore
+          x2 = Math.floor(x2) + (y1 === y2 ? 1 : 0);
+          //@ts-ignore
+          y1 = Math.floor(y1) + (x1 === x2 ? -1 : 0);
+          //@ts-ignore
+          y2 = Math.floor(y2) + (x1 === x2 ? 1 : 0);
+          break;
+        case "dashed":
+          ctx.lineWidth = 1;
+          x1 = Math.floor(x1);
+          x2 = Math.floor(x2);
+          y1 = Math.floor(y1);
+          y2 = Math.floor(y2);
+          ctx.setLineDash([1, 3]);
+          break;
+        case "dotted":
+          ctx.lineWidth = 1;
+          x1 = Math.floor(x1) + (y1 == y2 ? 0.5 : 0);
+          x2 = Math.floor(x2) + (y1 == y2 ? 0.5 : 0);
+          y1 = Math.floor(y1) + (x1 == x2 ? 0.5 : 0);
+          y2 = Math.floor(y2) + (x1 == x2 ? 0.5 : 0);
+          ctx.setLineDash([1, 1]);
+          break;
+        case "thin":
+        default:
+          ctx.lineWidth = 1;
+          x1 = Math.floor(x1);
+          x2 = Math.floor(x2);
+          y1 = Math.floor(y1);
+          y2 = Math.floor(y2);
+          break;
+      }
       ctx.beginPath();
       ctx.moveTo(x1, y1);
       ctx.lineTo(x2, y2);
       ctx.stroke();
+
+      ctx.lineWidth = 1;
+      ctx.setLineDash([]);
     }
   }
 
