@@ -1,9 +1,5 @@
 import { Component, onMounted, useRef, useState } from "@odoo/owl";
-import {
-  ComponentsImportance,
-  DEFAULT_CELL_HEIGHT,
-  SELECTION_BORDER_COLOR,
-} from "../../../constants";
+import { ComponentsImportance, SELECTION_BORDER_COLOR } from "../../../constants";
 import { fontSizeMap } from "../../../fonts";
 import { ComposerSelection } from "../../../plugins/ui/edition";
 import { DOMDimension, Rect, Ref, SpreadsheetChildEnv, Zone } from "../../../types/index";
@@ -112,7 +108,7 @@ export class GridComposer extends Component<Props, SpreadsheetChildEnv> {
 
     // font style
     const fontSize = (!isFormula && style.fontSize) || 10;
-    const fontWeight = !isFormula && style.bold ? "bold" : 500;
+    const fontWeight = !isFormula && style.bold ? "bold" : "";
     const fontStyle = !isFormula && style.italic ? "italic" : "normal";
     const textDecoration = !isFormula ? getTextDecoration(style) : "none";
 
@@ -133,7 +129,7 @@ export class GridComposer extends Component<Props, SpreadsheetChildEnv> {
       color: ${color};
 
       font-size: ${fontSizeMap[fontSize]}px;
-      font-weight: ${fontWeight};
+      ${fontWeight === "" ? "" : `font-weight: ${fontWeight};`}
       font-style: ${fontStyle};
       text-decoration: ${textDecoration};
 
@@ -142,8 +138,25 @@ export class GridComposer extends Component<Props, SpreadsheetChildEnv> {
   }
 
   get composerStyle(): string {
+    const { height } = this.rect;
+    const isFormula = this.env.model.getters.getCurrentContent().startsWith("=");
+    const position = this.env.model.getters.getPosition();
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    const cellPosition = this.env.model.getters.getMainCellPosition(
+      sheetId,
+      position.col,
+      position.row
+    );
+    const style = this.env.model.getters.getCellComputedStyle(
+      sheetId,
+      cellPosition.col,
+      cellPosition.row
+    );
+
+    // font style
+    const fontSize = (!isFormula && style.fontSize) || 10;
     return `
-      line-height: ${DEFAULT_CELL_HEIGHT}px;
+      line-height: ${Math.max(height, fontSizeMap[fontSize])}px;
       max-height: inherit;
       overflow: hidden;
     `;
