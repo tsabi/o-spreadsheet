@@ -346,10 +346,6 @@ describe("figures", () => {
   });
 
   describe("Figure drag & drop snap", () => {
-    function expectFigureIsAtPosition(id: UID, x: Pixel, y: Pixel) {
-      expect(model.getters.getFigure(sheetId, id)).toMatchObject({ x, y });
-    }
-
     describe("Move figure", () => {
       test.each([
         [48, 50], // left border snaps with left border of other figure
@@ -367,7 +363,7 @@ describe("figures", () => {
         await nextTick();
         const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
         await dragElement(figureEl, mouseMove, 0, true);
-        expectFigureIsAtPosition("f1", expectedResult, 0);
+        expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ x: expectedResult, y: 0 });
       });
 
       test.each([
@@ -386,7 +382,7 @@ describe("figures", () => {
         await nextTick();
         const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
         await dragElement(figureEl, 0, mouseMove, true);
-        expectFigureIsAtPosition("f1", 0, expectedResult);
+        expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ x: 0, y: expectedResult });
       });
     });
 
@@ -474,7 +470,7 @@ describe("figures", () => {
           await nextTick();
           const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
           await dragElement(figureEl, mouseMove, 0, true);
-          expectFigureIsAtPosition("f1", expectedResult, 0);
+          expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ x: expectedResult, y: 0 });
         }
       );
 
@@ -494,7 +490,7 @@ describe("figures", () => {
         await nextTick();
         const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
         await dragElement(figureEl, 0, mouseMove, true);
-        expectFigureIsAtPosition("f1", 0, expectedResult);
+        expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ x: 0, y: expectedResult });
       });
     });
 

@@ -118,7 +118,7 @@ interface Props {
 }
 
 interface State {
-  dnd?: Figure;
+  draggedFigure?: Figure;
   horizontalSnapLine?: SnapLine;
   verticalSnapLine?: SnapLine;
 }
@@ -131,20 +131,20 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
   private figureRef = useRef("figure");
 
   state: State = useState({
-    dnd: undefined,
+    draggedFigure: undefined,
     horizontalSnapLine: undefined,
     verticalSnapLine: undefined,
   });
 
   get displayedFigure(): Figure {
-    return this.state.dnd ? this.state.dnd : this.props.figure;
+    return this.state.draggedFigure ? this.state.draggedFigure : this.props.figure;
   }
 
   get isSelected(): boolean {
     return this.env.model.getters.getSelectedFigureId() === this.props.figure.id;
   }
 
-  /** Get the current figure size, which is either the stored figure size of the DnD figure size */
+  /** Get the current figure size, which is either the stored figure size of the dragged figure size */
   private getFigureSize() {
     const { width, height } = this.displayedFigure;
     return { width, height };
@@ -299,7 +299,7 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
 
     const onMouseMove = (ev: MouseEvent) => {
       const currentMousePosition = { x: ev.clientX, y: ev.clientY };
-      const dnd = dragFigureForResize(
+      const draggedFigure = dragFigureForResize(
         figure,
         dirX,
         dirY,
@@ -309,26 +309,26 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
 
       const visibleFigures = this.env.model.getters.getVisibleFigures();
       const otherFigures = visibleFigures.filter((fig) => fig.id !== figure.id);
-      const snapResult = snapForResize(dirX, dirY, dnd, otherFigures);
+      const snapResult = snapForResize(dirX, dirY, draggedFigure, otherFigures);
 
-      this.state.dnd = snapResult.snappedFigure;
+      this.state.draggedFigure = snapResult.snappedFigure;
       this.state.horizontalSnapLine = snapResult.horizontalSnapLine;
       this.state.verticalSnapLine = snapResult.verticalSnapLine;
     };
     const onMouseUp = (ev: MouseEvent) => {
-      if (!this.state.dnd) return;
+      if (!this.state.draggedFigure) return;
       const update: Partial<Figure> = {
-        x: this.state.dnd.x,
-        y: this.state.dnd.y,
-        width: this.state.dnd.width,
-        height: this.state.dnd.height,
+        x: this.state.draggedFigure.x,
+        y: this.state.draggedFigure.y,
+        width: this.state.draggedFigure.width,
+        height: this.state.draggedFigure.height,
       };
       this.env.model.dispatch("UPDATE_FIGURE", {
         sheetId: this.env.model.getters.getActiveSheetId(),
         id: figure.id,
         ...update,
       });
-      this.state.dnd = undefined;
+      this.state.draggedFigure = undefined;
       this.state.verticalSnapLine = undefined;
       this.state.horizontalSnapLine = undefined;
     };
@@ -358,7 +358,7 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     };
     const onMouseMove = (ev: MouseEvent) => {
       const currentMousePosition = { x: ev.clientX, y: ev.clientY };
-      const dnd = dragFigureForMove(
+      const draggedFigure = dragFigureForMove(
         initialMousePosition,
         currentMousePosition,
         figure,
@@ -368,21 +368,21 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
 
       const visibleFigures = this.env.model.getters.getVisibleFigures();
       const otherFigures = visibleFigures.filter((fig) => fig.id !== figure.id);
-      const snapResult = snapForMove(dnd, otherFigures);
+      const snapResult = snapForMove(draggedFigure, otherFigures);
 
-      this.state.dnd = snapResult.snappedFigure;
+      this.state.draggedFigure = snapResult.snappedFigure;
       this.state.horizontalSnapLine = snapResult.horizontalSnapLine;
       this.state.verticalSnapLine = snapResult.verticalSnapLine;
     };
     const onMouseUp = (ev: MouseEvent) => {
-      if (!this.state.dnd) return;
+      if (!this.state.draggedFigure) return;
       this.env.model.dispatch("UPDATE_FIGURE", {
         sheetId: this.env.model.getters.getActiveSheetId(),
         id: figure.id,
-        x: this.state.dnd.x,
-        y: this.state.dnd.y,
+        x: this.state.draggedFigure.x,
+        y: this.state.draggedFigure.y,
       });
-      this.state.dnd = undefined;
+      this.state.draggedFigure = undefined;
       this.state.verticalSnapLine = undefined;
       this.state.horizontalSnapLine = undefined;
     };
@@ -426,56 +426,58 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
   }
 
   get horizontalSnapLineStyle(): string {
-    if (!this.state.horizontalSnapLine || !this.state.dnd) return "";
+    if (!this.state.horizontalSnapLine || !this.state.draggedFigure) return "";
 
     const snap = this.state.horizontalSnapLine;
-    const dnd = this.state.dnd;
+    const draggedFigure = this.state.draggedFigure;
     const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
 
     if (!snap || snap.position < offsetY) return "";
 
-    const leftMost = Math.min(dnd.x, ...snap.matchedFigs.map((fig) => fig.x));
+    const leftMost = Math.min(draggedFigure.x, ...snap.matchedFigs.map((fig) => fig.x));
     const rightMost = Math.max(
-      dnd.x + dnd.width,
+      draggedFigure.x + draggedFigure.width,
       ...snap.matchedFigs.map((fig) => fig.x + fig.width)
     );
 
-    const overflowX = offsetX - leftMost > 0 ? offsetX - leftMost : 0;
-    const overflowY = offsetY - dnd.y > 0 ? offsetY - dnd.y : 0;
+    const overflowX = offsetX > leftMost ? offsetX - leftMost : 0;
+    const overflowY = offsetY > draggedFigure.y ? offsetY - draggedFigure.y : 0;
 
-    const left = leftMost === dnd.x ? 0 : leftMost - dnd.x + overflowX;
+    const left = leftMost === draggedFigure.x ? 0 : leftMost - draggedFigure.x + overflowX;
 
+    // top/left are coordinates relative to the figure, not the grid
     return cssPropertiesToCss({
       left: left + "px",
       width: rightMost - leftMost - overflowX + "px",
-      top: snap.position - dnd.y + FIGURE_BORDER_WIDTH - overflowY + "px",
+      top: snap.position - draggedFigure.y + FIGURE_BORDER_WIDTH - overflowY + "px",
     });
   }
 
   get verticalSnapLineStyle(): string {
-    if (!this.state.verticalSnapLine || !this.state.dnd) return "";
+    if (!this.state.verticalSnapLine || !this.state.draggedFigure) return "";
     const snap = this.state.verticalSnapLine;
-    const dnd = this.state.dnd;
+    const draggedFigure = this.state.draggedFigure;
 
     const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
 
     if (!snap || snap.position < offsetX) return "";
 
-    const topMost = Math.min(dnd.y, ...snap.matchedFigs.map((fig) => fig.y));
+    const topMost = Math.min(draggedFigure.y, ...snap.matchedFigs.map((fig) => fig.y));
     const bottomMost = Math.max(
-      dnd.y + dnd.height,
+      draggedFigure.y + draggedFigure.height,
       ...snap.matchedFigs.map((fig) => fig.y + fig.height)
     );
 
-    const overflowY = offsetY - topMost > 0 ? offsetY - topMost : 0;
-    const overflowX = offsetX - dnd.x > 0 ? offsetX - dnd.x : 0;
+    const overflowY = offsetY > topMost ? offsetY - topMost : 0;
+    const overflowX = offsetX > draggedFigure.x ? offsetX - draggedFigure.x : 0;
 
-    const top = topMost === dnd.y ? 0 : topMost - dnd.y + overflowY;
+    const top = topMost === draggedFigure.y ? 0 : topMost - draggedFigure.y + overflowY;
 
+    // top/left are coordinates relative to the figure, not the grid
     return cssPropertiesToCss({
       top: top + "px",
       height: bottomMost - topMost - overflowY + "px",
-      left: snap.position - dnd.x + FIGURE_BORDER_WIDTH - overflowX + "px",
+      left: snap.position - draggedFigure.x + FIGURE_BORDER_WIDTH - overflowX + "px",
     });
   }
 }

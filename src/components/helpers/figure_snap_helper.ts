@@ -19,11 +19,11 @@ interface SnapReturn {
 }
 
 /**
- * Try to snap the given figure to the other figures when moving the figure, and return the snapped
+ * Try to snap the given figure to other figures when moving the figure, and return the snapped
  * figure and the possible snap lines, if any were found
  *
  * @param figureToSnap figure to snap
- * @param otherFigures other figure the main figure can snap to
+ * @param otherFigures other figures the main figure can snap to
  */
 export function snapForMove(figureToSnap: Figure, otherFigures: Figure[]): SnapReturn {
   const snappedFigure = { ...figureToSnap };
@@ -56,7 +56,7 @@ export function snapForMove(figureToSnap: Figure, otherFigures: Figure[]): SnapR
  * @param resizeDirY Y direction of the resize. -1 : resize from the top border of the figure, 0 : no resize in Y, 1 :
  * resize from the bottom border of the figure
  * @param figureToSnap figure to snap
- * @param otherFigures other figure the main figure can snap to
+ * @param otherFigures other figures the main figure can snap to
  */
 export function snapForResize(
   resizeDirX: -1 | 0 | 1,
@@ -69,14 +69,14 @@ export function snapForResize(
   // Vertical snap line
   const verticalSnapLine = getSnapLine(
     snappedFigure,
-    [resizeDirX < 0 ? "left" : "right"],
+    [resizeDirX === -1 ? "left" : "right"],
     otherFigures,
     ["left", "right"]
   );
   if (verticalSnapLine) {
-    if (resizeDirX > 0) {
+    if (resizeDirX === 1) {
       snappedFigure.width -= verticalSnapLine.snapOffset;
-    } else if (resizeDirX < 0) {
+    } else if (resizeDirX === -1) {
       snappedFigure.x -= verticalSnapLine.snapOffset;
       snappedFigure.width += verticalSnapLine.snapOffset;
     }
@@ -85,14 +85,14 @@ export function snapForResize(
   // Horizontal snap line
   const horizontalSnapLine = getSnapLine(
     snappedFigure,
-    [resizeDirY < 0 ? "top" : "bottom"],
+    [resizeDirY === -1 ? "top" : "bottom"],
     otherFigures,
     ["top", "bottom"]
   );
   if (horizontalSnapLine) {
-    if (resizeDirY > 0) {
+    if (resizeDirY === 1) {
       snappedFigure.height -= horizontalSnapLine.snapOffset;
-    } else if (resizeDirY < 0) {
+    } else if (resizeDirY === -1) {
       snappedFigure.y -= horizontalSnapLine.snapOffset;
       snappedFigure.height += horizontalSnapLine.snapOffset;
     }
@@ -115,48 +115,45 @@ export function snapForResize(
 function getFigureSnapAxisPositions<T extends HSnapAxis | VSnapAxis>(
   figure: Figure,
   snapAxes: T[]
-): {
-  axis: T;
-  position: Pixel;
-}[] {
-  return snapAxes.map((axis) => ({ axis, position: getSnapAxisPosition(figure, axis) }));
+): Pixel[] {
+  return snapAxes.map((axis) => getSnapAxisPosition(figure, axis));
 }
 
 /**
  * Get a snap line for the given figure, if the figure can snap to any other figure
  *
- * @param snapFigure figure to get the snap line for
+ * @param figureToSnap figure to get the snap line for
  * @param axesOfSnappedFigToMatch snap axes of the given figure to be considered to find a snap line
  * @param otherFigures figures to match against the snapped figure to find a snap line
  * @param axesOfOtherFigsToMatch snap axes of the other figures to be considered to find a snap line
  */
 
 function getSnapLine<T extends HSnapAxis[] | VSnapAxis[]>(
-  snapFigure: Figure,
+  figureToSnap: Figure,
   axesOfSnappedFigToMatch: T,
   otherFigures: Figure[],
   axesOfOtherFigsToMatch: T
 ): SnapLine | undefined {
-  const snapFigureAxes = getFigureSnapAxisPositions(snapFigure, axesOfSnappedFigToMatch);
+  const snapFigureAxesPositions = getFigureSnapAxisPositions(figureToSnap, axesOfSnappedFigToMatch);
   let closestSnap: SnapLine | undefined = undefined;
 
   for (const matchedFig of otherFigures) {
-    const matchedAxes = getFigureSnapAxisPositions(matchedFig, axesOfOtherFigsToMatch);
+    const matchedAxesPositions = getFigureSnapAxisPositions(matchedFig, axesOfOtherFigsToMatch);
 
-    for (const snapFigureAxis of snapFigureAxes) {
-      for (const matchedAxis of matchedAxes) {
-        if (canSnap(snapFigureAxis.position, matchedAxis.position)) {
-          const snapOffset = snapFigureAxis.position - matchedAxis.position;
+    for (const snapFigureAxisPosition of snapFigureAxesPositions) {
+      for (const matchedAxisPosition of matchedAxesPositions) {
+        if (!canSnap(snapFigureAxisPosition, matchedAxisPosition)) continue;
 
-          if (closestSnap && Math.abs(snapOffset) === Math.abs(closestSnap.snapOffset)) {
-            closestSnap.matchedFigs.push(matchedFig);
-          } else if (!closestSnap || Math.abs(snapOffset) <= Math.abs(closestSnap.snapOffset)) {
-            closestSnap = {
-              matchedFigs: [matchedFig],
-              position: matchedAxis.position,
-              snapOffset,
-            };
-          }
+        const snapOffset = snapFigureAxisPosition - matchedAxisPosition;
+
+        if (closestSnap && snapOffset === closestSnap.snapOffset) {
+          closestSnap.matchedFigs.push(matchedFig);
+        } else if (!closestSnap || Math.abs(snapOffset) <= Math.abs(closestSnap.snapOffset)) {
+          closestSnap = {
+            matchedFigs: [matchedFig],
+            position: matchedAxisPosition,
+            snapOffset,
+          };
         }
       }
     }
