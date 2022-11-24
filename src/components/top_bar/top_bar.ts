@@ -99,7 +99,7 @@ css/* scss */ `
     line-height: 1.2;
     user-select: none;
     font-weight: 500;
-    color: #666666;
+    color: #4a4f59;
 
     .o-topbar-top {
       border-bottom: 1px solid #e0e2e4;
@@ -173,7 +173,15 @@ css/* scss */ `
           margin-right: 8px;
         }
 
-        .o-tool.active,
+        .o-tool.active {
+          background-color: #e6f4ea;
+          color: #006c24;
+          svg path,
+          polygon,
+          rect {
+            fill: #006c24;
+          }
+        }
         .o-tool:not(.o-disabled):hover {
           background-color: #017d831a;
         }
