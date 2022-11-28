@@ -731,7 +731,6 @@ describe("figures", () => {
       });
     });
 
-    jest.setTimeout(100000);
     describe("Snap with freeze pane", () => {
       const cellHeight = DEFAULT_CELL_HEIGHT;
       const cellWidth = DEFAULT_CELL_WIDTH;

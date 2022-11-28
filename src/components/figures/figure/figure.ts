@@ -371,9 +371,9 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
         x: this.state.draggedFigure.x,
         y: this.state.draggedFigure.y,
       });
-      // this.state.draggedFigure = undefined;
-      // this.state.verticalSnapLine = undefined;
-      // this.state.horizontalSnapLine = undefined;
+      this.state.draggedFigure = undefined;
+      this.state.verticalSnapLine = undefined;
+      this.state.horizontalSnapLine = undefined;
     };
     startDnd(onMouseMove, onMouseUp);
   }
@@ -418,26 +418,21 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     if (!this.state.horizontalSnapLine || !this.state.draggedFigure) return "";
 
     const snap = this.state.horizontalSnapLine;
-    const draggedFigure = this.getContainerRect(this.displayedFigure);
+    const draggedFigure = this.getContainerRect(this.state.draggedFigure);
     // const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
 
     if (!snap) return "";
 
-    const matechedFigsIds = snap.matchedFigs.map((fig) => fig.id);
     const matchedFigs = this.env.model.getters
       .getVisibleFigures()
-      .filter((fig) => matechedFigsIds.includes(fig.id));
+      .filter((fig) => snap.matchedFigIds.includes(fig.id));
     const matchedFigureRects = matchedFigs.map(this.getContainerRect, this);
-    console.log(draggedFigure, matchedFigureRects[0]);
 
     const leftMost = Math.min(draggedFigure.x, ...matchedFigureRects.map((rect) => rect.x));
     const rightMost = Math.max(
       draggedFigure.x + draggedFigure.width,
       ...matchedFigureRects.map((rect) => rect.x + rect.width)
     );
-
-    // const overflowX = offsetX > leftMost ? offsetX - leftMost : 0;
-    // const overflowY = offsetY > draggedFigure.y ? offsetY - draggedFigure.y : 0;
 
     const left = leftMost === draggedFigure.x ? 0 : leftMost - draggedFigure.x;
 
@@ -447,13 +442,11 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
         : snap.snappedAxis === "bottom"
         ? draggedFigure.height - FIGURE_BORDER_WIDTH
         : draggedFigure.height / 2 - FIGURE_BORDER_WIDTH;
-    console.log(snap.snappedAxis);
 
     // top/left are coordinates relative to the figure, not the grid
     return cssPropertiesToCss({
       left: left + "px",
       width: rightMost - leftMost + "px",
-      // top: snap.position - draggedFigure.y + FIGURE_BORDER_WIDTH - overflowY + "px",
       top: top + "px",
     });
   }
@@ -461,28 +454,35 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
   get verticalSnapLineStyle(): string {
     if (!this.state.verticalSnapLine || !this.state.draggedFigure) return "";
     const snap = this.state.verticalSnapLine;
-    const draggedFigure = this.state.draggedFigure;
+    const draggedFigure = this.getContainerRect(this.state.draggedFigure);
 
-    const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
+    if (!snap) return "";
 
-    if (!snap || snap.position < offsetX) return "";
+    const matchedFigs = this.env.model.getters
+      .getVisibleFigures()
+      .filter((fig) => snap.matchedFigIds.includes(fig.id));
+    const matchedFigureRects = matchedFigs.map(this.getContainerRect, this);
 
-    const topMost = Math.min(draggedFigure.y, ...snap.matchedFigs.map((fig) => fig.y));
+    const topMost = Math.min(draggedFigure.y, ...matchedFigureRects.map((rect) => rect.y));
     const bottomMost = Math.max(
       draggedFigure.y + draggedFigure.height,
-      ...snap.matchedFigs.map((fig) => fig.y + fig.height)
+      ...matchedFigureRects.map((rect) => rect.y + rect.height)
     );
 
-    const overflowY = offsetY > topMost ? offsetY - topMost : 0;
-    const overflowX = offsetX > draggedFigure.x ? offsetX - draggedFigure.x : 0;
+    const top = topMost === draggedFigure.y ? 0 : topMost - draggedFigure.y;
 
-    const top = topMost === draggedFigure.y ? 0 : topMost - draggedFigure.y + overflowY;
+    const left =
+      snap.snappedAxis === "left"
+        ? FIGURE_BORDER_WIDTH
+        : snap.snappedAxis === "right"
+        ? draggedFigure.width - FIGURE_BORDER_WIDTH
+        : draggedFigure.width / 2 - FIGURE_BORDER_WIDTH;
 
     // top/left are coordinates relative to the figure, not the grid
     return cssPropertiesToCss({
       top: top + "px",
-      height: bottomMost - topMost - overflowY + "px",
-      left: snap.position - draggedFigure.x + FIGURE_BORDER_WIDTH - overflowX + "px",
+      height: bottomMost - topMost + "px",
+      left: left + "px",
     });
   }
 

@@ -1,5 +1,5 @@
 import { FIGURE_BORDER_WIDTH } from "../../constants";
-import { Figure, Pixel, Rect } from "../../types";
+import { Figure, Pixel, Rect, UID } from "../../types";
 
 const SNAP_MARGIN: Pixel = 5;
 
@@ -7,7 +7,7 @@ export type HSnapAxis = "top" | "bottom" | "vCenter";
 export type VSnapAxis = "right" | "left" | "hCenter";
 
 export interface SnapLine<T extends HSnapAxis | VSnapAxis> {
-  matchedFigs: Figure[];
+  matchedFigIds: UID[];
   position: Pixel;
   snapOffset: number;
   snappedAxis: T;
@@ -151,10 +151,10 @@ function getSnapLine<T extends HSnapAxis[] | VSnapAxis[]>(
         const snapOffset = snapFigureAxis.position - matchedAxisPosition;
 
         if (closestSnap && snapOffset === closestSnap.snapOffset) {
-          closestSnap.matchedFigs.push(matchedFig);
+          closestSnap.matchedFigIds.push(matchedFig.id);
         } else if (!closestSnap || Math.abs(snapOffset) <= Math.abs(closestSnap.snapOffset)) {
           closestSnap = {
-            matchedFigs: [matchedFig],
+            matchedFigIds: [matchedFig.id],
             position: matchedAxisPosition,
             snapOffset,
             snappedAxis: snapFigureAxis.axis,
