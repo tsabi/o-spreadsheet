@@ -695,5 +695,80 @@ describe("figures", () => {
         });
       });
     });
+
+    jest.setTimeout(100000);
+    describe("Snap with freeze pane", () => {
+      const cellHeight = DEFAULT_CELL_HEIGHT;
+      const cellWidth = DEFAULT_CELL_WIDTH;
+
+      test.each([
+        { figHeight: 50, scrollY: 0 }, // Figure totally in frozen pane
+        { figHeight: 6 * cellHeight, scrollY: 0 }, // Figure half in frozen pane, no scroll
+        { figHeight: 6 * cellHeight, scrollY: 2 * cellHeight }, // Figure half in frozen pane, with scroll
+      ])("Frozen rows and snap, %s ", async (params) => {
+        freezeRows(model, 5);
+        createFigure(model, { id: "f1", x: 0, y: 0, width: 50, height: params.figHeight });
+        createFigure(model, { id: "f2", x: 0, y: 0, width: 50, height: params.figHeight });
+        setViewportOffset(model, 0, params.scrollY);
+        await nextTick();
+        const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
+
+        await dragElement(figureEl, 0, 0, false);
+        expect(fixture.querySelector(".o-figure-snap-border.horizontal")).toBeTruthy();
+        expect(fixture.querySelector(".o-figure-snap-border.vertical")).toBeTruthy();
+
+        await dragElement(figureEl, 0, 10, false);
+        expect(fixture.querySelector(".o-figure-snap-border.horizontal")).toBeFalsy();
+        expect(fixture.querySelector(".o-figure-snap-border.vertical")).toBeTruthy();
+
+        await dragElement(figureEl, 0, params.figHeight, false);
+        expect(fixture.querySelector(".o-figure-snap-border.horizontal")).toBeTruthy();
+        expect(fixture.querySelector(".o-figure-snap-border.vertical")).toBeTruthy();
+      });
+
+      test.each([
+        { figWidth: 50, scrollX: 0 }, // Figure totally in frozen pane
+        { figWidth: 6 * cellWidth, scrollX: 0 }, // Figure half in frozen pane, no scroll
+        { figWidth: 6 * cellWidth, scrollX: 2 * cellWidth }, // Figure half in frozen pane, with scroll
+      ])("Frozen cols and snap, %s ", async (params) => {
+        freezeColumns(model, 5);
+        createFigure(model, { id: "f1", x: 0, y: 0, width: params.figWidth, height: 50 });
+        createFigure(model, { id: "f2", x: 0, y: 0, width: params.figWidth, height: 50 });
+        setViewportOffset(model, params.scrollX, 0);
+        await nextTick();
+        const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
+
+        await dragElement(figureEl, 0, 0, false);
+        expect(fixture.querySelector(".o-figure-snap-border.vertical")).toBeTruthy();
+        expect(fixture.querySelector(".o-figure-snap-border.horizontal")).toBeTruthy();
+
+        await dragElement(figureEl, 10, 0, false);
+        expect(fixture.querySelector(".o-figure-snap-border.vertical")).toBeFalsy();
+        expect(fixture.querySelector(".o-figure-snap-border.horizontal")).toBeTruthy();
+
+        await dragElement(figureEl, params.figWidth, 0, false);
+        expect(fixture.querySelector(".o-figure-snap-border.vertical")).toBeTruthy();
+        expect(fixture.querySelector(".o-figure-snap-border.horizontal")).toBeTruthy();
+      });
+
+      test.each([
+        [48, 50], // top border snaps with top border of other figure
+        [77, 75 + FIGURE_BORDER_WIDTH], // top border snaps with center of other figure
+        [102, 100 + FIGURE_BORDER_WIDTH], // top border snaps with bottom border of other figure
+        [38, 40 - FIGURE_BORDER_WIDTH], // center snaps with top border of other figure
+        [67, 65], // center snaps with center of other figure
+        [92, 90], // center snaps with bottom border of other figure
+        [31, 30 - FIGURE_BORDER_WIDTH], // bottom border snaps with top border of other figure
+        [57, 55], // bottom border snaps with center of other figure
+        [79, 80], // bottom border snaps with bottom border of other figure
+      ])("Snap y with y mouseMove %s", async (mouseMove: Pixel, expectedResult: Pixel) => {
+        createFigure(model, { id: "f1", x: 0, y: 0, width: 20, height: 20 });
+        createFigure(model, { id: "f2", x: 50, y: 50, width: 50, height: 50 });
+        await nextTick();
+        const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
+        await dragElement(figureEl, 0, mouseMove, true);
+        expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ x: 0, y: expectedResult });
+      });
+    });
   });
 });

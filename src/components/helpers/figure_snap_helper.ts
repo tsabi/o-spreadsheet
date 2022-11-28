@@ -1,21 +1,22 @@
 import { FIGURE_BORDER_WIDTH } from "../../constants";
-import { Figure, Pixel } from "../../types";
+import { Figure, Pixel, Rect } from "../../types";
 
 const SNAP_MARGIN: Pixel = 5;
 
-type HSnapAxis = "top" | "bottom" | "vCenter";
-type VSnapAxis = "right" | "left" | "hCenter";
+export type HSnapAxis = "top" | "bottom" | "vCenter";
+export type VSnapAxis = "right" | "left" | "hCenter";
 
-export interface SnapLine {
+export interface SnapLine<T extends HSnapAxis | VSnapAxis> {
   matchedFigs: Figure[];
   position: Pixel;
   snapOffset: number;
+  snappedAxis: T;
 }
 
 interface SnapReturn {
   snappedFigure: Figure;
-  verticalSnapLine?: SnapLine;
-  horizontalSnapLine?: SnapLine;
+  verticalSnapLine?: SnapLine<VSnapAxis>;
+  horizontalSnapLine?: SnapLine<HSnapAxis>;
 }
 
 /**
@@ -133,18 +134,21 @@ function getSnapLine<T extends HSnapAxis[] | VSnapAxis[]>(
   axesOfSnappedFigToMatch: T,
   otherFigures: Figure[],
   axesOfOtherFigsToMatch: T
-): SnapLine | undefined {
-  const snapFigureAxesPositions = getFigureSnapAxisPositions(figureToSnap, axesOfSnappedFigToMatch);
-  let closestSnap: SnapLine | undefined = undefined;
+): SnapLine<T[number]> | undefined {
+  const snapFigureAxes = axesOfSnappedFigToMatch.map((axis) => ({
+    position: getSnapAxisPosition(figureToSnap, axis),
+    axis,
+  }));
+
+  let closestSnap: SnapLine<T[number]> | undefined = undefined;
 
   for (const matchedFig of otherFigures) {
     const matchedAxesPositions = getFigureSnapAxisPositions(matchedFig, axesOfOtherFigsToMatch);
-
-    for (const snapFigureAxisPosition of snapFigureAxesPositions) {
+    for (const snapFigureAxis of snapFigureAxes) {
       for (const matchedAxisPosition of matchedAxesPositions) {
-        if (!canSnap(snapFigureAxisPosition, matchedAxisPosition)) continue;
+        if (!canSnap(snapFigureAxis.position, matchedAxisPosition)) continue;
 
-        const snapOffset = snapFigureAxisPosition - matchedAxisPosition;
+        const snapOffset = snapFigureAxis.position - matchedAxisPosition;
 
         if (closestSnap && snapOffset === closestSnap.snapOffset) {
           closestSnap.matchedFigs.push(matchedFig);
@@ -153,6 +157,7 @@ function getSnapLine<T extends HSnapAxis[] | VSnapAxis[]>(
             matchedFigs: [matchedFig],
             position: matchedAxisPosition,
             snapOffset,
+            snappedAxis: snapFigureAxis.axis,
           };
         }
       }
@@ -167,7 +172,7 @@ function canSnap(snapAxisPosition1: Pixel, snapAxisPosition2: Pixel) {
 }
 
 /** Get the position of a snap axis of a figure */
-function getSnapAxisPosition(fig: Figure, axis: HSnapAxis | VSnapAxis): Pixel {
+export function getSnapAxisPosition(fig: Rect, axis: HSnapAxis | VSnapAxis): Pixel {
   switch (axis) {
     case "top":
       return fig.y;
