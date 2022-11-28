@@ -5,38 +5,52 @@ export function dragFigureForMove(
   initialMousePosition: PixelPosition,
   currentMousePosition: PixelPosition,
   initialFigure: Figure,
-  mainViewportOffset: PixelPosition,
-  scrollInfo: SheetScrollInfo
+  mainViewportPosition: PixelPosition,
+  scrollInfo: SheetScrollInfo,
+  frozenPaneOffset: number
 ): Figure {
   const initialMouseX = initialMousePosition.x;
   const mouseX = currentMousePosition.x;
-  const viewportOffsetX = mainViewportOffset.x;
+  const viewportX = mainViewportPosition.x;
 
   const initialMouseY = initialMousePosition.y;
   const mouseY = currentMousePosition.y;
-  const viewportOffsetY = mainViewportOffset.y;
+  const viewportY = mainViewportPosition.y;
 
-  let deltaX = initialMouseX - mouseX;
-  // Put the figure on the frozen pane if the mouse is over the pane
-  if (mouseX > viewportOffsetX && initialMouseX < viewportOffsetX) {
-    deltaX -= scrollInfo.offsetX;
-  } else if (mouseX < viewportOffsetX && initialMouseX > viewportOffsetX) {
-    deltaX += scrollInfo.offsetX;
+  const deltaX = initialMouseX - mouseX;
+  let newX = initialFigure.x - deltaX;
+
+  // Freeze panes: always display the figure above the panes
+  if (viewportX > 0) {
+    const isInitialXInFrozenPane = initialFigure.x < viewportX - frozenPaneOffset;
+    const isNewXInFrozenPane = newX < viewportX - frozenPaneOffset;
+    const isNewXBelowFrozenPane = newX < scrollInfo.offsetX + viewportX - frozenPaneOffset;
+    if (isInitialXInFrozenPane && !isNewXInFrozenPane) {
+      newX += scrollInfo.offsetX;
+    } else if (!isInitialXInFrozenPane && isNewXBelowFrozenPane) {
+      newX -= scrollInfo.offsetX;
+    }
   }
+  newX = Math.max(newX, 0);
 
-  let deltaY = initialMouseY - mouseY;
+  const deltaY = initialMouseY - mouseY;
+  let newY = initialFigure.y - deltaY;
 
-  // Put the figure on the frozen pane if the mouse is over the pane
-  if (mouseY > viewportOffsetY && initialMouseY < viewportOffsetY) {
-    deltaY -= scrollInfo.offsetY;
-  } else if (mouseY < viewportOffsetY && initialMouseY > viewportOffsetY) {
-    deltaY += scrollInfo.offsetY;
+  // Freeze panes: always display the figure above the panes
+  if (viewportY > 0) {
+    const isInitialYInFrozenPane = initialFigure.y < viewportY - frozenPaneOffset;
+    const isNewYInFrozenPane = newY < viewportY - frozenPaneOffset;
+    const isNewYBelowFrozenPane = newY < scrollInfo.offsetY + viewportY - frozenPaneOffset;
+
+    if (isInitialYInFrozenPane && !isNewYInFrozenPane) {
+      newY += scrollInfo.offsetY;
+    } else if (!isInitialYInFrozenPane && isNewYBelowFrozenPane) {
+      newY -= scrollInfo.offsetY;
+    }
   }
+  newY = Math.max(newY, 0);
 
-  const x = Math.max(initialFigure.x - deltaX, 0);
-  const y = Math.max(initialFigure.y - deltaY, 0);
-
-  return { ...initialFigure, x, y };
+  return { ...initialFigure, x: newX, y: newY };
 }
 
 export function dragFigureForResize(

@@ -8,7 +8,6 @@ import {
 import { figureRegistry } from "../../../registries/index";
 import { Figure, Pixel, Rect, SpreadsheetChildEnv, UID } from "../../../types/index";
 import { css, cssPropertiesToCss } from "../../helpers/css";
-import { gridOverlayPosition } from "../../helpers/dom_helpers";
 import { startDnd } from "../../helpers/drag_and_drop";
 import { dragFigureForMove, dragFigureForResize } from "../../helpers/figure_drag_helper";
 import {
@@ -313,7 +312,7 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
 
   onMouseDown(ev: MouseEvent) {
     const figure = this.props.figure;
-    const gridPosition = gridOverlayPosition();
+    // const gridPosition = gridOverlayPosition();
 
     if (ev.button > 0 || this.env.model.getters.isReadonly()) {
       // not main button, probably a context menu
@@ -328,18 +327,15 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     }
     const initialMousePosition = { x: ev.clientX, y: ev.clientY };
     const mainViewportPosition = this.env.model.getters.getMainViewportCoordinates();
-    const mainViewportOffset = {
-      x: mainViewportPosition.x + gridPosition.left,
-      y: mainViewportPosition.y + gridPosition.top,
-    };
     const onMouseMove = (ev: MouseEvent) => {
       const currentMousePosition = { x: ev.clientX, y: ev.clientY };
       const draggedFigure = dragFigureForMove(
         initialMousePosition,
         currentMousePosition,
         figure,
-        mainViewportOffset,
-        this.env.model.getters.getActiveSheetScrollInfo()
+        mainViewportPosition,
+        this.env.model.getters.getActiveSheetScrollInfo(),
+        ANCHOR_SIZE / 2
       );
 
       const visibleFigures = this.env.model.getters.getVisibleFigures();
@@ -423,7 +419,7 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
 
     const snap = this.state.horizontalSnapLine;
     const draggedFigure = this.getContainerRect(this.displayedFigure);
-    const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
+    // const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
 
     if (!snap) return "";
 
@@ -441,7 +437,7 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     );
 
     // const overflowX = offsetX > leftMost ? offsetX - leftMost : 0;
-    const overflowY = offsetY > draggedFigure.y ? offsetY - draggedFigure.y : 0;
+    // const overflowY = offsetY > draggedFigure.y ? offsetY - draggedFigure.y : 0;
 
     const left = leftMost === draggedFigure.x ? 0 : leftMost - draggedFigure.x;
 
