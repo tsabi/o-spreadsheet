@@ -1,0 +1,35 @@
+name: Release
+on:
+  push:
+    # Match LTS  and saas releases >= 10
+    branches: ["^[1-9][0-9].[0-9]$", "^saas-[1-9][0-9].[0-9]$"]
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    run-if:
+      if: contains(github.event.head_commit.message, "[REL]")
+    steps:
+      - id: parse
+      - uses: actions/checkout@v3
+        # should work with le latest stable node
+      - uses: actions/setup-node@v3
+      # parse-message will fail on invalid commit title/body
+      - run: |
+          npm install @actions/core && npm install @actions/github &&\
+          echo "data=$(tools/parse_message.js)" >> $GITHUB_OUTPUT
+      # generate all builds
+      - id: build
+      - run: npm ci && npm run dist
+      - id: release
+      - uses: ncipollo/release-action@v1.11.2
+        with:
+          body: ${{ fromJSON(steps.parse.outputs.data).body }}
+          artifacts: "dist"
+      - id: publish
+      - uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          access: "public"
+          check-version: false
+          # TODORAR remove once its safe
+          draft: true
