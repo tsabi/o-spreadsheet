@@ -25,6 +25,7 @@ import {
   SnapLine,
   VSnapAxis,
 } from "../../helpers/figure_snap_helper";
+import { CSSProperties } from "./../../../types/misc";
 
 type Anchor =
   | "top left"
@@ -354,31 +355,6 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
       const snappedFigure = { ...draggedFigure };
       snappedFigure.x -= snapResult.verticalSnapLine?.snapOffset || 0;
       snappedFigure.y -= snapResult.horizontalSnapLine?.snapOffset || 0;
-      // if (snapResult.horizontalSnapLine) {
-      //   snapResult.horizontalSnapLine.position = this.getEquivalentYInDOM(
-      //     snapResult.horizontalSnapLine.position
-      //   );
-      // }
-      // if (snapResult.verticalSnapLine) {
-      //   snapResult.verticalSnapLine.position = this.getEquivalentXInDOM(
-      //     snapResult.verticalSnapLine.position
-      //   );
-      // }
-
-      // console.log(
-      //   "Top border visible : ",
-      //   this.env.model.getters.isPositionVisible({
-      //     x: snappedFigure.x,
-      //     y: snappedFigure.y + FIGURE_BORDER_SHIFT,
-      //   }),
-      //   "Bot border visible : ",
-      //   this.env.model.getters.isPositionVisible({
-      //     x: snappedFigure.x,
-      //     y: snappedFigure.y + snappedFigure.height + FIGURE_BORDER_SHIFT,
-      //   })
-      // );
-      // console.log();
-      // console.log(snappedFigure);
 
       this.state.draggedFigure = snappedFigure;
       this.state.horizontalSnapLine = snapResult.horizontalSnapLine;
@@ -439,7 +415,8 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     if (!this.state.horizontalSnapLine || !this.state.draggedFigure) return "";
 
     const snap = this.state.horizontalSnapLine;
-    const draggedFigure = this.getContainerDOMRect(this.state.draggedFigure);
+    const draggedFigure = this.state.draggedFigure;
+    const draggedFigureDOMRect = this.getContainerDOMRect(this.state.draggedFigure);
     // const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
 
     if (!snap) return "";
@@ -449,34 +426,44 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
       .filter((fig) => snap.matchedFigIds.includes(fig.id));
     const matchedFigureRects = matchedFigs.map(this.getContainerDOMRect, this);
 
-    const leftMost = Math.min(draggedFigure.x, ...matchedFigureRects.map((rect) => rect.x));
+    const leftMost = Math.min(draggedFigureDOMRect.x, ...matchedFigureRects.map((rect) => rect.x));
     const rightMost = Math.max(
-      draggedFigure.x + draggedFigure.width,
+      draggedFigureDOMRect.x + draggedFigureDOMRect.width,
       ...matchedFigureRects.map((rect) => rect.x + rect.width)
     );
 
-    const left = leftMost === draggedFigure.x ? 0 : leftMost - draggedFigure.x;
+    // Coordinates relative to the figure, not the grid
+    const cssProperties: CSSProperties = {};
+    cssProperties.left =
+      (leftMost === draggedFigureDOMRect.x ? 0 : leftMost - draggedFigureDOMRect.x) + "px";
+    cssProperties.width = rightMost - leftMost + "px";
 
-    const top =
-      snap.snappedAxis === "top"
-        ? FIGURE_BORDER_WIDTH
-        : snap.snappedAxis === "bottom"
-        ? draggedFigure.height - 2 * FIGURE_BORDER_WIDTH
-        : draggedFigure.height / 2 - 2 * FIGURE_BORDER_WIDTH;
-    // const top = snap.position;
+    switch (snap.snappedAxis) {
+      case "top":
+        cssProperties.top = FIGURE_BORDER_WIDTH + "px";
+        break;
+      case "bottom":
+        cssProperties.bottom = FIGURE_BORDER_WIDTH + "px";
+        break;
+      case "vCenter":
+        const isFigureOverflowingTop = draggedFigureDOMRect.y === 0 && draggedFigure.y !== 0;
+        if (!isFigureOverflowingTop) {
+          cssProperties.top = draggedFigure.height / 2 + 2 * FIGURE_BORDER_WIDTH + "px";
+        } else {
+          cssProperties.bottom = draggedFigure.height / 2 + FIGURE_BORDER_WIDTH + "px";
+        }
+        break;
+    }
 
-    // top/left are coordinates relative to the figure, not the grid
-    return cssPropertiesToCss({
-      left: left + "px",
-      width: rightMost - leftMost + "px",
-      top: top + "px",
-    });
+    return cssPropertiesToCss(cssProperties);
   }
 
   get verticalSnapLineStyle(): string {
     if (!this.state.verticalSnapLine || !this.state.draggedFigure) return "";
+
     const snap = this.state.verticalSnapLine;
-    const draggedFigure = this.getContainerDOMRect(this.state.draggedFigure);
+    const draggedFigure = this.state.draggedFigure;
+    const draggedFigureDOMRect = this.getContainerDOMRect(draggedFigure);
 
     if (!snap) return "";
 
@@ -485,27 +472,36 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
       .filter((fig) => snap.matchedFigIds.includes(fig.id));
     const matchedFigureRects = matchedFigs.map(this.getContainerDOMRect, this);
 
-    const topMost = Math.min(draggedFigure.y, ...matchedFigureRects.map((rect) => rect.y));
+    const topMost = Math.min(draggedFigureDOMRect.y, ...matchedFigureRects.map((rect) => rect.y));
     const bottomMost = Math.max(
-      draggedFigure.y + draggedFigure.height,
+      draggedFigureDOMRect.y + draggedFigureDOMRect.height,
       ...matchedFigureRects.map((rect) => rect.y + rect.height)
     );
 
-    const top = topMost === draggedFigure.y ? 0 : topMost - draggedFigure.y;
+    // Coordinates relative to the figure, not the grid
+    const cssProperties: CSSProperties = {};
+    cssProperties.top =
+      (topMost === draggedFigureDOMRect.y ? 0 : topMost - draggedFigureDOMRect.y) + "px";
+    cssProperties.height = bottomMost - topMost + "px";
 
-    const left =
-      snap.snappedAxis === "left"
-        ? FIGURE_BORDER_WIDTH
-        : snap.snappedAxis === "right"
-        ? draggedFigure.width - 2 * FIGURE_BORDER_WIDTH
-        : draggedFigure.width / 2;
+    switch (snap.snappedAxis) {
+      case "left":
+        cssProperties.left = FIGURE_BORDER_WIDTH + "px";
+        break;
+      case "right":
+        cssProperties.right = FIGURE_BORDER_WIDTH + "px";
+        break;
+      case "hCenter":
+        const isFigureOverflowingLeft = draggedFigureDOMRect.x === -1 && draggedFigure.x !== 0;
+        if (!isFigureOverflowingLeft) {
+          cssProperties.left = draggedFigure.width / 2 + 2 * FIGURE_BORDER_WIDTH + "px";
+        } else {
+          cssProperties.right = draggedFigure.width / 2 + 2 * FIGURE_BORDER_WIDTH + "px";
+        }
+        break;
+    }
 
-    // top/left are coordinates relative to the figure, not the grid
-    return cssPropertiesToCss({
-      top: top + "px",
-      height: bottomMost - topMost + "px",
-      left: left + "px",
-    });
+    return cssPropertiesToCss(cssProperties);
   }
 
   private getContainerDOMRect(target: Figure): Rect {

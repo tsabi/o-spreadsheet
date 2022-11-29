@@ -529,6 +529,54 @@ describe("figures", () => {
       });
     });
 
+    describe("Snap doesn't happen with borders that aren't visible", () => {
+      test("No Y snap with top border above the viewport", async () => {
+        createFigure(model, { id: "f1", x: 50, y: 50, width: 100, height: 100 });
+        createFigure(model, { id: "f2", x: 0, y: 0, width: 20, height: 20 });
+        await nextTick();
+        setViewportOffset(model, 0, DEFAULT_CELL_HEIGHT);
+        const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
+        await dragElement(figureEl, 0, -49, true);
+        expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ x: 50, y: 1 });
+      });
+
+      test("No X snap with left border left of the viewport", async () => {
+        createFigure(model, { id: "f1", x: 50, y: 50, width: 100, height: 100 });
+        createFigure(model, { id: "f2", x: 0, y: 0, width: 20, height: 20 });
+        await nextTick();
+        setViewportOffset(model, DEFAULT_CELL_WIDTH, 0);
+        const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
+        await dragElement(figureEl, -49, 0, true);
+        expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ x: 1, y: 50 });
+      });
+
+      test("No Y snap with bottom border below the viewport", async () => {
+        const { height: viewportHeight } = model.getters.getMainViewportRect();
+        createFigure(model, { id: "f1", x: 0, y: 100, width: 100, height: viewportHeight });
+        createFigure(model, { id: "f2", x: 0, y: 0, width: 100, height: viewportHeight + 100 });
+        await nextTick();
+        const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
+        await dragElement(figureEl, 0, 1, true);
+        expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({
+          x: 0,
+          y: 101,
+        });
+      });
+
+      test("No X snap with right border right of the viewport", async () => {
+        const { width: viewportWidth } = model.getters.getMainViewportRect();
+        createFigure(model, { id: "f1", x: 100, y: 0, width: viewportWidth, height: 100 });
+        createFigure(model, { id: "f2", x: 0, y: 0, width: viewportWidth + 100, height: 100 });
+        await nextTick();
+        const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
+        await dragElement(figureEl, 1, 0, true);
+        expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({
+          x: 101,
+          y: 0,
+        });
+      });
+    });
+
     describe("Snap lines display", () => {
       describe("Snap lines are displayed during the drag & drop", () => {
         test("If the figure is snapping horizontally left of the other figure", async () => {
@@ -643,8 +691,9 @@ describe("figures", () => {
         expect(fixture.querySelectorAll(".o-figure-snap-border")).toHaveLength(0);
       });
 
-      describe("Snap lines are cut to not overflow over the headers", () => {
-        describe("If the dragged figure is overflowing left", () => {
+      //TODO rewrite these test, what is going on here
+      describe("Snap lines are cut to not overflow", () => {
+        describe("If the dragged figure is overflowing left over the headers", () => {
           beforeEach(async () => {
             setViewportOffset(model, DEFAULT_CELL_WIDTH, 0);
             createFigure(model, {
@@ -682,9 +731,7 @@ describe("figures", () => {
             const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
             await dragElement(figureEl, -5, 0, false);
             expect(fixture.querySelectorAll(selector)).toHaveLength(1);
-            expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(
-              5 + FIGURE_BORDER_WIDTH
-            );
+            expect(pixelsToNumber(getElComputedStyle(selector, "right"))).toBe(FIGURE_BORDER_WIDTH);
             expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(0);
             expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBeCloseToInteger(
               100,
@@ -693,7 +740,7 @@ describe("figures", () => {
           });
         });
 
-        describe("If the dragged figure is overflowing top", () => {
+        describe("If the dragged figure is overflowing top over the headers", () => {
           beforeEach(async () => {
             setViewportOffset(model, 0, DEFAULT_CELL_HEIGHT);
             createFigure(model, {
@@ -719,8 +766,8 @@ describe("figures", () => {
             const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
             await dragElement(figureEl, 0, -5, false);
             expect(fixture.querySelectorAll(selector)).toHaveLength(1);
-            expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(
-              5 + FIGURE_BORDER_WIDTH
+            expect(pixelsToNumber(getElComputedStyle(selector, "bottom"))).toBe(
+              FIGURE_BORDER_WIDTH
             );
             expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(0);
             expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBeCloseToInteger(
