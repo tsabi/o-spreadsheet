@@ -143,19 +143,24 @@ function getSnapLine<T extends HSnapAxis[] | VSnapAxis[]>(
   let closestSnap: SnapLine<T[number]> | undefined = undefined;
 
   for (const matchedFig of otherFigures) {
-    const matchedAxesPositions = getFigureSnapAxisPositions(matchedFig, axesOfOtherFigsToMatch);
-    for (const snapFigureAxis of snapFigureAxes) {
-      for (const matchedAxisPosition of matchedAxesPositions) {
-        if (!canSnap(snapFigureAxis.position, matchedAxisPosition)) continue;
+    // const matchedAxesPositions = getFigureSnapAxisPositions(matchedFig, axesOfOtherFigsToMatch);
+    const matchedAxes = axesOfOtherFigsToMatch.map((axis) => ({
+      position: getSnapAxisPosition(matchedFig, axis),
+      axis,
+    }));
 
-        const snapOffset = snapFigureAxis.position - matchedAxisPosition;
+    for (const snapFigureAxis of snapFigureAxes) {
+      for (const matchedAxis of matchedAxes) {
+        if (!canSnap(snapFigureAxis.position, matchedAxis.position)) continue;
+
+        const snapOffset = snapFigureAxis.position - matchedAxis.position;
 
         if (closestSnap && snapOffset === closestSnap.snapOffset) {
           closestSnap.matchedFigIds.push(matchedFig.id);
         } else if (!closestSnap || Math.abs(snapOffset) <= Math.abs(closestSnap.snapOffset)) {
           closestSnap = {
             matchedFigIds: [matchedFig.id],
-            position: matchedAxisPosition,
+            position: matchedAxis.position,
             snapOffset,
             snappedAxis: snapFigureAxis.axis,
           };

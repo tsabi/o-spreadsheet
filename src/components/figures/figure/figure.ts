@@ -201,19 +201,18 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     const { x: offsetCorrectionX, y: offsetCorrectionY } =
       this.env.model.getters.getMainViewportCoordinates();
     const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
-    const borderShift = ANCHOR_SIZE / 2;
 
-    if (target.x + borderShift < offsetCorrectionX) {
+    if (target.x + this.getBorderShift() < offsetCorrectionX) {
       x = 0;
-    } else if (target.x + borderShift < offsetCorrectionX + offsetX) {
+    } else if (target.x + this.getBorderShift() < offsetCorrectionX + offsetX) {
       x = target.x - offsetCorrectionX - offsetX;
     } else {
       x = 0;
     }
 
-    if (target.y + borderShift < offsetCorrectionY) {
+    if (target.y + this.getBorderShift() < offsetCorrectionY) {
       y = 0;
-    } else if (target.y + borderShift < offsetCorrectionY + offsetY) {
+    } else if (target.y + this.getBorderShift() < offsetCorrectionY + offsetY) {
       y = target.y - offsetCorrectionY - offsetY;
     } else {
       y = 0;
@@ -341,20 +340,20 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
       const visibleFigures = this.env.model.getters.getVisibleFigures();
       const otherFigures = visibleFigures.filter((fig) => fig.id !== figure.id);
       const snapResult = snapForMove(
-        this.getFigureVisibleCoordinates(draggedFigure),
-        otherFigures.map(this.getFigureVisibleCoordinates, this)
+        this.getCoordinatesInDOM(draggedFigure),
+        otherFigures.map(this.getCoordinatesInDOM, this)
       );
 
       const snappedFigure = { ...draggedFigure };
       snappedFigure.x -= snapResult.verticalSnapLine?.snapOffset || 0;
       snappedFigure.y -= snapResult.horizontalSnapLine?.snapOffset || 0;
       if (snapResult.horizontalSnapLine) {
-        snapResult.horizontalSnapLine.position = this.getYVisibleCoordinates(
+        snapResult.horizontalSnapLine.position = this.getEquivalentYInDOM(
           snapResult.horizontalSnapLine.position
         );
       }
       if (snapResult.verticalSnapLine) {
-        snapResult.verticalSnapLine.position = this.getXVisibleCoordinates(
+        snapResult.verticalSnapLine.position = this.getEquivalentXInDOM(
           snapResult.verticalSnapLine.position
         );
       }
@@ -494,22 +493,19 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     let { width, height } = this.getFigureSizeWithBorders(target);
     let x: Pixel, y: Pixel;
 
-    // Visually, the content of the container is slightly shifted as it includes borders and/or corners.
-    // If we want to make assertions on the position of the content, we need to take this shift into account
-    const borderShift = ANCHOR_SIZE / 2;
-
-    if (target.x + borderShift < offsetCorrectionX) {
+    if (target.x + this.getBorderShift() < offsetCorrectionX) {
       x = target.x;
-    } else if (target.x + borderShift < offsetCorrectionX + offsetX) {
+    } else if (target.x + this.getBorderShift() < offsetCorrectionX + offsetX) {
       x = offsetCorrectionX;
       width += target.x - offsetCorrectionX - offsetX;
     } else {
       x = target.x - offsetX;
     }
 
-    if (target.y + borderShift < offsetCorrectionY) {
+    y = this.getEquivalentXInDOM(target.y);
+    if (target.y + this.getBorderShift() < offsetCorrectionY) {
       y = target.y;
-    } else if (target.y + borderShift < offsetCorrectionY + offsetY) {
+    } else if (target.y + this.getBorderShift() < offsetCorrectionY + offsetY) {
       y = offsetCorrectionY;
       height += target.y - offsetCorrectionY - offsetY;
     } else {
@@ -519,34 +515,40 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     return { x, y, width, height };
   }
 
-  private getFigureVisibleCoordinates(target: Figure) {
+  private getCoordinatesInDOM(target: Figure) {
     return {
       ...target,
-      x: this.getXVisibleCoordinates(target.x),
-      y: this.getYVisibleCoordinates(target.y),
+      x: this.getEquivalentXInDOM(target.x),
+      y: this.getEquivalentYInDOM(target.y),
     };
   }
 
-  private getXVisibleCoordinates(targetX: number): number {
+  private getEquivalentXInDOM(targetX: number): number {
     const { x: offsetCorrectionX } = this.env.model.getters.getMainViewportCoordinates();
     const { offsetX } = this.env.model.getters.getActiveSheetScrollInfo();
-    const borderShift = ANCHOR_SIZE / 2;
 
-    if (targetX + borderShift < offsetCorrectionX) {
+    if (targetX + this.getBorderShift() < offsetCorrectionX) {
       return targetX;
     }
     return targetX - offsetX;
   }
 
-  private getYVisibleCoordinates(targetY: number): number {
+  private getEquivalentYInDOM(targetY: number): number {
     const { y: offsetCorrectionY } = this.env.model.getters.getMainViewportCoordinates();
     const { offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
-    const borderShift = ANCHOR_SIZE / 2;
 
-    if (targetY + borderShift < offsetCorrectionY) {
+    if (targetY + this.getBorderShift() < offsetCorrectionY) {
       return targetY;
     }
     return targetY - offsetY;
+  }
+
+  /**
+   * Visually, the content of the container is slightly shifted as it includes borders and/or corners.
+   * If we want to make assertions on the position of the content, we need to take this shift into account
+   */
+  private getBorderShift() {
+    return ANCHOR_SIZE / 2;
   }
 }
 
