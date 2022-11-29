@@ -1,17 +1,17 @@
 import { MIN_FIG_SIZE } from "../../constants";
-import { Figure, PixelPosition, SheetScrollInfo } from "../../types";
+import { Figure, FIGURE_BORDER_SHIFT, PixelPosition, SheetScrollInfo } from "../../types";
 
 export function dragFigureForMove(
   initialMousePosition: PixelPosition,
   currentMousePosition: PixelPosition,
   initialFigure: Figure,
   mainViewportPosition: PixelPosition,
-  scrollInfo: SheetScrollInfo,
-  frozenPaneOffset: number
+  scrollInfo: SheetScrollInfo
 ): Figure {
   const initialMouseX = initialMousePosition.x;
   const mouseX = currentMousePosition.x;
   const viewportX = mainViewportPosition.x;
+  const frozenPaneOffset = FIGURE_BORDER_SHIFT;
 
   const initialMouseY = initialMousePosition.y;
   const mouseY = currentMousePosition.y;

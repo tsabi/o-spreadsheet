@@ -6,7 +6,15 @@ import {
   SELECTION_BORDER_COLOR,
 } from "../../../constants";
 import { figureRegistry } from "../../../registries/index";
-import { Figure, Pixel, Rect, SpreadsheetChildEnv, UID } from "../../../types/index";
+import {
+  ANCHOR_SIZE,
+  Figure,
+  FIGURE_BORDER_SHIFT,
+  Pixel,
+  Rect,
+  SpreadsheetChildEnv,
+  UID,
+} from "../../../types/index";
 import { css, cssPropertiesToCss } from "../../helpers/css";
 import { startDnd } from "../../helpers/drag_and_drop";
 import { dragFigureForMove, dragFigureForResize } from "../../helpers/figure_drag_helper";
@@ -31,7 +39,6 @@ type Anchor =
 // -----------------------------------------------------------------------------
 // STYLE
 // -----------------------------------------------------------------------------
-const ANCHOR_SIZE = 8;
 const ACTIVE_BORDER_WIDTH = 2;
 
 css/*SCSS*/ `
@@ -173,16 +180,14 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
   }
 
   getContainerStyle() {
-    const { x, y, height, width } = this.getContainerRect(this.displayedFigure);
+    const { x, y, height, width } = this.getContainerDOMRect(this.displayedFigure);
 
     if (width < 0 || height < 0) {
       return cssPropertiesToCss({ display: "none" });
     }
-    const borderOffset = FIGURE_BORDER_WIDTH - this.getBorderWidth(this.displayedFigure);
     return cssPropertiesToCss({
-      // TODO : remove the +1 once 2951210 is fixed
-      top: y + borderOffset + 1 + "px",
-      left: x + borderOffset + "px",
+      top: y + "px",
+      left: x + "px",
       width: width + "px",
       height: height + "px",
       "z-index": (ComponentsImportance.Figure + (this.isSelected ? 1 : 0)).toString(),
@@ -202,17 +207,17 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
       this.env.model.getters.getMainViewportCoordinates();
     const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
 
-    if (target.x + this.getBorderShift() < offsetCorrectionX) {
+    if (target.x + FIGURE_BORDER_SHIFT < offsetCorrectionX) {
       x = 0;
-    } else if (target.x + this.getBorderShift() < offsetCorrectionX + offsetX) {
+    } else if (target.x + FIGURE_BORDER_SHIFT < offsetCorrectionX + offsetX) {
       x = target.x - offsetCorrectionX - offsetX;
     } else {
       x = 0;
     }
 
-    if (target.y + this.getBorderShift() < offsetCorrectionY) {
+    if (target.y + FIGURE_BORDER_SHIFT < offsetCorrectionY) {
       y = 0;
-    } else if (target.y + this.getBorderShift() < offsetCorrectionY + offsetY) {
+    } else if (target.y + FIGURE_BORDER_SHIFT < offsetCorrectionY + offsetY) {
       y = target.y - offsetCorrectionY - offsetY;
     } else {
       y = 0;
@@ -283,7 +288,13 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
 
       const visibleFigures = this.env.model.getters.getVisibleFigures();
       const otherFigures = visibleFigures.filter((fig) => fig.id !== figure.id);
-      const snapResult = snapForResize(dirX, dirY, draggedFigure, otherFigures);
+      const snapResult = snapForResize(
+        this.env.model.getters,
+        dirX,
+        dirY,
+        draggedFigure,
+        otherFigures
+      );
 
       this.state.draggedFigure = snapResult.snappedFigure;
       this.state.horizontalSnapLine = snapResult.horizontalSnapLine;
@@ -333,30 +344,41 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
         currentMousePosition,
         figure,
         mainViewportPosition,
-        this.env.model.getters.getActiveSheetScrollInfo(),
-        ANCHOR_SIZE / 2
+        this.env.model.getters.getActiveSheetScrollInfo()
       );
 
       const visibleFigures = this.env.model.getters.getVisibleFigures();
       const otherFigures = visibleFigures.filter((fig) => fig.id !== figure.id);
-      const snapResult = snapForMove(
-        this.getCoordinatesInDOM(draggedFigure),
-        otherFigures.map(this.getCoordinatesInDOM, this)
-      );
+      const snapResult = snapForMove(this.env.model.getters, draggedFigure, otherFigures);
 
       const snappedFigure = { ...draggedFigure };
       snappedFigure.x -= snapResult.verticalSnapLine?.snapOffset || 0;
       snappedFigure.y -= snapResult.horizontalSnapLine?.snapOffset || 0;
-      if (snapResult.horizontalSnapLine) {
-        snapResult.horizontalSnapLine.position = this.getEquivalentYInDOM(
-          snapResult.horizontalSnapLine.position
-        );
-      }
-      if (snapResult.verticalSnapLine) {
-        snapResult.verticalSnapLine.position = this.getEquivalentXInDOM(
-          snapResult.verticalSnapLine.position
-        );
-      }
+      // if (snapResult.horizontalSnapLine) {
+      //   snapResult.horizontalSnapLine.position = this.getEquivalentYInDOM(
+      //     snapResult.horizontalSnapLine.position
+      //   );
+      // }
+      // if (snapResult.verticalSnapLine) {
+      //   snapResult.verticalSnapLine.position = this.getEquivalentXInDOM(
+      //     snapResult.verticalSnapLine.position
+      //   );
+      // }
+
+      // console.log(
+      //   "Top border visible : ",
+      //   this.env.model.getters.isPositionVisible({
+      //     x: snappedFigure.x,
+      //     y: snappedFigure.y + FIGURE_BORDER_SHIFT,
+      //   }),
+      //   "Bot border visible : ",
+      //   this.env.model.getters.isPositionVisible({
+      //     x: snappedFigure.x,
+      //     y: snappedFigure.y + snappedFigure.height + FIGURE_BORDER_SHIFT,
+      //   })
+      // );
+      // console.log();
+      // console.log(snappedFigure);
 
       this.state.draggedFigure = snappedFigure;
       this.state.horizontalSnapLine = snapResult.horizontalSnapLine;
@@ -417,7 +439,7 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     if (!this.state.horizontalSnapLine || !this.state.draggedFigure) return "";
 
     const snap = this.state.horizontalSnapLine;
-    const draggedFigure = this.getContainerRect(this.state.draggedFigure);
+    const draggedFigure = this.getContainerDOMRect(this.state.draggedFigure);
     // const { offsetX, offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
 
     if (!snap) return "";
@@ -425,7 +447,7 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     const matchedFigs = this.env.model.getters
       .getVisibleFigures()
       .filter((fig) => snap.matchedFigIds.includes(fig.id));
-    const matchedFigureRects = matchedFigs.map(this.getContainerRect, this);
+    const matchedFigureRects = matchedFigs.map(this.getContainerDOMRect, this);
 
     const leftMost = Math.min(draggedFigure.x, ...matchedFigureRects.map((rect) => rect.x));
     const rightMost = Math.max(
@@ -439,8 +461,9 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
       snap.snappedAxis === "top"
         ? FIGURE_BORDER_WIDTH
         : snap.snappedAxis === "bottom"
-        ? draggedFigure.height - FIGURE_BORDER_WIDTH
-        : draggedFigure.height / 2 - FIGURE_BORDER_WIDTH;
+        ? draggedFigure.height - 2 * FIGURE_BORDER_WIDTH
+        : draggedFigure.height / 2 - 2 * FIGURE_BORDER_WIDTH;
+    // const top = snap.position;
 
     // top/left are coordinates relative to the figure, not the grid
     return cssPropertiesToCss({
@@ -453,14 +476,14 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
   get verticalSnapLineStyle(): string {
     if (!this.state.verticalSnapLine || !this.state.draggedFigure) return "";
     const snap = this.state.verticalSnapLine;
-    const draggedFigure = this.getContainerRect(this.state.draggedFigure);
+    const draggedFigure = this.getContainerDOMRect(this.state.draggedFigure);
 
     if (!snap) return "";
 
     const matchedFigs = this.env.model.getters
       .getVisibleFigures()
       .filter((fig) => snap.matchedFigIds.includes(fig.id));
-    const matchedFigureRects = matchedFigs.map(this.getContainerRect, this);
+    const matchedFigureRects = matchedFigs.map(this.getContainerDOMRect, this);
 
     const topMost = Math.min(draggedFigure.y, ...matchedFigureRects.map((rect) => rect.y));
     const bottomMost = Math.max(
@@ -474,8 +497,8 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
       snap.snappedAxis === "left"
         ? FIGURE_BORDER_WIDTH
         : snap.snappedAxis === "right"
-        ? draggedFigure.width - FIGURE_BORDER_WIDTH
-        : draggedFigure.width / 2 - FIGURE_BORDER_WIDTH;
+        ? draggedFigure.width - 2 * FIGURE_BORDER_WIDTH
+        : draggedFigure.width / 2;
 
     // top/left are coordinates relative to the figure, not the grid
     return cssPropertiesToCss({
@@ -485,7 +508,7 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     });
   }
 
-  private getContainerRect(target: Figure): Rect {
+  private getContainerDOMRect(target: Figure): Rect {
     const { x: offsetCorrectionX, y: offsetCorrectionY } =
       this.env.model.getters.getMainViewportCoordinates();
 
@@ -493,63 +516,40 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
     let { width, height } = this.getFigureSizeWithBorders(target);
     let x: Pixel, y: Pixel;
 
-    if (target.x + this.getBorderShift() < offsetCorrectionX) {
+    if (target.x + FIGURE_BORDER_SHIFT < offsetCorrectionX) {
       x = target.x;
-    } else if (target.x + this.getBorderShift() < offsetCorrectionX + offsetX) {
+    } else if (target.x + FIGURE_BORDER_SHIFT < offsetCorrectionX + offsetX) {
       x = offsetCorrectionX;
       width += target.x - offsetCorrectionX - offsetX;
     } else {
       x = target.x - offsetX;
     }
 
-    y = this.getEquivalentXInDOM(target.y);
-    if (target.y + this.getBorderShift() < offsetCorrectionY) {
+    if (target.y + FIGURE_BORDER_SHIFT < offsetCorrectionY) {
       y = target.y;
-    } else if (target.y + this.getBorderShift() < offsetCorrectionY + offsetY) {
+    } else if (target.y + FIGURE_BORDER_SHIFT < offsetCorrectionY + offsetY) {
       y = offsetCorrectionY;
       height += target.y - offsetCorrectionY - offsetY;
     } else {
       y = target.y - offsetY;
     }
 
-    return { x, y, width, height };
-  }
+    const borderOffset = FIGURE_BORDER_WIDTH - this.getBorderWidth(this.displayedFigure);
 
-  private getCoordinatesInDOM(target: Figure) {
     return {
-      ...target,
-      x: this.getEquivalentXInDOM(target.x),
-      y: this.getEquivalentYInDOM(target.y),
+      // TODO : remove the +1 once 2951210 is fixed
+      y: y + borderOffset + 1,
+      x: x + borderOffset,
+      width,
+      height,
     };
   }
 
-  private getEquivalentXInDOM(targetX: number): number {
-    const { x: offsetCorrectionX } = this.env.model.getters.getMainViewportCoordinates();
-    const { offsetX } = this.env.model.getters.getActiveSheetScrollInfo();
+  // private xPositionToFigureDOMCoordinate(x : number, figure : Figure){
+  //   const figureDOMRect = this.getContainerDOMRect(figure);
 
-    if (targetX + this.getBorderShift() < offsetCorrectionX) {
-      return targetX;
-    }
-    return targetX - offsetX;
-  }
-
-  private getEquivalentYInDOM(targetY: number): number {
-    const { y: offsetCorrectionY } = this.env.model.getters.getMainViewportCoordinates();
-    const { offsetY } = this.env.model.getters.getActiveSheetScrollInfo();
-
-    if (targetY + this.getBorderShift() < offsetCorrectionY) {
-      return targetY;
-    }
-    return targetY - offsetY;
-  }
-
-  /**
-   * Visually, the content of the container is slightly shifted as it includes borders and/or corners.
-   * If we want to make assertions on the position of the content, we need to take this shift into account
-   */
-  private getBorderShift() {
-    return ANCHOR_SIZE / 2;
-  }
+  //   const overflow =
+  // }
 }
 
 FigureComponent.props = {

@@ -24,6 +24,7 @@ import {
   ZoneDimension,
 } from "../../types/index";
 import { UIPlugin } from "../ui_plugin";
+import { PixelPosition } from "./../../types/misc";
 
 type SheetViewports = {
   topLeft: InternalViewport | undefined;
@@ -93,6 +94,7 @@ export class SheetViewPlugin extends UIPlugin {
     "getSheetViewVisibleCols",
     "getSheetViewVisibleRows",
     "getFrozenSheetViewRatio",
+    "isPositionVisible",
   ] as const;
 
   readonly viewports: Record<UID, SheetViewports | undefined> = {};
@@ -747,6 +749,28 @@ export class SheetViewPlugin extends UIPlugin {
       result.push(figure);
     }
     return result;
+  }
+
+  isPositionVisible(position: PixelPosition): boolean {
+    const sheetId = this.getters.getActiveSheetId();
+    const { offsetX, offsetY } = this.getSheetScrollInfo(sheetId);
+    const { x: mainViewportX, y: mainViewportY } = this.getters.getMainViewportCoordinates();
+    const { width, height } = this.getters.getSheetViewDimension();
+
+    if (
+      position.x >= mainViewportX &&
+      (position.x < mainViewportX + offsetX || position.x > width + offsetX + mainViewportX)
+    ) {
+      return false;
+    }
+    if (
+      position.y >= mainViewportY &&
+      (position.y < mainViewportY + offsetY || position.y > height + offsetY + mainViewportY)
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
   getFrozenSheetViewRatio(sheetId: UID) {

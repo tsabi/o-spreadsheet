@@ -22,6 +22,10 @@ declare global {
       toBeCancelledBecause(...expected: CancelledReason[]): R;
       toBeSuccessfullyDispatched(): R;
       toBeBetween(lower: number, upper: number): R;
+      /**
+       * Check that a number has the expected value, with a margin of error.
+       */
+      toBeCloseToInteger(expected: number, margin: number): R;
     }
   }
 }
@@ -127,6 +131,16 @@ CancelledReasons: ${this.utils.printReceived(dispatchResult.reasons)}
       return {
         pass: false,
         message: () => `Expected ${received} to be between ${lower} and ${upper}`,
+      };
+    }
+    return { pass: true, message: () => "" };
+  },
+  toBeCloseToInteger(received: number, expected: number, margin: number) {
+    if (Math.abs(received - expected) > margin) {
+      return {
+        pass: false,
+        message: () =>
+          `Expected ${received} to be close to ${expected} (margin of error of ${margin})`,
       };
     }
     return { pass: true, message: () => "" };

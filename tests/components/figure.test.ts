@@ -543,7 +543,7 @@ describe("figures", () => {
 
           expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(FIGURE_BORDER_WIDTH);
           expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(0);
-          expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBe(100);
+          expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBeCloseToInteger(100, 2);
         });
 
         test("If the figure is snapping horizontally right of the other figure", async () => {
@@ -558,7 +558,10 @@ describe("figures", () => {
 
           expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(FIGURE_BORDER_WIDTH);
           expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(-(120 - 50));
-          expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBe(120 + 20 - 50);
+          expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBeCloseToInteger(
+            120 + 20 - 50,
+            4
+          );
         });
 
         test("If the figure is snapping vertically above the other figure", async () => {
@@ -573,7 +576,7 @@ describe("figures", () => {
 
           expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(FIGURE_BORDER_WIDTH);
           expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(0);
-          expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBe(100);
+          expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBeCloseToInteger(100, 2);
         });
 
         test("If the figure is snapping vertically below the other figure", async () => {
@@ -588,7 +591,10 @@ describe("figures", () => {
 
           expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(FIGURE_BORDER_WIDTH);
           expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(-(120 - 50));
-          expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBe(120 + 20 - 50);
+          expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBeCloseToInteger(
+            120 + 20 - 50,
+            4
+          );
         });
 
         test("If there are multiple horizontal matches, the snap line include all of them", async () => {
@@ -604,7 +610,7 @@ describe("figures", () => {
           expect(fixture.querySelectorAll(selector)).toHaveLength(1);
           expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(FIGURE_BORDER_WIDTH);
           expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(0);
-          expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBe(250);
+          expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBeCloseToInteger(250, 2);
         });
 
         test("If there are multiple vertical matches, the snap line include all of them", async () => {
@@ -620,7 +626,7 @@ describe("figures", () => {
           expect(fixture.querySelectorAll(selector)).toHaveLength(1);
           expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(FIGURE_BORDER_WIDTH);
           expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(0);
-          expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBe(250);
+          expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBeCloseToInteger(250, 2);
         });
       });
 
@@ -667,7 +673,7 @@ describe("figures", () => {
 
             expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(FIGURE_BORDER_WIDTH);
             expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(0);
-            expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBe(55);
+            expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBeCloseToInteger(55, 2);
           });
 
           test("If the dragged figure have an vertical snap line", async () => {
@@ -680,7 +686,10 @@ describe("figures", () => {
               5 + FIGURE_BORDER_WIDTH
             );
             expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(0);
-            expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBe(100);
+            expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBeCloseToInteger(
+              100,
+              2
+            );
           });
         });
 
@@ -714,7 +723,10 @@ describe("figures", () => {
               5 + FIGURE_BORDER_WIDTH
             );
             expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(0);
-            expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBe(100);
+            expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBeCloseToInteger(
+              100,
+              2
+            );
           });
 
           test("If the dragged figure have an vertical snap line", async () => {
@@ -725,7 +737,10 @@ describe("figures", () => {
             expect(fixture.querySelectorAll(selector)).toHaveLength(1);
             expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(FIGURE_BORDER_WIDTH);
             expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(0);
-            expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBe(55);
+            expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBeCloseToInteger(
+              55,
+              2
+            );
           });
         });
       });
