@@ -955,8 +955,6 @@ describe("XLOOKUP formula", () => {
   });
 });
 
-// ---------------------------------------------------------------------------------
-
 describe("INDEX formula", () => {
   const defaultGrid = {
     A1: "1",
@@ -970,7 +968,7 @@ describe("INDEX formula", () => {
     C3: "=CONCAT(B3,B2)",
   };
 
-  test("Check argument validity", () => {
+  test.skip("Check argument validity", () => {
     expect(evaluateCell("A1", { A1: "=INDEX()" })).toBe("#BAD_EXPR");
     expect(evaluateCell("A1", { A1: "=INDEX(5)" })).toBe("#BAD_EXPR");
     expect(evaluateCell("A1", { A1: "=INDEX(B1:C5, 'string')" })).toBe("#BAD_EXPR");

@@ -462,15 +462,15 @@ export const INDEX: AddFunctionDescription = {
   description: _lt("Returns the content of a cell, specified by row and column offset."),
   args: args(`
     reference (range) ${_lt("The range of cells from which the values are returned.")}
-    row (number, optional, default=0) ${_lt(
+    row (number) ${_lt(
       "The index of the row to be returned from within the reference range of cells."
     )}
-    column (number, optional, default=0) ${_lt(
+    column (number) ${_lt(
       "The index of the column to be returned from within the reference range of cells."
     )}
   `),
   returns: ["ANY"],
-  compute: function (reference: MatrixArgValue, row: number = 0, column: number = 0): any {
+  compute: function (reference: MatrixArgValue, row: number, column: number): any {
     assert(
       () =>
         column >= 0 && column - 1 < reference.length && row >= 0 && row - 1 < reference[0].length,
