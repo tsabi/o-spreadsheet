@@ -3,6 +3,7 @@
 exports[`Scorecard charts Scorecard snapshot 1`] = `
 <div
   class="o-figure"
+  data-id="someuuid"
   style="
 width: 536px;
 height: 335px;
@@ -137,6 +138,7 @@ color: #757575;
 exports[`Scorecard charts scorecard text is resized while figure is resized 1`] = `
 <div
   class="o-figure active o-dragging"
+  data-id="someuuid"
   style="
 width: 236px;
 height: 135px;

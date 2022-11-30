@@ -6,6 +6,13 @@ const SNAP_MARGIN: Pixel = 5;
 export type HSnapAxis = "top" | "bottom" | "vCenter";
 export type VSnapAxis = "right" | "left" | "hCenter";
 
+/**
+ * We need two positions for the snap axis :
+ *  - the position (core) of the axis in the figure. This is used to know whether or not the axis is
+ *      displayed, or is hidden by the scroll/the frozen panes
+ *  - the position in the DOM, which is used to find snap matches. We cannot use the core position for this,
+ *      because figures partially in frozen panes aren't displayed at their actual coordinates
+ */
 type SnapAxisWithPosition<T extends HSnapAxis | VSnapAxis> = {
   axis: T;
   position: number;
@@ -14,7 +21,6 @@ type SnapAxisWithPosition<T extends HSnapAxis | VSnapAxis> = {
 
 export interface SnapLine<T extends HSnapAxis | VSnapAxis> {
   matchedFigIds: UID[];
-  position: Pixel;
   snapOffset: number;
   snappedAxis: T;
 }
@@ -29,6 +35,7 @@ interface SnapReturn {
  * Try to snap the given figure to other figures when moving the figure, and return the snapped
  * figure and the possible snap lines, if any were found
  *
+ * @param getters the getters
  * @param figureToSnap figure to snap
  * @param otherFigures other figures the main figure can snap to
  */
@@ -42,17 +49,17 @@ export function snapForMove(
   const verticalSnapLine = getSnapLine(
     getters,
     snappedFigure,
-    ["left", "right", "hCenter"],
+    ["hCenter", "right", "left"],
     otherFigures,
-    ["left", "right", "hCenter"]
+    ["hCenter", "right", "left"]
   );
 
   const horizontalSnapLine = getSnapLine(
     getters,
     snappedFigure,
-    ["top", "bottom", "vCenter"],
+    ["vCenter", "bottom", "top"],
     otherFigures,
-    ["top", "bottom", "vCenter"]
+    ["vCenter", "bottom", "top"]
   );
 
   snappedFigure.x -= verticalSnapLine?.snapOffset || 0;
@@ -65,6 +72,7 @@ export function snapForMove(
  * Try to snap the given figure to the other figures when resizing the figure, and return the snapped
  * figure and the possible snap lines, if any were found
  *
+ * @param getters the getters
  * @param resizeDirX X direction of the resize. -1 : resize from the left border of the figure, 0 : no resize in X, 1 :
  * resize from the right border of the figure
  * @param resizeDirY Y direction of the resize. -1 : resize from the top border of the figure, 0 : no resize in Y, 1 :
@@ -87,7 +95,7 @@ export function snapForResize(
     snappedFigure,
     [resizeDirX === -1 ? "left" : "right"],
     otherFigures,
-    ["left", "right"]
+    ["right", "left"]
   );
   if (verticalSnapLine) {
     if (resizeDirX === 1) {
@@ -104,7 +112,7 @@ export function snapForResize(
     snappedFigure,
     [resizeDirY === -1 ? "top" : "bottom"],
     otherFigures,
-    ["top", "bottom"]
+    ["bottom", "top"]
   );
   if (horizontalSnapLine) {
     if (resizeDirY === 1) {
@@ -134,10 +142,7 @@ function getFigureVisibleSnapAxes<T extends HSnapAxis | VSnapAxis>(
   figure: Figure,
   snapAxes: T[]
 ): SnapAxisWithPosition<T>[] {
-  const axes = snapAxes.map((axis) => {
-    const positions = getSnapAxisPosition(getters, figure, axis);
-    return { position: positions.position, positionInDOM: positions.positionInDOM, axis };
-  });
+  const axes = snapAxes.map((axis) => getSnapAxisPosition(getters, figure, axis));
   return axes.filter((axis) => isSnapAxisVisible(getters, figure, axis));
 }
 
@@ -187,20 +192,11 @@ function getSnapLine<T extends HSnapAxis[] | VSnapAxis[]>(
   otherFigures: Figure[],
   axesOfOtherFigsToMatch: T
 ): SnapLine<T[number]> | undefined {
-  // const snapFigureAxes = axesOfSnappedFigToMatch.map((axis) => ({
-  //   position: getSnapAxisPosition(figureToSnap, axis),
-  //   axis,
-  // }));
   const snapFigureAxes = getFigureVisibleSnapAxes(getters, figureToSnap, axesOfSnappedFigToMatch);
 
   let closestSnap: SnapLine<T[number]> | undefined = undefined;
 
   for (const matchedFig of otherFigures) {
-    // const matchedAxesPositions = getFigureSnapAxisPositions(matchedFig, axesOfOtherFigsToMatch);
-    // const matchedAxes = axesOfOtherFigsToMatch.map((axis) => ({
-    //   position: getSnapAxisPosition(matchedFig, axis),
-    //   axis,
-    // }));
     const matchedAxes = getFigureVisibleSnapAxes(getters, matchedFig, axesOfOtherFigsToMatch);
     for (const snapFigureAxis of snapFigureAxes) {
       for (const matchedAxis of matchedAxes) {
@@ -213,7 +209,6 @@ function getSnapLine<T extends HSnapAxis[] | VSnapAxis[]>(
         } else if (!closestSnap || Math.abs(snapOffset) <= Math.abs(closestSnap.snapOffset)) {
           closestSnap = {
             matchedFigIds: [matchedFig.id],
-            position: matchedAxis.positionInDOM,
             snapOffset,
             snappedAxis: snapFigureAxis.axis,
           };
@@ -229,12 +224,12 @@ function canSnap(snapAxisPosition1: Pixel, snapAxisPosition2: Pixel) {
   return Math.abs(snapAxisPosition1 - snapAxisPosition2) <= SNAP_MARGIN;
 }
 
-/** Get the position of a snap axis of a figure */
-export function getSnapAxisPosition(
+/** Get the core and DOM position of a snap axis of a figure */
+export function getSnapAxisPosition<T extends HSnapAxis | VSnapAxis>(
   getters: Getters,
   fig: Figure,
-  axis: HSnapAxis | VSnapAxis
-): { position: number; positionInDOM: number } {
+  axis: T
+): SnapAxisWithPosition<T> {
   let position = 0;
   let positionInDOM = 0;
   const figInDom = getFigureInDOM(getters, fig);
@@ -265,9 +260,14 @@ export function getSnapAxisPosition(
       break;
   }
 
-  return { position, positionInDOM };
+  return { position, positionInDOM, axis };
 }
 
+/**
+ * Return a figure with its coordinates translated in DOM coordinates.
+ *
+ * The figure is translated by the scroll of the sheet, except if the figure is in a frozen pane.
+ * */
 function getFigureInDOM(getters: Getters, figure: Figure): Figure {
   const { x: offsetCorrectionX, y: offsetCorrectionY } = getters.getMainViewportCoordinates();
   const { offsetX: scrollX, offsetY: scrollY } = getters.getActiveSheetScrollInfo();
@@ -283,31 +283,3 @@ function getFigureInDOM(getters: Getters, figure: Figure): Figure {
   }
   return figInDOM;
 }
-
-// function getCoordinatesInDOM(getters: Getters, target: Figure) {
-//   return {
-//     ...target,
-//     x: getEquivalentXInDOM(getters, target.x),
-//     y: getEquivalentYInDOM(getters, target.y),
-//   };
-// }
-
-// function getEquivalentXInDOM(getters: Getters, targetX: number): number {
-//   const { x: offsetCorrectionX } = getters.getMainViewportCoordinates();
-//   const { offsetX } = getters.getActiveSheetScrollInfo();
-
-//   if (targetX + FIGURE_BORDER_SHIFT < offsetCorrectionX) {
-//     return targetX;
-//   }
-//   return targetX - offsetX;
-// }
-
-// function getEquivalentYInDOM(getters: Getters, targetY: number): number {
-//   const { y: offsetCorrectionY } = getters.getMainViewportCoordinates();
-//   const { offsetY } = getters.getActiveSheetScrollInfo();
-
-//   if (targetY + FIGURE_BORDER_SHIFT < offsetCorrectionY) {
-//     return targetY;
-//   }
-//   return targetY - offsetY;
-// }

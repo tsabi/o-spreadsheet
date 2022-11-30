@@ -1,6 +1,11 @@
 import { App, Component, xml } from "@odoo/owl";
 import { Model, Spreadsheet } from "../../src";
-import { DEFAULT_CELL_HEIGHT, DEFAULT_CELL_WIDTH, FIGURE_BORDER_WIDTH } from "../../src/constants";
+import {
+  ACTIVE_BORDER_WIDTH,
+  DEFAULT_CELL_HEIGHT,
+  DEFAULT_CELL_WIDTH,
+  FIGURE_BORDER_WIDTH,
+} from "../../src/constants";
 import { figureRegistry } from "../../src/registries";
 import { CreateFigureCommand, Figure, Pixel, SpreadsheetChildEnv, UID } from "../../src/types";
 import {
@@ -21,6 +26,9 @@ import {
 } from "../test_helpers/dom_helper";
 import { getCellContent, getCellText } from "../test_helpers/getters_helpers";
 import { makeTestFixture, mountSpreadsheet, nextTick } from "../test_helpers/helpers";
+
+const cellHeight = DEFAULT_CELL_HEIGHT;
+const cellWidth = DEFAULT_CELL_WIDTH;
 
 let fixture: HTMLElement;
 let model: Model;
@@ -392,14 +400,17 @@ describe("figures", () => {
         [31, 30 - FIGURE_BORDER_WIDTH], // right border snaps with left border of other figure
         [57, 55], // right border snaps with center of other figure
         [79, 80], // right border snaps with right border of other figure
-      ])("Snap x with x mouseMove %s", async (mouseMove: Pixel, expectedResult: Pixel) => {
-        createFigure(model, { id: "f1", x: 0, y: 0, width: 20, height: 20 });
-        createFigure(model, { id: "f2", x: 50, y: 50, width: 50, height: 50 });
-        await nextTick();
-        const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
-        await dragElement(figureEl, mouseMove, 0, true);
-        expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ x: expectedResult, y: 0 });
-      });
+      ])(
+        "Snap x with x mouseMove %s when moving figure",
+        async (mouseMove: Pixel, expectedResult: Pixel) => {
+          createFigure(model, { id: "f1", x: 0, y: 0, width: 20, height: 20 });
+          createFigure(model, { id: "f2", x: 50, y: 50, width: 50, height: 50 });
+          await nextTick();
+          const figureEl = fixture.querySelector(".o-figure[data-id=f1]")! as HTMLElement;
+          await dragElement(figureEl, mouseMove, 0, true);
+          expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ x: expectedResult, y: 0 });
+        }
+      );
 
       test.each([
         [48, 50], // top border snaps with top border of other figure
@@ -411,14 +422,17 @@ describe("figures", () => {
         [31, 30 - FIGURE_BORDER_WIDTH], // bottom border snaps with top border of other figure
         [57, 55], // bottom border snaps with center of other figure
         [79, 80], // bottom border snaps with bottom border of other figure
-      ])("Snap y with y mouseMove %s", async (mouseMove: Pixel, expectedResult: Pixel) => {
-        createFigure(model, { id: "f1", x: 0, y: 0, width: 20, height: 20 });
-        createFigure(model, { id: "f2", x: 50, y: 50, width: 50, height: 50 });
-        await nextTick();
-        const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
-        await dragElement(figureEl, 0, mouseMove, true);
-        expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ x: 0, y: expectedResult });
-      });
+      ])(
+        "Snap y with y mouseMove %s when moving figure",
+        async (mouseMove: Pixel, expectedResult: Pixel) => {
+          createFigure(model, { id: "f1", x: 0, y: 0, width: 20, height: 20 });
+          createFigure(model, { id: "f2", x: 50, y: 50, width: 50, height: 50 });
+          await nextTick();
+          const figureEl = fixture.querySelector(".o-figure[data-id=f1]")! as HTMLElement;
+          await dragElement(figureEl, 0, mouseMove, true);
+          expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ x: 0, y: expectedResult });
+        }
+      );
     });
 
     describe("Resize figure", () => {
@@ -432,7 +446,7 @@ describe("figures", () => {
             createFigure(model, { id: "f1", x: 200, y: 200, width: 100, height: 100 });
             createFigure(model, { id: "f2", x: 50, y: 50, width: 100, height: 100 });
             await nextTick();
-            await simulateClick(".o-figure");
+            await simulateClick(".o-figure[data-id=f1]");
             await dragAnchor(anchor, mouseMove, 0, true);
             expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ ...expectedResult });
           });
@@ -449,7 +463,7 @@ describe("figures", () => {
             createFigure(model, { id: "f1", x: 50, y: 50, width: 100, height: 100 });
             createFigure(model, { id: "f2", x: 200, y: 200, width: 100, height: 100 });
             await nextTick();
-            await simulateClick(".o-figure");
+            await simulateClick(".o-figure[data-id=f1]");
             await dragAnchor(anchor, mouseMove, 0, true);
             expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ ...expectedResult });
           });
@@ -466,7 +480,7 @@ describe("figures", () => {
             createFigure(model, { id: "f1", x: 50, y: 50, width: 100, height: 100 });
             createFigure(model, { id: "f2", x: 200, y: 200, width: 100, height: 100 });
             await nextTick();
-            await simulateClick(".o-figure");
+            await simulateClick(".o-figure[data-id=f1]");
             await dragAnchor(anchor, 0, mouseMove, true);
             expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ ...expectedResult });
           });
@@ -483,50 +497,12 @@ describe("figures", () => {
             createFigure(model, { id: "f1", x: 200, y: 200, width: 100, height: 100 });
             createFigure(model, { id: "f2", x: 50, y: 50, width: 100, height: 100 });
             await nextTick();
-            await simulateClick(".o-figure");
+            await simulateClick(".o-figure[data-id=f1]");
             await dragAnchor(anchor, 0, mouseMove, true);
             expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ ...expectedResult });
           });
         }
       );
-
-      test.each([
-        ["left", 48, 50], // left border snaps with left border of other figure
-        ["left", 77, 75 + FIGURE_BORDER_WIDTH], // left border snaps with center of other figure
-        ["topLeft", 48, 50], // left border snaps with left border of other figure
-        ["topLeft", 77, 75 + FIGURE_BORDER_WIDTH], // left border snaps with center of other figure
-        ["bottomLeft", 48, 50], // left border snaps with left border of other figure
-        ["bottomLeft", 77, 75 + FIGURE_BORDER_WIDTH], // left border snaps with center of other figure
-      ])(
-        "Snap when resizing to the left",
-        async (anchor: string, mouseMove: Pixel, expectedResult: Pixel) => {
-          createFigure(model, { id: "f1", x: 0, y: 0, width: 20, height: 20 });
-          createFigure(model, { id: "f2", x: 50, y: 50, width: 50, height: 50 });
-          await nextTick();
-          const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
-          await dragElement(figureEl, mouseMove, 0, true);
-          expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ x: expectedResult, y: 0 });
-        }
-      );
-
-      test.each([
-        [48, 50], // top border snaps with top border of other figure
-        [77, 75 + FIGURE_BORDER_WIDTH], // top border snaps with center of other figure
-        [102, 100 + FIGURE_BORDER_WIDTH], // top border snaps with bottom border of other figure
-        [38, 40 - FIGURE_BORDER_WIDTH], // center snaps with top border of other figure
-        [67, 65], // center snaps with center of other figure
-        [92, 90], // center snaps with bottom border of other figure
-        [31, 30 - FIGURE_BORDER_WIDTH], // bottom border snaps with top border of other figure
-        [57, 55], // bottom border snaps with center of other figure
-        [79, 80], // bottom border snaps with bottom border of other figure
-      ])("Snap y with y mouseMove %s", async (mouseMove: Pixel, expectedResult: Pixel) => {
-        createFigure(model, { id: "f1", x: 0, y: 0, width: 20, height: 20 });
-        createFigure(model, { id: "f2", x: 50, y: 50, width: 50, height: 50 });
-        await nextTick();
-        const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
-        await dragElement(figureEl, 0, mouseMove, true);
-        expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ x: 0, y: expectedResult });
-      });
     });
 
     describe("Snap doesn't happen with borders that aren't visible", () => {
@@ -535,7 +511,7 @@ describe("figures", () => {
         createFigure(model, { id: "f2", x: 0, y: 0, width: 20, height: 20 });
         await nextTick();
         setViewportOffset(model, 0, DEFAULT_CELL_HEIGHT);
-        const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
+        const figureEl = fixture.querySelector(".o-figure[data-id=f1]")! as HTMLElement;
         await dragElement(figureEl, 0, -49, true);
         expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ x: 50, y: 1 });
       });
@@ -545,7 +521,7 @@ describe("figures", () => {
         createFigure(model, { id: "f2", x: 0, y: 0, width: 20, height: 20 });
         await nextTick();
         setViewportOffset(model, DEFAULT_CELL_WIDTH, 0);
-        const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
+        const figureEl = fixture.querySelector(".o-figure[data-id=f1]")! as HTMLElement;
         await dragElement(figureEl, -49, 0, true);
         expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ x: 1, y: 50 });
       });
@@ -555,7 +531,7 @@ describe("figures", () => {
         createFigure(model, { id: "f1", x: 0, y: 100, width: 100, height: viewportHeight });
         createFigure(model, { id: "f2", x: 0, y: 0, width: 100, height: viewportHeight + 100 });
         await nextTick();
-        const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
+        const figureEl = fixture.querySelector(".o-figure[data-id=f1]")! as HTMLElement;
         await dragElement(figureEl, 0, 1, true);
         expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({
           x: 0,
@@ -568,7 +544,7 @@ describe("figures", () => {
         createFigure(model, { id: "f1", x: 100, y: 0, width: viewportWidth, height: 100 });
         createFigure(model, { id: "f2", x: 0, y: 0, width: viewportWidth + 100, height: 100 });
         await nextTick();
-        const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
+        const figureEl = fixture.querySelector(".o-figure[data-id=f1]")! as HTMLElement;
         await dragElement(figureEl, 1, 0, true);
         expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({
           x: 101,
@@ -580,68 +556,74 @@ describe("figures", () => {
     describe("Snap lines display", () => {
       describe("Snap lines are displayed during the drag & drop", () => {
         test("If the figure is snapping horizontally left of the other figure", async () => {
-          createFigure(model, { id: "f1", x: 0, y: 0, width: 20, height: 20 });
-          createFigure(model, { id: "f2", x: 50, y: 50, width: 50, height: 50 });
+          createFigure(model, { id: "f1", x: 50, y: 0, width: 20, height: 20 });
+          createFigure(model, { id: "f2", x: 0, y: 0, width: 50, height: 50 });
           await nextTick();
           const selector = ".o-figure-snap-border.horizontal";
           expect(fixture.querySelectorAll(selector)).toHaveLength(0);
-          const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
-          await dragElement(figureEl, 0, 50, false);
+          const figureEl = fixture.querySelector(".o-figure[data-id=f2]")! as HTMLElement;
+          await dragElement(figureEl, 0, 0, false);
           expect(fixture.querySelectorAll(selector)).toHaveLength(1);
 
           expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(FIGURE_BORDER_WIDTH);
           expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(0);
-          expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBeCloseToInteger(100, 2);
+          expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBeCloseToInteger(
+            70 + ACTIVE_BORDER_WIDTH,
+            2
+          );
         });
 
         test("If the figure is snapping horizontally right of the other figure", async () => {
-          createFigure(model, { id: "f1", x: 120, y: 0, width: 20, height: 20 });
-          createFigure(model, { id: "f2", x: 50, y: 50, width: 50, height: 50 });
+          createFigure(model, { id: "f1", x: 0, y: 0, width: 20, height: 20 });
+          createFigure(model, { id: "f2", x: 50, y: 0, width: 50, height: 50 });
           await nextTick();
           const selector = ".o-figure-snap-border.horizontal";
           expect(fixture.querySelectorAll(selector)).toHaveLength(0);
-          const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
-          await dragElement(figureEl, 0, 50, false);
+          const figureEl = fixture.querySelector(".o-figure[data-id=f2]")! as HTMLElement;
+          await dragElement(figureEl, 0, 0, false);
           expect(fixture.querySelectorAll(selector)).toHaveLength(1);
 
           expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(FIGURE_BORDER_WIDTH);
-          expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(-(120 - 50));
+          expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(-50);
           expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBeCloseToInteger(
-            120 + 20 - 50,
-            4
+            100 + ACTIVE_BORDER_WIDTH,
+            2
           );
         });
 
         test("If the figure is snapping vertically above the other figure", async () => {
-          createFigure(model, { id: "f1", x: 0, y: 0, width: 20, height: 20 });
-          createFigure(model, { id: "f2", x: 50, y: 50, width: 50, height: 50 });
+          createFigure(model, { id: "f1", x: 0, y: 50, width: 20, height: 20 });
+          createFigure(model, { id: "f2", x: 0, y: 0, width: 50, height: 50 });
           await nextTick();
           const selector = ".o-figure-snap-border.vertical";
           expect(fixture.querySelectorAll(selector)).toHaveLength(0);
-          const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
-          await dragElement(figureEl, 50, 0, false);
+          const figureEl = fixture.querySelector(".o-figure[data-id=f2]")! as HTMLElement;
+          await dragElement(figureEl, 0, 0, false);
           expect(fixture.querySelectorAll(selector)).toHaveLength(1);
 
           expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(FIGURE_BORDER_WIDTH);
           expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(0);
-          expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBeCloseToInteger(100, 2);
+          expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBeCloseToInteger(
+            70 + ACTIVE_BORDER_WIDTH,
+            2
+          );
         });
 
         test("If the figure is snapping vertically below the other figure", async () => {
-          createFigure(model, { id: "f1", x: 0, y: 120, width: 20, height: 20 });
-          createFigure(model, { id: "f2", x: 50, y: 50, width: 50, height: 50 });
+          createFigure(model, { id: "f1", x: 0, y: 0, width: 20, height: 20 });
+          createFigure(model, { id: "f2", x: 0, y: 50, width: 50, height: 50 });
           await nextTick();
           const selector = ".o-figure-snap-border.vertical";
           expect(fixture.querySelectorAll(selector)).toHaveLength(0);
-          const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
-          await dragElement(figureEl, 50, 0, false);
+          const figureEl = fixture.querySelector(".o-figure[data-id=f2]")! as HTMLElement;
+          await dragElement(figureEl, 0, 0, false);
           expect(fixture.querySelectorAll(selector)).toHaveLength(1);
 
           expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(FIGURE_BORDER_WIDTH);
-          expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(-(120 - 50));
+          expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(-50);
           expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBeCloseToInteger(
-            120 + 20 - 50,
-            4
+            100 + ACTIVE_BORDER_WIDTH,
+            2
           );
         });
 
@@ -651,7 +633,7 @@ describe("figures", () => {
           createFigure(model, { id: "f3", x: 200, y: 50, width: 50, height: 50 });
           await nextTick();
 
-          const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
+          const figureEl = fixture.querySelector(".o-figure[data-id=f1]")! as HTMLElement;
           await dragElement(figureEl, 0, 50, false);
 
           const selector = ".o-figure-snap-border.horizontal";
@@ -667,7 +649,7 @@ describe("figures", () => {
           createFigure(model, { id: "f3", x: 50, y: 200, width: 50, height: 50 });
           await nextTick();
 
-          const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
+          const figureEl = fixture.querySelector(".o-figure[data-id=f1]")! as HTMLElement;
           await dragElement(figureEl, 50, 0, false);
 
           const selector = ".o-figure-snap-border.vertical";
@@ -683,7 +665,7 @@ describe("figures", () => {
         createFigure(model, { id: "f2", x: 50, y: 50, width: 50, height: 50 });
         await nextTick();
         expect(fixture.querySelectorAll(".o-figure-snap-border")).toHaveLength(0);
-        const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
+        const figureEl = fixture.querySelector(".o-figure[data-id=f1]")! as HTMLElement;
         await dragElement(figureEl, 50, 50, false);
         expect(fixture.querySelectorAll(".o-figure-snap-border")).toHaveLength(2);
         triggerMouseEvent(figureEl, "mouseup");
@@ -691,117 +673,52 @@ describe("figures", () => {
         expect(fixture.querySelectorAll(".o-figure-snap-border")).toHaveLength(0);
       });
 
-      //TODO rewrite these test, what is going on here
       describe("Snap lines are cut to not overflow", () => {
-        describe("If the dragged figure is overflowing left over the headers", () => {
-          beforeEach(async () => {
-            setViewportOffset(model, DEFAULT_CELL_WIDTH, 0);
-            createFigure(model, {
-              id: "f1",
-              x: DEFAULT_CELL_WIDTH - 10,
-              y: 0,
-              width: 20,
-              height: 20,
-            });
-            createFigure(model, {
-              id: "f2",
-              x: DEFAULT_CELL_WIDTH + 5,
-              y: 50,
-              width: 50,
-              height: 50,
-            });
-            await nextTick();
-          });
+        test("Figure overflowing left w/ horizontal snap line", async () => {
+          setViewportOffset(model, cellWidth, 0);
+          createFigure(model, { id: "f1", x: 0, y: 0, width: cellWidth + 10, height: 20 });
+          createFigure(model, { id: "f2", x: 0, y: 0, width: cellWidth + 10, height: 50 });
+          await nextTick();
 
-          test("If the dragged figure have an horizontal snap line", async () => {
-            const selector = ".o-figure-snap-border.horizontal";
-            expect(fixture.querySelectorAll(selector)).toHaveLength(0);
-            const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
-            await dragElement(figureEl, 0, 50, false);
-            expect(fixture.querySelectorAll(selector)).toHaveLength(1);
+          const selector = ".o-figure-snap-border.horizontal";
+          expect(fixture.querySelectorAll(selector)).toHaveLength(0);
+          const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
+          await dragElement(figureEl, 0, 0, false);
+          expect(fixture.querySelectorAll(selector)).toHaveLength(1);
 
-            expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(FIGURE_BORDER_WIDTH);
-            expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(0);
-            expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBeCloseToInteger(55, 2);
-          });
-
-          test("If the dragged figure have an vertical snap line", async () => {
-            const selector = ".o-figure-snap-border.vertical";
-            expect(fixture.querySelectorAll(selector)).toHaveLength(0);
-            const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
-            await dragElement(figureEl, -5, 0, false);
-            expect(fixture.querySelectorAll(selector)).toHaveLength(1);
-            expect(pixelsToNumber(getElComputedStyle(selector, "right"))).toBe(FIGURE_BORDER_WIDTH);
-            expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(0);
-            expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBeCloseToInteger(
-              100,
-              2
-            );
-          });
+          expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(FIGURE_BORDER_WIDTH);
+          expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(0);
+          expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBe(
+            10 + 2 * ACTIVE_BORDER_WIDTH
+          );
         });
 
-        describe("If the dragged figure is overflowing top over the headers", () => {
-          beforeEach(async () => {
-            setViewportOffset(model, 0, DEFAULT_CELL_HEIGHT);
-            createFigure(model, {
-              id: "f1",
-              x: 0,
-              y: DEFAULT_CELL_HEIGHT - 10,
-              width: 20,
-              height: 20,
-            });
-            createFigure(model, {
-              id: "f2",
-              x: 50,
-              y: DEFAULT_CELL_HEIGHT + 5,
-              width: 50,
-              height: 50,
-            });
-            await nextTick();
-          });
+        test("Figure overflowing top w/ vertical snap line", async () => {
+          setViewportOffset(model, 0, cellHeight);
+          createFigure(model, { id: "f1", x: 0, y: 0, width: 20, height: cellHeight + 10 });
+          createFigure(model, { id: "f2", x: 0, y: 0, width: 50, height: cellHeight + 10 });
+          await nextTick();
 
-          test("If the dragged figure have an horizontal snap line", async () => {
-            const selector = ".o-figure-snap-border.horizontal";
-            expect(fixture.querySelectorAll(selector)).toHaveLength(0);
-            const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
-            await dragElement(figureEl, 0, -5, false);
-            expect(fixture.querySelectorAll(selector)).toHaveLength(1);
-            expect(pixelsToNumber(getElComputedStyle(selector, "bottom"))).toBe(
-              FIGURE_BORDER_WIDTH
-            );
-            expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(0);
-            expect(pixelsToNumber(getElComputedStyle(selector, "width"))).toBeCloseToInteger(
-              100,
-              2
-            );
-          });
-
-          test("If the dragged figure have an vertical snap line", async () => {
-            const selector = ".o-figure-snap-border.vertical";
-            expect(fixture.querySelectorAll(selector)).toHaveLength(0);
-            const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
-            await dragElement(figureEl, 50, 0, false);
-            expect(fixture.querySelectorAll(selector)).toHaveLength(1);
-            expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(FIGURE_BORDER_WIDTH);
-            expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(0);
-            expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBeCloseToInteger(
-              55,
-              2
-            );
-          });
+          const selector = ".o-figure-snap-border.vertical";
+          expect(fixture.querySelectorAll(selector)).toHaveLength(0);
+          const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
+          await dragElement(figureEl, 0, 0, false);
+          expect(fixture.querySelectorAll(selector)).toHaveLength(1);
+          expect(pixelsToNumber(getElComputedStyle(selector, "left"))).toBe(FIGURE_BORDER_WIDTH);
+          expect(pixelsToNumber(getElComputedStyle(selector, "top"))).toBe(0);
+          expect(pixelsToNumber(getElComputedStyle(selector, "height"))).toBe(
+            10 + 2 * ACTIVE_BORDER_WIDTH
+          );
         });
       });
     });
 
     describe("Snap with freeze pane", () => {
-      const cellHeight = DEFAULT_CELL_HEIGHT;
-      const cellWidth = DEFAULT_CELL_WIDTH;
-
       test.each([
         { figHeight: 50, scrollY: 0 }, // Figure totally in frozen pane
         { figHeight: 6 * cellHeight, scrollY: 0 }, // Figure half in frozen pane, no scroll
         { figHeight: 6 * cellHeight, scrollY: 2 * cellHeight }, // Figure half in frozen pane, with scroll
-      ])("Frozen rows and snap, %s ", async (params) => {
+      ])("Can snap with figure in frozen row, %s ", async (params) => {
         freezeRows(model, 5);
         createFigure(model, { id: "f1", x: 0, y: 0, width: 50, height: params.figHeight });
         createFigure(model, { id: "f2", x: 0, y: 0, width: 50, height: params.figHeight });
@@ -826,7 +743,7 @@ describe("figures", () => {
         { figWidth: 50, scrollX: 0 }, // Figure totally in frozen pane
         { figWidth: 6 * cellWidth, scrollX: 0 }, // Figure half in frozen pane, no scroll
         { figWidth: 6 * cellWidth, scrollX: 2 * cellWidth }, // Figure half in frozen pane, with scroll
-      ])("Frozen cols and snap, %s ", async (params) => {
+      ])("Can snap with figure in frozen cols, %s ", async (params) => {
         freezeColumns(model, 5);
         createFigure(model, { id: "f1", x: 0, y: 0, width: params.figWidth, height: 50 });
         createFigure(model, { id: "f2", x: 0, y: 0, width: params.figWidth, height: 50 });
@@ -845,25 +762,6 @@ describe("figures", () => {
         await dragElement(figureEl, params.figWidth, 0, false);
         expect(fixture.querySelector(".o-figure-snap-border.vertical")).toBeTruthy();
         expect(fixture.querySelector(".o-figure-snap-border.horizontal")).toBeTruthy();
-      });
-
-      test.each([
-        [48, 50], // top border snaps with top border of other figure
-        [77, 75 + FIGURE_BORDER_WIDTH], // top border snaps with center of other figure
-        [102, 100 + FIGURE_BORDER_WIDTH], // top border snaps with bottom border of other figure
-        [38, 40 - FIGURE_BORDER_WIDTH], // center snaps with top border of other figure
-        [67, 65], // center snaps with center of other figure
-        [92, 90], // center snaps with bottom border of other figure
-        [31, 30 - FIGURE_BORDER_WIDTH], // bottom border snaps with top border of other figure
-        [57, 55], // bottom border snaps with center of other figure
-        [79, 80], // bottom border snaps with bottom border of other figure
-      ])("Snap y with y mouseMove %s", async (mouseMove: Pixel, expectedResult: Pixel) => {
-        createFigure(model, { id: "f1", x: 0, y: 0, width: 20, height: 20 });
-        createFigure(model, { id: "f2", x: 50, y: 50, width: 50, height: 50 });
-        await nextTick();
-        const figureEl = fixture.querySelector(".o-figure")! as HTMLElement;
-        await dragElement(figureEl, 0, mouseMove, true);
-        expect(model.getters.getFigure(sheetId, "f1")).toMatchObject({ x: 0, y: expectedResult });
       });
     });
   });

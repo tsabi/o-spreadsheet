@@ -159,6 +159,7 @@ export const DEFAULT_REVISION_ID = "START_REVISION";
 export const DEFAULT_FIGURE_HEIGHT = 335;
 export const DEFAULT_FIGURE_WIDTH = 536;
 export const FIGURE_BORDER_WIDTH = 1;
+export const ACTIVE_BORDER_WIDTH = 2;
 export const MIN_FIG_SIZE = 80;
 
 // Chart
