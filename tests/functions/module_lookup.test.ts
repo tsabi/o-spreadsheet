@@ -954,3 +954,102 @@ describe("XLOOKUP formula", () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------------
+
+describe("INDEX formula", () => {
+  const defaultGrid = {
+    A1: "1",
+    A2: "2",
+    A3: "3",
+    B1: "Hello",
+    B2: "Test",
+    B3: "string",
+    C1: "=SUM(A1:A3)",
+    C2: "=GT(A3,A1)",
+    C3: "=CONCAT(B3,B2)",
+  };
+
+  test("Check argument validity", () => {
+    expect(evaluateCell("A1", { A1: "=INDEX()" })).toBe("#BAD_EXPR");
+    expect(evaluateCell("A1", { A1: "=INDEX(5)" })).toBe("#BAD_EXPR");
+    expect(evaluateCell("A1", { A1: "=INDEX(B1:C5, 'string')" })).toBe("#BAD_EXPR");
+    expect(evaluateCell("A1", { A1: "=INDEX(B1:C5, -1)" })).toBe("#ERROR");
+    expect(evaluateCell("A1", { A1: "=INDEX(B1:C5, 6)" })).toBe("#ERROR");
+    expect(evaluateCell("A1", { A1: "=INDEX(B1:C5, ,-1)" })).toBe("#ERROR");
+    expect(evaluateCell("A1", { A1: "=INDEX(B1:C5, ,6)" })).toBe("#ERROR");
+  });
+
+  test.skip("Check no override", () => {
+    const grid = evaluateGrid({
+      ...defaultGrid,
+      A5: "=INDEX(A1:C3)",
+      B6: "override",
+    });
+    expect(grid.A5).toBe("#ERROR");
+  });
+
+  test("select single cell", () => {
+    const grid = evaluateGrid({
+      ...defaultGrid,
+      A5: "=INDEX(A1, 1, 1)",
+      B5: "=INDEX(B1, 1, 1)",
+      C5: "=INDEX(C1, 1, 1)",
+    });
+    expect(grid.A5).toBe(grid.A1);
+    expect(grid.B5).toBe(grid.B1);
+    expect(grid.C5).toBe(grid.C1);
+  });
+
+  test.skip("select a row", () => {
+    const grid = evaluateGrid({
+      ...defaultGrid,
+      A5: "=INDEX(A1:C3, 1)",
+      A7: "=INDEX(A1:C3, 2)",
+      A9: "=INDEX(A1:C3, 3)",
+    });
+    expect(grid.A5).toBe(grid.A1);
+    expect(grid.B5).toBe(grid.B1);
+    expect(grid.C5).toBe(grid.C1);
+    expect(grid.A7).toBe(grid.A2);
+    expect(grid.B7).toBe(grid.B2);
+    expect(grid.C7).toBe(grid.C2);
+    expect(grid.A9).toBe(grid.A3);
+    expect(grid.B9).toBe(grid.B3);
+    expect(grid.C9).toBe(grid.C3);
+  });
+
+  test.skip("select a column", () => {
+    const grid = evaluateGrid({
+      ...defaultGrid,
+      A5: "=INDEX(A1:C3, ,1)",
+      C5: "=INDEX(A1:C3, ,2)",
+      E5: "=INDEX(A1:C3, ,3)",
+    });
+    expect(grid.A5).toBe(grid.A1);
+    expect(grid.A6).toBe(grid.A2);
+    expect(grid.A7).toBe(grid.A3);
+    expect(grid.C5).toBe(grid.B1);
+    expect(grid.C6).toBe(grid.B2);
+    expect(grid.C7).toBe(grid.B3);
+    expect(grid.E5).toBe(grid.C1);
+    expect(grid.E6).toBe(grid.C2);
+    expect(grid.E7).toBe(grid.C3);
+  });
+
+  test.skip("select the whole range", () => {
+    const grid = evaluateGrid({
+      ...defaultGrid,
+      A5: "=INDEX(A1:C3)",
+    });
+    expect(grid.A5).toBe(grid.A1);
+    expect(grid.A6).toBe(grid.A2);
+    expect(grid.A7).toBe(grid.A3);
+    expect(grid.B5).toBe(grid.B1);
+    expect(grid.B6).toBe(grid.B2);
+    expect(grid.B7).toBe(grid.B3);
+    expect(grid.C5).toBe(grid.C1);
+    expect(grid.C6).toBe(grid.C2);
+    expect(grid.C7).toBe(grid.C3);
+  });
+});
