@@ -9,26 +9,13 @@ import { OWL_TEMPLATES } from "../setup/jest.setup";
 import { setCellContent } from "../test_helpers/commands_helpers";
 import { rightClickCell, simulateClick, triggerMouseEvent } from "../test_helpers/dom_helper";
 import { getCell, getCellContent, getEvaluatedCell } from "../test_helpers/getters_helpers";
-import {
-  makeTestFixture,
-  MockClipboard,
-  mountSpreadsheet,
-  nextTick,
-  Touch,
-} from "../test_helpers/helpers";
+import { makeTestFixture, mountSpreadsheet, nextTick, Touch } from "../test_helpers/helpers";
 
 let fixture: HTMLElement;
 let app: App;
 let model: Model;
 
 beforeEach(async () => {
-  const clipboard = new MockClipboard();
-  Object.defineProperty(navigator, "clipboard", {
-    get() {
-      return clipboard;
-    },
-    configurable: true,
-  });
   fixture = makeTestFixture();
   ({ app, model } = await mountSpreadsheet(fixture));
 });

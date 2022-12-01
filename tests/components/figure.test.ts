@@ -25,7 +25,6 @@ import {
   getFigureDefinition,
   getFigureIds,
   makeTestFixture,
-  MockClipboard,
   mountSpreadsheet,
   nextTick,
 } from "../test_helpers/helpers";
@@ -355,13 +354,6 @@ describe("figures", () => {
       let sheetId: UID;
       let figureId: UID;
       beforeEach(async () => {
-        const clipboard = new MockClipboard();
-        Object.defineProperty(navigator, "clipboard", {
-          get() {
-            return clipboard;
-          },
-          configurable: true,
-        });
         sheetId = model.getters.getActiveSheetId();
         figureId = "figureId";
         switch (type) {

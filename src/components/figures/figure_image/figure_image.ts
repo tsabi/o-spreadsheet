@@ -30,7 +30,7 @@ export class ImageFigure extends Component<Props, SpreadsheetChildEnv> {
       action: async () => {
         this.env.model.dispatch("SELECT_FIGURE", { id: this.figureId });
         this.env.model.dispatch("COPY");
-        await this.env.clipboard.writeText(this.env.model.getters.getClipboardContent());
+        await this.env.clipboard.clear();
       },
     });
     registry.add("cut", {
@@ -40,7 +40,7 @@ export class ImageFigure extends Component<Props, SpreadsheetChildEnv> {
       action: async () => {
         this.env.model.dispatch("SELECT_FIGURE", { id: this.figureId });
         this.env.model.dispatch("CUT");
-        await this.env.clipboard.writeText(this.env.model.getters.getClipboardContent());
+        await this.env.clipboard.clear();
       },
     });
     registry.add("reset_size", {
