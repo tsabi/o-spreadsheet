@@ -6,6 +6,7 @@ import {
   MatrixArgValue,
   PrimitiveArgValue,
 } from "../types";
+import { NotAvailableError } from "../types/errors";
 import { args } from "./arguments";
 import {
   assert,
@@ -117,10 +118,11 @@ export const HLOOKUP: AddFunctionDescription = {
       );
     }
 
-    assert(
-      () => colIndex > -1,
-      _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey))
-    );
+    if (colIndex < 0) {
+      throw new NotAvailableError(
+        _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey))
+      );
+    }
 
     return range[colIndex][_index - 1] as FunctionReturnValue;
   },
@@ -165,10 +167,11 @@ export const LOOKUP: AddFunctionDescription = {
       rangeLength,
       getElement
     );
-    assert(
-      () => index >= 0,
-      _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey))
-    );
+    if (index < 0) {
+      throw new NotAvailableError(
+        _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey))
+      );
+    }
 
     if (resultRange === undefined) {
       return (
@@ -184,17 +187,22 @@ export const LOOKUP: AddFunctionDescription = {
     );
 
     if (nbCol > 1) {
-      assert(
-        () => index <= nbCol - 1,
-        _lt("[[FUNCTION_NAME]] evaluates to an out of range row value %s.", (index + 1).toString())
-      );
+      if (index >= nbCol) {
+        throw new NotAvailableError(
+          _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey))
+        );
+      }
       return resultRange[index][0] as FunctionReturnValue;
     }
 
-    assert(
-      () => index <= nbRow - 1,
-      _lt("[[FUNCTION_NAME]] evaluates to an out of range column value %s.", (index + 1).toString())
-    );
+    if (index >= nbRow) {
+      throw new NotAvailableError(
+        _lt(
+          "[[FUNCTION_NAME]] evaluates to an out of range column value %s.",
+          (index + 1).toString()
+        )
+      );
+    }
 
     return resultRange[0][index] as FunctionReturnValue;
   },
@@ -247,10 +255,11 @@ export const MATCH: AddFunctionDescription = {
         break;
     }
 
-    assert(
-      () => index >= 0,
-      _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey))
-    );
+    if (index < 0) {
+      throw new NotAvailableError(
+        _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey))
+      );
+    }
 
     return index + 1;
   },
@@ -349,10 +358,11 @@ export const VLOOKUP: AddFunctionDescription = {
       );
     }
 
-    assert(
-      () => rowIndex > -1,
-      _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey))
-    );
+    if (rowIndex < 0) {
+      throw new NotAvailableError(
+        _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey))
+      );
+    }
 
     return range[_index - 1][rowIndex] as FunctionReturnValue;
   },
@@ -446,10 +456,11 @@ export const XLOOKUP: AddFunctionDescription = {
     }
 
     const _defaultValue = defaultValue?.();
-    assert(
-      () => !!_defaultValue,
-      _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey))
-    );
+    if (!_defaultValue) {
+      throw new NotAvailableError(
+        _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey))
+      );
+    }
     return _defaultValue!;
   },
   isExported: true,
