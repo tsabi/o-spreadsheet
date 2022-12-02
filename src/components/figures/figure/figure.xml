@@ -16,6 +16,7 @@
             t-key="this.props.figure.id"
             sidePanelIsOpen="props.sidePanelIsOpen"
             onFigureDeleted="props.onFigureDeleted"
+            gridRect="props.gridRect"
             figure="displayedFigure"
           />
         </div>

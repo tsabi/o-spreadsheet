@@ -3,7 +3,7 @@ import { MENU_WIDTH } from "../../../constants";
 import { chartComponentRegistry } from "../../../registries/chart_types";
 import { MenuItemRegistry } from "../../../registries/index";
 import { _lt } from "../../../translation";
-import { ChartType, DOMCoordinates, Figure, SpreadsheetChildEnv } from "../../../types";
+import { ChartType, DOMCoordinates, Figure, Rect, SpreadsheetChildEnv } from "../../../types";
 import { css } from "../../helpers/css";
 import { useAbsolutePosition } from "../../helpers/position_hook";
 import { Menu, MenuState } from "../../menu/menu";
@@ -41,6 +41,7 @@ css/* scss */ `
 interface Props {
   figure: Figure;
   sidePanelIsOpen: boolean;
+  gridRect: Rect;
   onFigureDeleted: () => void;
 }
 
@@ -139,5 +140,6 @@ export class ChartFigure extends Component<Props, SpreadsheetChildEnv> {
 ChartFigure.props = {
   figure: Object,
   sidePanelIsOpen: Boolean,
+  gridRect: Object,
   onFigureDeleted: Function,
 };

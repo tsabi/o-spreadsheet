@@ -13,6 +13,7 @@
       <FiguresContainer
         sidePanelIsOpen="props.sidePanelIsOpen"
         onFigureDeleted="props.onFigureDeleted"
+        gridRect="props.gridRect"
       />
     </div>
   </t>

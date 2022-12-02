@@ -5,6 +5,7 @@
         <FigureComponent
           sidePanelIsOpen="this.props.sidePanelIsOpen"
           onFigureDeleted="this.props.onFigureDeleted"
+          gridRect="props.gridRect"
           figure="figure"
         />
       </t>

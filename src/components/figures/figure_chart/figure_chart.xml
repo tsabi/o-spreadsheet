@@ -22,6 +22,7 @@
       <Menu
         t-if="menuState.isOpen"
         position="menuState.position"
+        containerRect="props.gridRect"
         menuItems="menuState.menuItems"
         onClose="() => this.menuState.isOpen=false"
       />

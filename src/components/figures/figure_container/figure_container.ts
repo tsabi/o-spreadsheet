@@ -1,11 +1,12 @@
 import { Component, onMounted } from "@odoo/owl";
 import { figureRegistry } from "../../../registries/index";
-import { Figure, SpreadsheetChildEnv } from "../../../types/index";
+import { Figure, Rect, SpreadsheetChildEnv } from "../../../types/index";
 import { FigureComponent } from "../figure/figure";
 import { ChartFigure } from "../figure_chart/figure_chart";
 
 interface Props {
   sidePanelIsOpen: Boolean;
+  gridRect: Rect;
   onFigureDeleted: () => void;
 }
 
@@ -34,6 +35,7 @@ export class FiguresContainer extends Component<Props, SpreadsheetChildEnv> {
 FiguresContainer.props = {
   sidePanelIsOpen: Boolean,
   onFigureDeleted: Function,
+  gridRect: Object,
 };
 
 figureRegistry.add("chart", { Component: ChartFigure, SidePanelComponent: "ChartPanel" });

@@ -5,7 +5,7 @@ import {
   SELECTION_BORDER_COLOR,
 } from "../../../constants";
 import { figureRegistry } from "../../../registries/index";
-import { Figure, Pixel, SpreadsheetChildEnv, UID } from "../../../types/index";
+import { Figure, Pixel, Rect, SpreadsheetChildEnv, UID } from "../../../types/index";
 import { css } from "../../helpers/css";
 import { gridOverlayPosition } from "../../helpers/dom_helpers";
 import { startDnd } from "../../helpers/drag_and_drop";
@@ -100,6 +100,7 @@ css/*SCSS*/ `
 interface Props {
   sidePanelIsOpen: Boolean;
   onFigureDeleted: () => void;
+  gridRect: Rect;
   figure: Figure;
 }
 
@@ -401,5 +402,6 @@ export class FigureComponent extends Component<Props, SpreadsheetChildEnv> {
 FigureComponent.props = {
   sidePanelIsOpen: Boolean,
   onFigureDeleted: Function,
+  gridRect: Object,
   figure: Object,
 };
