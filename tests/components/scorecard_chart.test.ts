@@ -119,11 +119,11 @@ describe("Scorecard charts", () => {
     );
     await nextTick();
     await simulateClick(".o-figure");
-    expect(getElComputedStyle(".o-figure", "width")).toBe("536px");
-    expect(getElComputedStyle(".o-figure", "height")).toBe("335px");
+    expect(getElComputedStyle(".o-figure-wrapper", "width")).toBe("536px");
+    expect(getElComputedStyle(".o-figure-wrapper", "height")).toBe("335px");
     await dragElement(".o-anchor.o-topLeft", 300, 200);
-    expect(getElComputedStyle(".o-figure", "width")).toBe("236px");
-    expect(getElComputedStyle(".o-figure", "height")).toBe("135px");
+    expect(getElComputedStyle(".o-figure-wrapper", "width")).toBe("236px");
+    expect(getElComputedStyle(".o-figure-wrapper", "height")).toBe("135px");
     expect(getChartElement()).toMatchSnapshot();
   });
 

@@ -1,6 +1,6 @@
 import { App, Component, xml } from "@odoo/owl";
 import { Model, Spreadsheet } from "../../src";
-import { DEFAULT_CELL_HEIGHT, DEFAULT_CELL_WIDTH, MIN_FIG_SIZE } from "../../src/constants";
+import { MIN_FIG_SIZE } from "../../src/constants";
 import { figureRegistry } from "../../src/registries";
 import { CreateFigureCommand, Figure, SpreadsheetChildEnv, UID } from "../../src/types";
 import {
@@ -291,26 +291,6 @@ describe("figures", () => {
     await nextTick();
     figure = fixture.querySelector(".o-figure")! as HTMLElement;
     expect(window.getComputedStyle(figure)["border-width"]).toEqual("0px");
-  });
-
-  test("Figures are cropped to avoid overlap with headers", async () => {
-    const figureId = "someuuid";
-    createFigure(model, { id: figureId, x: 100, y: 20, height: 200, width: 100 });
-    await nextTick();
-    const figure = fixture.querySelector(".o-figure-wrapper")!;
-    expect(window.getComputedStyle(figure).width).toBe("102px"); // width + borders
-    expect(window.getComputedStyle(figure).height).toBe("202px"); // height + borders
-    model.dispatch("SET_VIEWPORT_OFFSET", {
-      offsetX: 2 * DEFAULT_CELL_WIDTH,
-      offsetY: 3 * DEFAULT_CELL_HEIGHT,
-    });
-    await nextTick();
-
-    const expectedWidth = 102 - (2 * DEFAULT_CELL_WIDTH - 100); // = width + borders - (overflow = viewport offset X - x)
-    const expectedHeight = 202 - (3 * DEFAULT_CELL_HEIGHT - 20); // = height + borders - (overflow = viewport offset Y - y)
-
-    expect(window.getComputedStyle(figure).width).toBe(`${expectedWidth}px`);
-    expect(window.getComputedStyle(figure).height).toBe(`${expectedHeight}px`);
   });
 
   test("Selected figure isn't removed by scroll", async () => {
