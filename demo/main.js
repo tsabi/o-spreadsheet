@@ -139,9 +139,6 @@ class Demo extends Component {
       raiseError: this.raiseError,
       askConfirmation: this.askConfirmation,
       editText: this.editText,
-      loadCurrencies: async () => {
-        return currenciesData;
-      },
     });
     useExternalListener(window, "beforeunload", this.leaveCollaborativeSession.bind(this));
 
@@ -176,7 +173,9 @@ class Demo extends Component {
     this.model = new Model(
       data,
       {
-        evalContext: { env: this.env },
+        external: {},
+        loadCurrencies: async () => currenciesData,
+        fileStore: this.fileStore,
         transportService: this.transportService,
         client: this.client,
         mode: "normal",
@@ -251,7 +250,7 @@ class Demo extends Component {
 
 Demo.template = xml/* xml */ `
   <div>
-    <Spreadsheet model="model" fileStore="fileStore" t-key="state.key"/>
+    <Spreadsheet model="model" t-key="state.key"/>
   </div>`;
 Demo.components = { Spreadsheet };
 

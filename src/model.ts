@@ -26,6 +26,7 @@ import { SelectionStreamProcessor } from "./selection_stream/selection_stream_pr
 import { StateObserver } from "./state_observer";
 import { _lt } from "./translation";
 import { StateUpdateMessage, TransportService } from "./types/collaborative/transport_service";
+import { FileStore } from "./types/files";
 import {
   canExecuteInReadonly,
   Client,
@@ -36,6 +37,7 @@ import {
   CommandResult,
   CoreCommand,
   CoreGetters,
+  Currency,
   DispatchResult,
   Getters,
   GridRenderingContext,
@@ -76,21 +78,23 @@ import { getXLSX } from "./xlsx/xlsx_writer";
 export type Mode = "normal" | "readonly" | "dashboard";
 
 export interface ModelConfig {
-  mode: Mode;
+  readonly mode: Mode;
   /**
    * Any external dependencies your custom plugins or functions might need.
    * They are available in plugins config and functions
    * evaluation context.
    */
-  external: {
+  readonly external: Readonly<{
     [key: string]: any;
-  };
-  moveClient: (position: ClientPosition) => void;
-  transportService: TransportService;
-  client: Client;
-  snapshotRequested: boolean;
-  notifyUI: (payload: NotifyUIEvent) => void;
-  lazyEvaluation: boolean;
+  }>;
+  readonly moveClient: (position: ClientPosition) => void;
+  readonly fileStore?: FileStore;
+  readonly loadCurrencies?: () => Promise<Currency[]>;
+  readonly transportService: TransportService;
+  readonly client: Client;
+  readonly snapshotRequested: boolean;
+  readonly notifyUI: (payload: NotifyUIEvent) => void;
+  readonly lazyEvaluation: boolean;
 }
 
 const enum Status {
@@ -138,7 +142,7 @@ export class Model extends EventBus<any> implements CommandDispatcher {
   /**
    * The config object contains some configuration flag and callbacks
    */
-  private config: ModelConfig;
+  readonly config: ModelConfig;
   private corePluginConfig: CorePluginConfig;
   private uiPluginConfig: UIPluginConfig;
 
@@ -548,6 +552,7 @@ export class Model extends EventBus<any> implements CommandDispatcher {
     if (mode !== "normal") {
       this.dispatch("STOP_EDITION", { cancel: true });
     }
+    // @ts-ignore For testing purposes only
     this.config.mode = mode;
     this.trigger("update");
   }

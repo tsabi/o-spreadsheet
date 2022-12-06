@@ -54,11 +54,12 @@ beforeEach(async () => {
   fixture = makeTestFixture();
   currenciesContent = Object.assign({}, currenciesRegistry.content);
 
-  ({ app, parent, model } = await mountSpreadsheet(
-    fixture,
-    { model: new Model() },
-    { loadCurrencies }
-  ));
+  ({ app, parent, model } = await mountSpreadsheet(fixture, {
+    model: new Model(
+      {},
+      { loadCurrencies }
+    ),
+  }));
   dispatch = spyDispatch(parent);
 
   parent.env.openSidePanel("CustomCurrency");
