@@ -11,10 +11,10 @@ import { areZonesContinuous, isEqual, positionToZone } from "../../helpers/index
 import { interactiveAddFilter } from "../../helpers/ui/filter_interactive";
 import { interactiveAddMerge } from "../../helpers/ui/merge_interactive";
 import { ComposerSelection } from "../../plugins/ui_stateful/edition";
+import { FullMenuItem } from "../../registries/helpers/menu_items_registry";
 import { setFormatter, setStyle, topbarComponentRegistry } from "../../registries/index";
 import { getMenuChildren, getMenuName } from "../../registries/menus/helpers";
 import { topbarMenuRegistry } from "../../registries/menus/topbar_menu_registry";
-import { FullMenuItem } from "../../registries/menu_items_registry";
 import {
   Align,
   BorderCommand,

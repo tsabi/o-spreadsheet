@@ -1,6 +1,6 @@
 import { DATETIME_FORMAT } from "../constants";
 import { evaluateLiteral } from "../helpers/cells";
-import { Registry } from "../registry";
+import { Registry } from "../registries/helpers/registry";
 import { AutofillModifier, Cell, CellValueType } from "../types/index";
 
 /**

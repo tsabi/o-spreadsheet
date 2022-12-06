@@ -3,7 +3,7 @@ import { Menu } from "../../src/components/menu/menu";
 import { MENU_ITEM_HEIGHT, MENU_WIDTH, TOPBAR_HEIGHT } from "../../src/constants";
 import { toXC } from "../../src/helpers";
 import { Model } from "../../src/model";
-import { createFullMenuItem, FullMenuItem } from "../../src/registries";
+import { createFullMenuItem, FullMenuItem } from "../../src/registries/helpers/menu_items_registry";
 import { cellMenuRegistry } from "../../src/registries/menus/cell_menu_registry";
 import { OWL_TEMPLATES } from "../setup/jest.setup";
 import { setCellContent } from "../test_helpers/commands_helpers";

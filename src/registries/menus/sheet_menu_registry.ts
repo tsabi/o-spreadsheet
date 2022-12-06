@@ -1,6 +1,6 @@
 import { interactiveRenameSheet } from "../../helpers/ui/sheet_interactive";
 import { _lt } from "../../translation";
-import { MenuItemRegistry } from "../menu_items_registry";
+import { MenuItemRegistry } from "../helpers/menu_items_registry";
 
 export const sheetMenuRegistry = new MenuItemRegistry();
 

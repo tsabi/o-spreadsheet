@@ -3,13 +3,8 @@ import { Model, Spreadsheet } from "../src";
 import { fontSizes } from "../src/fonts";
 import { zoneToXc } from "../src/helpers";
 import { interactivePaste } from "../src/helpers/ui/paste_interactive";
-import {
-  colMenuRegistry,
-  createFullMenuItem,
-  FullMenuItem,
-  rowMenuRegistry,
-  topbarMenuRegistry,
-} from "../src/registries/index";
+import { createFullMenuItem, FullMenuItem } from "../src/registries/helpers/menu_items_registry";
+import { colMenuRegistry, rowMenuRegistry, topbarMenuRegistry } from "../src/registries/index";
 import { getMenuChildren } from "../src/registries/menus/helpers";
 import { SpreadsheetChildEnv } from "../src/types";
 import {

@@ -1,6 +1,4 @@
-import { ImageFigure } from "../../components/figures/figure_image/figure_image";
 import { deepCopy } from "../../helpers";
-import { figureRegistry } from "../../registries";
 import { Image } from "../../types/image";
 import { CommandResult, CoreCommand, Figure, FigureSize, Pixel, UID } from "../../types/index";
 import { CorePlugin } from "../core_plugin";
@@ -105,10 +103,3 @@ export class ImagePlugin extends CorePlugin<ImageState> implements ImageState {
     this.dispatch("CREATE_FIGURE", { sheetId, figure });
   }
 }
-
-figureRegistry.add("image", {
-  Component: ImageFigure,
-  keepRatio: true,
-  minFigSize: 20,
-  borderWidth: 0,
-});

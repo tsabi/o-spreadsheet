@@ -59,6 +59,7 @@ import {
   statefulUIPluginRegistry,
 } from "./plugins/index";
 import { clickableCellRegistry } from "./registries/cell_clickable_registry";
+import { createFullMenuItem } from "./registries/helpers/menu_items_registry";
 import {
   autofillModifiersRegistry,
   autofillRulesRegistry,
@@ -67,7 +68,6 @@ import {
   chartComponentRegistry,
   chartRegistry,
   colMenuRegistry,
-  createFullMenuItem,
   figureRegistry,
   inverseCommandRegistry,
   linkMenuRegistry,
@@ -102,7 +102,7 @@ export { load } from "./migrations/data";
 export { Model } from "./model";
 export { CorePlugin } from "./plugins/core_plugin";
 export { UIPlugin } from "./plugins/ui_plugin";
-export { Registry } from "./registry";
+export { Registry } from "./registries/helpers/registry";
 export { setTranslationMethod } from "./translation";
 export { CancelledReason, CommandResult, DispatchResult } from "./types";
 export { Client } from "./types/collaborative/session";

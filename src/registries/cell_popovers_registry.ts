@@ -1,7 +1,7 @@
 import { ErrorToolTipPopoverBuilder } from "../components/error_tooltip/error_tooltip";
 import { FilterMenuPopoverBuilder } from "../components/filters/filter_menu/filter_menu";
 import { LinkCellPopoverBuilder, LinkEditorPopoverBuilder } from "../components/link";
-import { Registry } from "../registry";
+import { Registry } from "../registries/helpers/registry";
 import { PopoverBuilders } from "../types/cell_popovers";
 
 export const cellPopoverRegistry = new Registry<PopoverBuilders>();

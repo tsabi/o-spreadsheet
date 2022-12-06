@@ -1,6 +1,6 @@
 import { _lt } from "../../translation";
 import { SpreadsheetChildEnv } from "../../types";
-import { MenuItemRegistry } from "../menu_items_registry";
+import { MenuItemRegistry } from "../helpers/menu_items_registry";
 import * as ACTIONS from "./menu_items_actions";
 
 export const rowMenuRegistry = new MenuItemRegistry();

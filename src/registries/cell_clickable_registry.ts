@@ -1,5 +1,5 @@
 import { openLink } from "../helpers/links";
-import { Registry } from "../registry";
+import { Registry } from "../registries/helpers/registry";
 import { CellPosition, SpreadsheetChildEnv } from "../types";
 
 interface CellClickableItem {

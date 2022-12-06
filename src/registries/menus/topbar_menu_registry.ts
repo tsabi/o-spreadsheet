@@ -3,7 +3,7 @@ import { fontSizes } from "../../fonts";
 import { interactiveFreezeColumnsRows } from "../../helpers/ui/freeze_interactive";
 import { _lt } from "../../translation";
 import { SpreadsheetChildEnv } from "../../types/env";
-import { MenuItemRegistry } from "../menu_items_registry";
+import { MenuItemRegistry } from "../helpers/menu_items_registry";
 import * as ACTIONS from "./menu_items_actions";
 import { setStyle } from "./menu_items_actions";
 

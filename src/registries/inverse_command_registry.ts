@@ -1,5 +1,5 @@
 import { groupConsecutive } from "../helpers/index";
-import { Registry } from "../registry";
+import { Registry } from "../registries/helpers/registry";
 import {
   AddColumnsRowsCommand,
   AddMergeCommand,

@@ -1,5 +1,5 @@
 import { _lt } from "../../translation";
-import { MenuItemRegistry } from "../menu_items_registry";
+import { MenuItemRegistry } from "../helpers/menu_items_registry";
 import * as ACTIONS from "./menu_items_actions";
 
 //------------------------------------------------------------------------------

@@ -7,7 +7,7 @@ import {
   MENU_WIDTH,
   TOPBAR_HEIGHT,
 } from "../../constants";
-import { FullMenuItem, MenuItem } from "../../registries";
+import { FullMenuItem, MenuItem } from "../../registries/helpers/menu_items_registry";
 import { getMenuChildren, getMenuDescription, getMenuName } from "../../registries/menus/helpers";
 import { DOMCoordinates, Pixel, SpreadsheetChildEnv } from "../../types";
 import { css } from "../helpers/css";

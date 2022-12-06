@@ -1,4 +1,4 @@
-import { Registry } from "../registry";
+import { Registry } from "../registries/helpers/registry";
 import { _lt } from "../translation";
 import {
   AddFunctionDescription,

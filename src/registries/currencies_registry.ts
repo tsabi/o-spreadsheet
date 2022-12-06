@@ -1,4 +1,4 @@
-import { Registry } from "../registry";
+import { Registry } from "../registries/helpers/registry";
 import { Currency } from "../types";
 
 /**

@@ -1,6 +1,6 @@
 import { evaluateLiteral } from "../helpers/cells";
 import { formatValue } from "../helpers/format";
-import { Registry } from "../registry";
+import { Registry } from "../registries/helpers/registry";
 import {
   AutofillData,
   AutofillModifierImplementation,

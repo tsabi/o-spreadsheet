@@ -1,9 +1,9 @@
-import { Registry } from "../registry";
-import { SpreadsheetChildEnv } from "../types/env";
-
 //------------------------------------------------------------------------------
 // Menu Item Registry
 //------------------------------------------------------------------------------
+
+import { SpreadsheetChildEnv } from "../../types";
+import { Registry } from "./registry";
 
 /**
  * An ActionMenuItem represent a menu item for the menus of the topbar.

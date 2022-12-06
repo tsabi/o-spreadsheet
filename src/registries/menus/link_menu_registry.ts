@@ -1,6 +1,6 @@
 import { buildSheetLink, markdownLink } from "../../helpers";
 import { _lt } from "../../translation";
-import { createFullMenuItem, MenuItemRegistry } from "../menu_items_registry";
+import { createFullMenuItem, MenuItemRegistry } from "../helpers/menu_items_registry";
 
 //------------------------------------------------------------------------------
 // Link Menu Registry
