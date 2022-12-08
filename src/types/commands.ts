@@ -1134,6 +1134,7 @@ export const enum CommandResult {
   NonContinuousTargets,
   DuplicatedFigureId,
   InvalidSelectionStep,
+  WrongEditionMode,
 }
 
 export interface CommandHandler<T> {
