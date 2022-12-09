@@ -6,8 +6,12 @@ import { OWL_TEMPLATES } from "../setup/jest.setup";
 import {
   activateSheet,
   createSheet,
+  deleteSheet,
   hideSheet,
   redo,
+  renameSheet,
+  resizeColumns,
+  resizeRows,
   selectCell,
   setCellContent,
   undo,
@@ -376,10 +380,10 @@ describe("BottomBar component", () => {
     app.destroy();
   });
 
-  describe("drag&drop sheet", () => {
-    let sheetIds;
-    let model;
-    let app;
+  describe("drag & drop sheet", () => {
+    let sheetIds: UID[];
+    let model: Model;
+    let app: App;
 
     beforeAll(async () => {
       sheetIds = ["Sheet1", "Sheet2", "Sheet3", "Sheet4"];
@@ -405,45 +409,85 @@ describe("BottomBar component", () => {
       });
       ({ app } = await mountSpreadsheet(fixture, { model }));
     });
+
     afterEach(async () => {
       app.destroy();
     });
-    test("Can drag&drop a sheet forward", async () => {
+
+    test("Can drag & drop a sheet forward", async () => {
       dragSheet(sheetIds[0], { x: 1000 });
       expect(model.getters.getVisibleSheetIds()).toEqual(["Sheet2", "Sheet3", "Sheet4", "Sheet1"]);
     });
-    test("Can drag&drop a sheet backward", async () => {
+
+    test("Can drag & drop a sheet backward", async () => {
       dragSheet(sheetIds[2], { x: 10 });
       expect(model.getters.getVisibleSheetIds()).toEqual(["Sheet3", "Sheet1", "Sheet2", "Sheet4"]);
     });
-    test("Can drag&drop a sheet on itself", async () => {
+
+    test("Can drag & drop a sheet on itself", async () => {
       dragSheet(sheetIds[0], { x: 50 });
       expect(model.getters.getVisibleSheetIds()).toEqual(["Sheet1", "Sheet2", "Sheet3", "Sheet4"]);
     });
 
-    test("undo/redo drag&drop of a sheet", async () => {
+    test("Drag & drop sheet is activated", async () => {
+      expect(model.getters.getActiveSheetId()).toBe("Sheet1");
+      dragSheet(sheetIds[2], { x: 10 }, false);
+      expect(model.getters.getActiveSheetId()).toBe("Sheet3");
+    });
+
+    test("undo/redo drag & drop of a sheet", async () => {
       dragSheet(sheetIds[2], { x: 10 });
+      expect(model.getters.getVisibleSheetIds()).toEqual(["Sheet3", "Sheet1", "Sheet2", "Sheet4"]);
       undo(model);
       expect(model.getters.getVisibleSheetIds()).toEqual(["Sheet1", "Sheet2", "Sheet3", "Sheet4"]);
       redo(model);
       expect(model.getters.getVisibleSheetIds()).toEqual(["Sheet3", "Sheet1", "Sheet2", "Sheet4"]);
     });
+
+    test.each([
+      () => createSheet(model, { sheetId: "newSheet" }),
+      () => deleteSheet(model, "Sheet2"),
+      () => renameSheet(model, "Sheet2", "New name"),
+      () => hideSheet(model, "Sheet2"),
+    ])(
+      "Modifying the sheet list during the drag & drop cancels it",
+      async (modifySheetList: () => void) => {
+        dragSheet(sheetIds[2], { x: 10 }, false);
+        await nextTick();
+        expect(fixture.querySelector(".o-sheet.dragging")).toBeTruthy();
+        modifySheetList();
+        await nextTick();
+        expect(fixture.querySelector(".o-sheet.dragging")).toBeFalsy();
+      }
+    );
+
+    test.each([
+      () => resizeColumns(model, ["A"], 10),
+      () => resizeRows(model, [1], 10),
+      () => setCellContent(model, "A1", "Content"),
+    ])("Random actions on sheets does not cancel the drag & drop", async (action: () => void) => {
+      dragSheet(sheetIds[2], { x: 10 }, false);
+      await nextTick();
+      expect(fixture.querySelector(".o-sheet.dragging")).toBeTruthy();
+      action();
+      await nextTick();
+      expect(fixture.querySelector(".o-sheet.dragging")).toBeTruthy();
+    });
   });
 });
 
-function dragSheet(sheetId: UID, position: { x: number; y?: number }) {
+function dragSheet(sheetId: UID, position: { x: number; y?: number }, mouseUp = true) {
   position.y = position.y! | 10;
   const sheet = document.querySelector<HTMLElement>(`.o-sheet[data-id="${sheetId}"]`)!;
-  sheet.dispatchEvent(new MouseEvent("mousedown", { which: 1 }));
+  sheet.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
   document.body.dispatchEvent(
     new MouseEvent("mousemove", {
       clientX: position.x,
       clientY: position.y,
-      which: 1,
       bubbles: true,
     })
   );
-  document.body.dispatchEvent(
-    new MouseEvent("mouseup", { clientX: position.x, clientY: position.y, which: 1, bubbles: true })
-  );
+  if (mouseUp) {
+    document.body.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+  }
 }

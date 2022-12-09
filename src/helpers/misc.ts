@@ -462,3 +462,11 @@ export function transpose2dArray<T>(matrix: T[][]): T[][] {
   if (!matrix.length) return matrix;
   return matrix[0].map((_, i) => matrix.map((row) => row[i]));
 }
+
+export function moveItemToIndex<T>(array: T[], fromIndex: number, toIndex: number): T[] {
+  array = [...array];
+  const item = array[fromIndex];
+  array.splice(fromIndex, 1);
+  array.splice(toIndex, 0, item);
+  return array;
+}

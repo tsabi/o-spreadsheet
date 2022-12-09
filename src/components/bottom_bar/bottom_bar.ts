@@ -1,23 +1,18 @@
-import {
-  Component,
-  onMounted,
-  onPatched,
-  onWillUpdateProps,
-  useExternalListener,
-  useRef,
-  useState,
-} from "@odoo/owl";
+import { Component, onMounted, onPatched, onWillUpdateProps, useRef, useState } from "@odoo/owl";
 import { BACKGROUND_GRAY_COLOR, BOTTOMBAR_HEIGHT, HEADER_WIDTH } from "../../constants";
+import { deepEquals, moveItemToIndex } from "../../helpers";
 import { formatValue } from "../../helpers/format";
 import { interactiveRenameSheet } from "../../helpers/ui/sheet_interactive";
 import { MenuItemRegistry, sheetMenuRegistry } from "../../registries/index";
-import { Pixel, Sheet, SpreadsheetChildEnv, UID } from "../../types";
+import { Pixel, SpreadsheetChildEnv, UID } from "../../types";
 import { css } from "../helpers/css";
+import { startDnd } from "../helpers/drag_and_drop";
 import { Menu, MenuState } from "../menu/menu";
 
-// -----------------------------------------------------------------------------
-// SpreadSheet
-// -----------------------------------------------------------------------------
+interface BottomBarSheet {
+  id: UID;
+  name: string;
+}
 
 css/* scss */ `
   .o-spreadsheet-bottom-bar {
@@ -119,9 +114,15 @@ css/* scss */ `
   }
 `;
 
-export interface SheetState {
-  draggedSheetId: UID | undefined;
-  sheetList: Sheet[];
+interface SheetState {
+  sheetList: BottomBarSheet[];
+  dnd: DragSheetState | undefined;
+}
+
+interface DragSheetState {
+  draggedSheetId: UID;
+  originalSheetList: BottomBarSheet[];
+  sheetPositionList: number[];
 }
 
 interface Props {
@@ -134,27 +135,31 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
 
   private bottomBarRef = useRef("bottomBar");
 
-  private sheetPositionList: number[] = [];
-
   menuState: MenuState = useState({ isOpen: false, position: null, menuItems: [] });
   sheetState: SheetState = useState({
-    draggedSheetId: undefined,
-    sheetList: this.getUpdatedSheetsOrder(),
+    sheetList: this.getVisibleSheets(),
+    dnd: undefined,
   });
   selectedStatisticFn: string = "";
 
   setup() {
     onMounted(() => this.focusSheet());
     onPatched(() => this.focusSheet());
-    onWillUpdateProps(() => (this.sheetState.sheetList = this.getUpdatedSheetsOrder()));
-    // listening the mouse events on window rather than the sheet element allows for the events mousemove/up
-    // to be captured after a mousedown even after the mouse has left the window
-    useExternalListener(window, "mousemove", this.onSheetMouseMove);
-    useExternalListener(window, "mouseup", this.onSheetMouseUp);
+    onWillUpdateProps(() => {
+      const visibleSheets = this.getVisibleSheets();
+      // Cancel sheet dragging when there is a change in the sheets
+      if (
+        this.sheetState.dnd &&
+        !deepEquals(this.sheetState.dnd.originalSheetList, visibleSheets)
+      ) {
+        this.stopDragging();
+      }
+      this.sheetState.sheetList = visibleSheets;
+    });
   }
 
-  get dragging(): boolean {
-    return this.sheetState.draggedSheetId !== undefined;
+  isDragging(sheetId: UID): boolean {
+    return this.sheetState.dnd?.draggedSheetId === sheetId;
   }
 
   focusSheet() {
@@ -176,10 +181,11 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
     this.env.model.dispatch("ACTIVATE_SHEET", { sheetIdFrom: activeSheetId, sheetIdTo: sheetId });
   }
 
-  private getUpdatedSheetsOrder() {
-    return this.env.model.getters
-      .getVisibleSheetIds()
-      .map((sheetId) => this.env.model.getters.getSheet(sheetId));
+  private getVisibleSheets(): BottomBarSheet[] {
+    return this.env.model.getters.getVisibleSheetIds().map((sheetId) => {
+      const sheet = this.env.model.getters.getSheet(sheetId);
+      return { id: sheet.id, name: sheet.name };
+    });
   }
 
   getSheets() {
@@ -251,44 +257,61 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
     if (event.button !== 0) return;
 
     document.body.style.cursor = "grab";
-    this.sheetState.draggedSheetId = sheetId;
-    if (this.sheetPositionList.length === 0) {
-      this.updateSheetsPositions();
-    }
+    this.activateSheet(sheetId);
+    this.sheetState.dnd = {
+      draggedSheetId: sheetId,
+      originalSheetList: this.getVisibleSheets(),
+      sheetPositionList: this.getSheetItemsDOMXs(),
+    };
+
+    startDnd(this.dragSheetMouseMove.bind(this), this.dragSheetMouseUp.bind(this));
   }
 
-  onSheetMouseMove(event: MouseEvent) {
-    if (!this.dragging || event.clientX === 0) return;
-    if (event.button !== 0) {
+  private dragSheetMouseMove(event: MouseEvent) {
+    const dndState = this.sheetState.dnd;
+    if (!dndState || event.button !== 0) {
       this.stopDragging();
       return;
     }
+
+    const hoveredSheetIndex = this.getHoveredSheetIndex(event.clientX, dndState.sheetPositionList);
+    const draggedSheetIndex = this.sheetState.sheetList.findIndex(
+      (sheet) => sheet.id === dndState.draggedSheetId
+    );
+
+    if (draggedSheetIndex !== hoveredSheetIndex) {
+      this.sheetState.sheetList = moveItemToIndex(
+        this.sheetState.sheetList,
+        draggedSheetIndex,
+        hoveredSheetIndex
+      );
+    }
+
+    // Only update DOM positions when we are hovering the dragged sheet
+    const actualSheetItemXs = this.getSheetItemsDOMXs();
+    const actualHoveredSheet = this.getHoveredSheetIndex(event.clientX, actualSheetItemXs);
+    if (actualHoveredSheet === hoveredSheetIndex) {
+      dndState.sheetPositionList = actualSheetItemXs;
+    }
+  }
+
+  private getHoveredSheetIndex(mouseX: number, sheetItemsXs: number[]): number {
     let hoveredSheetIndex = -1;
-    for (let sheetPositionX of this.sheetPositionList) {
-      if (sheetPositionX > event.clientX) {
+    for (let sheetPositionX of sheetItemsXs) {
+      if (sheetPositionX > mouseX) {
         break;
       }
       hoveredSheetIndex++;
     }
-    hoveredSheetIndex = Math.max(0, hoveredSheetIndex);
-    const draggedSheetIndex = this.sheetState.sheetList.findIndex(
-      (sheet) => sheet.id === this.sheetState.draggedSheetId
-    );
-    if (draggedSheetIndex !== hoveredSheetIndex) {
-      this.sheetState.sheetList.splice(
-        hoveredSheetIndex,
-        0,
-        this.sheetState.sheetList.splice(draggedSheetIndex, 1)[0]
-      );
-    }
+    return Math.max(0, hoveredSheetIndex);
   }
 
-  onSheetMouseUp(event: MouseEvent) {
-    if (!this.dragging && event.button !== 0) return;
-    const sheetId = this.sheetState.draggedSheetId;
-    const draggedSheetIndex = this.env.model.getters
-      .getVisibleSheetIds()
-      .findIndex((id) => id === sheetId);
+  private dragSheetMouseUp(event: MouseEvent) {
+    const dndState = this.sheetState.dnd;
+    if (!dndState || event.button !== 0) return;
+
+    const sheetId = dndState.draggedSheetId;
+    const draggedSheetIndex = dndState.originalSheetList.findIndex((sheet) => sheet.id === sheetId);
     const targetSheetIndex = this.sheetState.sheetList.findIndex((sheet) => sheet.id === sheetId);
     const delta = targetSheetIndex - draggedSheetIndex;
     if (sheetId && delta !== 0) {
@@ -302,27 +325,14 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
 
   private stopDragging() {
     document.body.style.cursor = "";
-    this.sheetState.sheetList = this.getUpdatedSheetsOrder();
-    this.updateSheetsPositions();
-    this.sheetState.draggedSheetId = undefined;
+    this.sheetState.sheetList = this.getVisibleSheets();
+    this.sheetState.dnd = undefined;
   }
 
-  private updateSheetsPositions() {
-    const sheets = this.env.model.getters.getVisibleSheetIds();
-    this.sheetPositionList = [];
-    for (let sheet of sheets) {
-      const position = this.getSheetPosition(sheet);
-      if (position) {
-        this.sheetPositionList.push(position);
-      }
-    }
-  }
-
-  private getSheetPosition(sheetId: UID): number | undefined {
-    const sheet = document.querySelector<HTMLElement>(`.o-sheet[data-id="${sheetId}"]`);
-    if (!sheet) return undefined;
-    const position = sheet.getBoundingClientRect();
-    return position.left;
+  private getSheetItemsDOMXs(): number[] {
+    return Array.from(document.querySelectorAll<HTMLElement>(`.o-sheet.o-sheet-item`)).map(
+      (sheetEl) => sheetEl.getBoundingClientRect().left
+    );
   }
 
   getSelectedStatistic() {

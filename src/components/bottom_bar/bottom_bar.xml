@@ -22,8 +22,8 @@
             t-att-title="sheet.name"
             t-att-data-id="sheet.id"
             t-att-class="{active: sheet.id === env.model.getters.getActiveSheetId(),
-                          dragging: this.dragging,
-                          selected: this.dragging and sheet.id === this.sheetState.draggedSheetId}"
+                          dragging: isDragging(sheet.id),
+                          selected: sheetState.dnd and sheet.id === sheetState.dnd.draggedSheetId}"
             t-on-mousedown="(ev) => this.onSheetMouseDown(sheet.id, ev)">
             <span
               class="o-sheet-name"
