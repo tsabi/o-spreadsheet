@@ -41,12 +41,30 @@ MockCanvasRenderingContext2D.prototype.measureText = function (text: string) {
 };
 jest.mock("../../src/helpers/uuid", () => require("../__mocks__/uuid"));
 
+const lineWidth = 0.4;
+
+/**
+ * Get the rendering box used to draw the cell with the given text
+ *
+ * Add the borders width in the clipRect to simplify writing of the tests
+ */
 function getBoxFromText(model: Model, text: string): Box {
   const rendererPlugin = getPlugin(model, RendererPlugin);
-  // @ts-ignore
-  return (rendererPlugin.boxes as Box[]).find(
+  const box = (rendererPlugin["boxes"] as Box[]).find(
     (b) => (b.content?.textLines || []).join(" ") === text
-  );
+  )!;
+  const clipRect = box.clipRect
+    ? {
+        ...box.clipRect,
+        width: box.clipRect.width + lineWidth,
+        height: box.clipRect.height + lineWidth,
+      }
+    : undefined;
+
+  return {
+    ...box,
+    clipRect,
+  };
 }
 
 interface ContextObserver {
@@ -60,7 +78,7 @@ class MockGridRenderingContext implements GridRenderingContext {
   ctx: CanvasRenderingContext2D;
   viewport: Viewport;
   dpr = 1;
-  thinLineWidth = 0.4;
+  thinLineWidth = lineWidth;
 
   constructor(model: Model, width: number, height: number, observer: ContextObserver) {
     model.dispatch("RESIZE_SHEETVIEW", {
@@ -124,7 +142,10 @@ describe("renderer", () => {
     function getFirstRowHeaderFillColor() {
       const index = instructions.findIndex(
         (instr) =>
-          instr === `ctx.fillRect(${0}, ${HEADER_HEIGHT}, ${HEADER_WIDTH}, ${DEFAULT_CELL_HEIGHT})`
+          instr ===
+          `ctx.fillRect(${0}, ${HEADER_HEIGHT}, ${HEADER_WIDTH - lineWidth}, ${
+            DEFAULT_CELL_HEIGHT - lineWidth
+          })`
       );
       let instruction = instructions[index - 1];
       instruction = instruction.replace('ctx.fillStyle="', "");
@@ -135,7 +156,10 @@ describe("renderer", () => {
     function getFirstColHeaderFillColor() {
       const index = instructions.findIndex(
         (instr) =>
-          instr === `ctx.fillRect(${HEADER_WIDTH}, ${0}, ${DEFAULT_CELL_WIDTH}, ${HEADER_HEIGHT})`
+          instr ===
+          `ctx.fillRect(${HEADER_WIDTH}, ${0}, ${DEFAULT_CELL_WIDTH - lineWidth}, ${
+            HEADER_HEIGHT - lineWidth
+          })`
       );
       let instruction = instructions[index - 1];
       instruction = instruction.replace('ctx.fillStyle="', "");
@@ -298,7 +322,7 @@ describe("renderer", () => {
       sheets: [
         {
           id: 1,
-          cols: { 0: { size: 5 }, 2: { size: 25 } },
+          cols: { 0: { size: 5 + lineWidth }, 2: { size: 25 + lineWidth } },
           colNumber: 3,
           cells: {
             A1: { content: "123456" },
@@ -389,7 +413,9 @@ describe("renderer", () => {
     });
 
     model.drawGrid(ctx);
-    expect(fillStyle).toEqual([{ color: "#DC6CDF", h: 23, w: 96, x: 0, y: 0 }]);
+    expect(fillStyle).toEqual([
+      { color: "#DC6CDF", h: 23 - lineWidth, w: 96 - lineWidth, x: 0, y: 0 },
+    ]);
 
     fillStyle = [];
     model.dispatch("SET_FORMATTING", {
@@ -398,7 +424,9 @@ describe("renderer", () => {
       style: { fillColor: "#DC6CDE" },
     });
     model.drawGrid(ctx);
-    expect(fillStyle).toEqual([{ color: "#DC6CDE", h: 23, w: 96, x: 0, y: 0 }]);
+    expect(fillStyle).toEqual([
+      { color: "#DC6CDE", h: 23 - lineWidth, w: 96 - lineWidth, x: 0, y: 0 },
+    ]);
   });
 
   test("fillstyle of merge will be rendered for all cells in merge", () => {
@@ -447,7 +475,9 @@ describe("renderer", () => {
     });
 
     model.drawGrid(ctx);
-    expect(fillStyle).toEqual([{ color: "#DC6CDF", h: 3 * 23, w: 96, x: 0, y: 0 }]);
+    expect(fillStyle).toEqual([
+      { color: "#DC6CDF", h: 3 * 23 - lineWidth, w: 96 - lineWidth, x: 0, y: 0 },
+    ]);
 
     fillStyle = [];
     model.dispatch("SET_FORMATTING", {
@@ -456,7 +486,9 @@ describe("renderer", () => {
       style: { fillColor: "#DC6CDE" },
     });
     model.drawGrid(ctx);
-    expect(fillStyle).toEqual([{ color: "#DC6CDE", h: 3 * 23, w: 96, x: 0, y: 0 }]);
+    expect(fillStyle).toEqual([
+      { color: "#DC6CDE", h: 3 * 23 - lineWidth, w: 96 - lineWidth, x: 0, y: 0 },
+    ]);
   });
 
   test("fillstyle of cell works with CF", () => {
@@ -497,7 +529,9 @@ describe("renderer", () => {
     fillStyle = [];
     setCellContent(model, "A1", "1");
     model.drawGrid(ctx);
-    expect(fillStyle).toEqual([{ color: "#DC6CDF", h: 23, w: 96, x: 0, y: 0 }]);
+    expect(fillStyle).toEqual([
+      { color: "#DC6CDF", h: 23 - lineWidth, w: 96 - lineWidth, x: 0, y: 0 },
+    ]);
   });
 
   test("fillstyle of merge works with CF", () => {
@@ -538,7 +572,9 @@ describe("renderer", () => {
     fillStyle = [];
     setCellContent(model, "A1", "1");
     model.drawGrid(ctx);
-    expect(fillStyle).toEqual([{ color: "#DC6CDF", h: 23 * 3, w: 96, x: 0, y: 0 }]);
+    expect(fillStyle).toEqual([
+      { color: "#DC6CDF", h: 23 * 3 - lineWidth, w: 96 - lineWidth, x: 0, y: 0 },
+    ]);
   });
 
   test("formulas in a merge, evaluating to a string are properly aligned", () => {
@@ -809,7 +845,9 @@ describe("renderer", () => {
     });
     expect(result).toBeSuccessfullyDispatched();
     model.drawGrid(ctx);
-    expect(fillStyle).toEqual([{ color: "#DC6CDF", h: 23, w: 96, x: 0, y: 0 }]);
+    expect(fillStyle).toEqual([
+      { color: "#DC6CDF", h: 23 - lineWidth, w: 96 - lineWidth, x: 0, y: 0 },
+    ]);
   });
 
   test.each(["I am a very long text", "100000000000000"])(
@@ -1215,7 +1253,7 @@ describe("renderer", () => {
       x: 0,
       y: 0,
       width: maxIconBoxWidth,
-      height: DEFAULT_CELL_HEIGHT,
+      height: DEFAULT_CELL_HEIGHT - lineWidth,
     });
     expect(box.clipRect).toEqual({
       x: maxIconBoxWidth,
@@ -1230,13 +1268,13 @@ describe("renderer", () => {
     expect(box.image!.clipIcon).toEqual({
       x: 0,
       y: 0,
-      width: maxIconBoxWidth - 3,
-      height: DEFAULT_CELL_HEIGHT,
+      width: maxIconBoxWidth - 3 - lineWidth,
+      height: DEFAULT_CELL_HEIGHT - lineWidth,
     });
     expect(box.clipRect).toEqual({
       x: maxIconBoxWidth,
       y: 0,
-      width: 0,
+      width: lineWidth,
       height: DEFAULT_CELL_HEIGHT,
     });
   });
@@ -1331,7 +1369,7 @@ describe("renderer", () => {
 
     // Text + MIN_CELL_TEXT_MARGIN  <= col size, no clip
     let ctx = new MockGridRenderingContext(model, 1000, 1000, {});
-    let text = "a".repeat(10 - MIN_CELL_TEXT_MARGIN);
+    let text = "a".repeat(9 - MIN_CELL_TEXT_MARGIN);
     setCellContent(model, "A1", text);
     model.drawGrid(ctx);
     box = getBoxFromText(model, text);
@@ -1574,7 +1612,7 @@ describe("renderer", () => {
       style: { verticalAlign: "middle" },
     });
     model.drawGrid(ctx);
-    expect(verticalStartPoints[0]).toEqual(18);
+    expect(verticalStartPoints[0]).toEqual(17);
 
     // vertical bottom point
     verticalStartPoints = [];
@@ -1695,10 +1733,10 @@ describe("renderer", () => {
       model.drawGrid(ctx);
       const box = getBoxFromText(model, overflowingText);
       expect(getCellOverflowingBackgroundDims()).toMatchObject({
-        x: box.x + ctx.thinLineWidth / 2,
-        y: box.y + ctx.thinLineWidth / 2,
-        width: box.content!.width - ctx.thinLineWidth * 2,
-        height: box.height - ctx.thinLineWidth,
+        x: box.x + lineWidth / 2,
+        y: box.y + lineWidth / 2,
+        width: box.content!.width - lineWidth * 2,
+        height: box.height - lineWidth,
       });
     });
 
@@ -1711,10 +1749,10 @@ describe("renderer", () => {
       model.drawGrid(ctx);
       const box = getBoxFromText(model, overflowingText);
       expect(getCellOverflowingBackgroundDims()).toMatchObject({
-        x: box.x + ctx.thinLineWidth / 2,
-        y: box.y + ctx.thinLineWidth / 2,
-        width: box.content!.width - ctx.thinLineWidth * 2,
-        height: box.height - ctx.thinLineWidth,
+        x: box.x + lineWidth / 2,
+        y: box.y + lineWidth / 2,
+        width: box.content!.width - lineWidth * 2,
+        height: box.height - lineWidth,
       });
     });
   });
