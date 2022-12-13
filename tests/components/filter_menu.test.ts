@@ -201,6 +201,18 @@ describe("Filter menu component", () => {
       ]);
     });
 
+    test("Hitting esc key correctly closes the filter menu", async () => {
+      createFilter(model, "A1:A2");
+      await nextTick();
+      await simulateClick(".o-filter-icon");
+      expect(fixture.querySelectorAll(".o-filter-menu")).toHaveLength(1);
+      document
+        .querySelector(".o-grid")!
+        .dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+      await nextTick();
+      expect(fixture.querySelectorAll(".o-filter-menu")).toHaveLength(0);
+    });
+
     describe("Search bar", () => {
       test("Can filter values with the search bar", async () => {
         await openFilterMenu();
