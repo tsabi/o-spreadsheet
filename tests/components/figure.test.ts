@@ -67,7 +67,7 @@ const anchorSelectors = {
 };
 async function dragAnchor(anchor: string, dragX: number, dragY: number, mouseUp = false) {
   const anchorElement = fixture.querySelector(anchorSelectors[anchor])!;
-  await dragElement(anchorElement, dragX, dragY, mouseUp);
+  await dragElement(anchorElement, { x: dragX, y: dragY }, { x: 0, y: 0 }, mouseUp);
 }
 
 //Test Component required as we don't especially want/need to load an entire chart

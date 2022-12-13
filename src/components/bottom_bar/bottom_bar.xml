@@ -13,7 +13,7 @@
       <div class="o-sheet-item o-list-sheets" t-on-click="listSheets">
         <t t-call="o-spreadsheet-Icon.LIST"/>
       </div>
-      <div class="o-all-sheets">
+      <div class="o-all-sheets" t-ref="allSheetsDiv">
         <t t-foreach="getSheets()" t-as="sheet" t-key="sheet.id">
           <div
             class="o-sheet-item o-sheet"
@@ -21,9 +21,11 @@
             t-on-contextmenu.prevent="(ev) => this.onContextMenu(sheet.id, ev)"
             t-att-title="sheet.name"
             t-att-data-id="sheet.id"
+            t-att-style="getSheetItemStyle(sheet.id)"
             t-att-class="{active: sheet.id === env.model.getters.getActiveSheetId(),
-                          dragging: isDragging(sheet.id),
-                          selected: sheetState.dnd and sheet.id === sheetState.dnd.draggedSheetId}"
+                          dragged: isDragged(sheet.id),
+                          dragging: sheetState.dnd,
+                          }"
             t-on-mousedown="(ev) => this.onSheetMouseDown(sheet.id, ev)">
             <span
               class="o-sheet-name"

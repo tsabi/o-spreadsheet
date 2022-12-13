@@ -16,14 +16,8 @@ import {
   setCellContent,
   undo,
 } from "../test_helpers/commands_helpers";
-import { triggerMouseEvent } from "../test_helpers/dom_helper";
-import {
-  makeTestEnv,
-  makeTestFixture,
-  mockUuidV4To,
-  mountSpreadsheet,
-  nextTick,
-} from "../test_helpers/helpers";
+import { dragElement, triggerMouseEvent } from "../test_helpers/dom_helper";
+import { makeTestEnv, makeTestFixture, mockUuidV4To, nextTick } from "../test_helpers/helpers";
 jest.mock("../../src/helpers/uuid", () => require("../__mocks__/uuid"));
 
 let fixture: HTMLElement;
@@ -381,62 +375,64 @@ describe("BottomBar component", () => {
   });
 
   describe("drag & drop sheet", () => {
-    let sheetIds: UID[];
+    const sheetIds: UID[] = ["Sheet1", "Sheet2", "Sheet3", "Sheet4"];
     let model: Model;
     let app: App;
 
-    beforeAll(async () => {
-      sheetIds = ["Sheet1", "Sheet2", "Sheet3", "Sheet4"];
-      const originalGetBoundingClientRect = HTMLDivElement.prototype.getBoundingClientRect;
-      jest
-        .spyOn(HTMLDivElement.prototype, "getBoundingClientRect")
-        // @ts-ignore the mock should return a complete DOMRect, not only { top, left }
-        .mockImplementation(function (this: HTMLDivElement) {
-          for (let sheetId of sheetIds) {
-            if (this.dataset.id == sheetId) {
-              return { top: 100, left: (sheetIds.indexOf(sheetId) + 1) * 100 };
-            }
-          }
-          return originalGetBoundingClientRect.call(this);
-        });
-    });
+    const originalGetBoundingClientRect = HTMLDivElement.prototype.getBoundingClientRect;
+    jest
+      .spyOn(HTMLDivElement.prototype, "getBoundingClientRect")
+      // @ts-ignore
+      .mockImplementation(function (this: HTMLDivElement) {
+        if (this.classList.contains("o-sheet") && this.dataset.id) {
+          return { x: (sheetIds.indexOf(this.dataset.id) + 1) * 100, width: 100 };
+        }
+        return originalGetBoundingClientRect.call(this);
+      });
 
     beforeEach(async () => {
-      model = new Model({
-        sheets: sheetIds.map((sheetId) => {
-          name: sheetId;
-        }),
-      });
-      ({ app } = await mountSpreadsheet(fixture, { model }));
+      model = new Model({ sheets: sheetIds.map((sheetId) => ({ id: sheetId })) });
+      ({ app } = await mountBottomBar(model));
     });
 
     afterEach(async () => {
       app.destroy();
     });
 
+    async function dragSheet(sheetId: UID, offsetX: number, mouseUp = true) {
+      const sheetEl = fixture.querySelector(`.o-sheet[data-id="${sheetId}"]`)!;
+      const startingX = sheetEl.getBoundingClientRect().x;
+      await dragElement(
+        `.o-sheet[data-id="${sheetId}"]`,
+        { x: offsetX, y: 0 },
+        { x: startingX, y: 0 },
+        mouseUp
+      );
+    }
+
     test("Can drag & drop a sheet forward", async () => {
-      dragSheet(sheetIds[0], { x: 1000 });
+      await dragSheet(sheetIds[0], 1000);
       expect(model.getters.getVisibleSheetIds()).toEqual(["Sheet2", "Sheet3", "Sheet4", "Sheet1"]);
     });
 
     test("Can drag & drop a sheet backward", async () => {
-      dragSheet(sheetIds[2], { x: 10 });
+      await dragSheet(sheetIds[2], -500);
       expect(model.getters.getVisibleSheetIds()).toEqual(["Sheet3", "Sheet1", "Sheet2", "Sheet4"]);
     });
 
     test("Can drag & drop a sheet on itself", async () => {
-      dragSheet(sheetIds[0], { x: 50 });
+      await dragSheet(sheetIds[0], 10);
       expect(model.getters.getVisibleSheetIds()).toEqual(["Sheet1", "Sheet2", "Sheet3", "Sheet4"]);
     });
 
-    test("Drag & drop sheet is activated", async () => {
+    test("Drag & dropped sheet is activated", async () => {
       expect(model.getters.getActiveSheetId()).toBe("Sheet1");
-      dragSheet(sheetIds[2], { x: 10 }, false);
+      await dragSheet(sheetIds[2], 10, false);
       expect(model.getters.getActiveSheetId()).toBe("Sheet3");
     });
 
     test("undo/redo drag & drop of a sheet", async () => {
-      dragSheet(sheetIds[2], { x: 10 });
+      await dragSheet(sheetIds[2], -500);
       expect(model.getters.getVisibleSheetIds()).toEqual(["Sheet3", "Sheet1", "Sheet2", "Sheet4"]);
       undo(model);
       expect(model.getters.getVisibleSheetIds()).toEqual(["Sheet1", "Sheet2", "Sheet3", "Sheet4"]);
@@ -452,7 +448,7 @@ describe("BottomBar component", () => {
     ])(
       "Modifying the sheet list during the drag & drop cancels it",
       async (modifySheetList: () => void) => {
-        dragSheet(sheetIds[2], { x: 10 }, false);
+        await dragSheet(sheetIds[2], 10, false);
         await nextTick();
         expect(fixture.querySelector(".o-sheet.dragging")).toBeTruthy();
         modifySheetList();
@@ -466,28 +462,20 @@ describe("BottomBar component", () => {
       () => resizeRows(model, [1], 10),
       () => setCellContent(model, "A1", "Content"),
     ])("Random actions on sheets does not cancel the drag & drop", async (action: () => void) => {
-      dragSheet(sheetIds[2], { x: 10 }, false);
+      await dragSheet(sheetIds[2], 10, false);
       await nextTick();
       expect(fixture.querySelector(".o-sheet.dragging")).toBeTruthy();
       action();
       await nextTick();
       expect(fixture.querySelector(".o-sheet.dragging")).toBeTruthy();
     });
+
+    test("Bottom bar context menu is closed when starting to drag a sheet", async () => {
+      triggerMouseEvent(".o-sheet", "contextmenu");
+      await nextTick();
+      expect(fixture.querySelector(".o-menu")).toBeTruthy();
+      await dragSheet(sheetIds[0], 10, false);
+      expect(fixture.querySelector(".o-menu")).toBeFalsy();
+    });
   });
 });
-
-function dragSheet(sheetId: UID, position: { x: number; y?: number }, mouseUp = true) {
-  position.y = position.y! | 10;
-  const sheet = document.querySelector<HTMLElement>(`.o-sheet[data-id="${sheetId}"]`)!;
-  sheet.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-  document.body.dispatchEvent(
-    new MouseEvent("mousemove", {
-      clientX: position.x,
-      clientY: position.y,
-      bubbles: true,
-    })
-  );
-  if (mouseUp) {
-    document.body.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
-  }
-}

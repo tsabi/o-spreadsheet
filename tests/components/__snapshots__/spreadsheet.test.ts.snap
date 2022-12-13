@@ -573,6 +573,7 @@ height: 1px;
       <div
         class="o-sheet-item o-sheet active"
         data-id="sh1"
+        style=""
         title="Sheet1"
       >
         <span

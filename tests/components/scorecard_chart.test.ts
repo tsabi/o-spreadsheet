@@ -119,7 +119,7 @@ describe("Scorecard charts", () => {
     await simulateClick(".o-figure");
     expect(getElComputedStyle(".o-figure", "width")).toBe("536px");
     expect(getElComputedStyle(".o-figure", "height")).toBe("335px");
-    await dragElement(".o-anchor.o-topLeft", 300, 200);
+    await dragElement(".o-anchor.o-topLeft", { x: 300, y: 200 });
     expect(getElComputedStyle(".o-figure", "width")).toBe("236px");
     expect(getElComputedStyle(".o-figure", "height")).toBe("135px");
     expect(getChartElement()).toMatchSnapshot();
