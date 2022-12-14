@@ -644,4 +644,22 @@ describe("selection input plugin", () => {
     model.dispatch("CHANGE_RANGE", { id, rangeId: idOfRange(model, id, 0), value: "1:1" });
     expect(model.getters.getSelectionInput(id)[0].xc).toBe("1:1");
   });
+
+  test("consistent range colors upon refocusing multiple times", () => {
+    model.dispatch("ENABLE_NEW_SELECTION_INPUT", { id });
+    select(model, "A1");
+    model.dispatch("ADD_EMPTY_RANGE", { id });
+    select(model, "B1");
+    const [oneFColor, oneSColor] = model.getters.getSelectionInput(id).map((i) => i.color);
+    model.dispatch("UNFOCUS_SELECTION_INPUT");
+    model.dispatch("FOCUS_RANGE", { id, rangeId: idOfRange(model, id, 0) });
+    const [twoFColor, twoSColor] = model.getters.getSelectionInput(id).map((i) => i.color);
+    expect(oneFColor).toBe(twoFColor);
+    expect(oneSColor).toBe(twoSColor);
+    model.dispatch("UNFOCUS_SELECTION_INPUT");
+    model.dispatch("FOCUS_RANGE", { id, rangeId: idOfRange(model, id, 0) });
+    const [threeFColor, threeSColor] = model.getters.getSelectionInput(id).map((i) => i.color);
+    expect(oneFColor).toBe(threeFColor);
+    expect(oneSColor).toBe(threeSColor);
+  });
 });
