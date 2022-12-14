@@ -434,6 +434,13 @@ describe("range plugin", () => {
         expect(m.getters.getRangeString(range, "tao")).toBe(`'${name}'!A1`);
       }
     );
+
+    test.each([["s1!A1:s1!A9"], ["s1!!!A1:s1!!!A9"]])(
+      "xc with more than one exclamation mark does not throw error",
+      (range) => {
+        expect(() => m.getters.getRangeFromSheetXC("s1", range)).not.toThrowError();
+      }
+    );
   });
 });
 
