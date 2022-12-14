@@ -480,9 +480,13 @@ describe("Model resizer", () => {
       setStyle(model, "A1", { fontSize: 36 });
       merge(model, "B1:C1");
       setStyle(model, "B1", { fontSize: 26 });
-      expect(model.getters.getRowSize(sheet.id, 0)).toBe(getDefaultCellHeight({ fontSize: 36 }));
+      expect(model.getters.getRowSize(sheet.id, 0)).toBe(
+        Math.round(getDefaultCellHeight({ fontSize: 36 }))
+      );
       deleteColumns(model, ["A"]);
-      expect(model.getters.getRowSize(sheet.id, 0)).toBe(getDefaultCellHeight({ fontSize: 26 }));
+      expect(model.getters.getRowSize(sheet.id, 0)).toBe(
+        Math.round(getDefaultCellHeight({ fontSize: 26 }))
+      );
     });
 
     test("removing a merge with a font height will update the row height", () => {
@@ -501,5 +505,14 @@ describe("Model resizer", () => {
 
       expect(model.getters.getRowSize(sheet.id, 0)).toBe(getDefaultCellHeight({ fontSize: 18 }));
     });
+  });
+
+  test("Header sizes are rounded to avoid issues in further computations with floating number precision", () => {
+    const model = new Model();
+    const sheetId = model.getters.getActiveSheetId();
+    resizeColumns(model, ["A"], 26.4);
+    resizeRows(model, [0], 26.6);
+    expect(model.getters.getColSize(sheetId, 0)).toBe(26);
+    expect(model.getters.getRowSize(sheetId, 0)).toBe(27);
   });
 });
