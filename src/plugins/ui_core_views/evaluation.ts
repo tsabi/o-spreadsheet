@@ -29,7 +29,6 @@ import {
   EvalContext,
   EvaluatedCell,
   ExcelWorkbookData,
-  Format,
   FormattedValue,
   FormulaCell,
   HeaderIndex,
@@ -281,22 +280,14 @@ export class EvaluationPlugin extends UIPlugin {
     });
     const getters = this.getters;
 
-    function readCell(range: Range): PrimitiveArg {
-      let cell: Cell | undefined;
-      if (!getters.tryGetSheet(range.sheetId)) {
-        throw new Error(_lt("Invalid sheet name"));
+    const readCellPosition = (cellPosition: CellPosition): PrimitiveArg => {
+      const cell = getters.getCell(cellPosition);
+      if (!cell) {
+        return { value: null };
       }
-      cell = getters.getCell({ sheetId: range.sheetId, col: range.zone.left, row: range.zone.top });
-      if (cell && cell.content) {
-        return getEvaluatedCell(cell);
-      }
-      if (cell) {
+      if (cell && !cell.content) {
         return { value: null, format: cell.format };
       }
-      return { value: null };
-    }
-
-    const getEvaluatedCell = (cell: Cell): { value: CellValue; format?: Format } => {
       const evaluatedCell = computeCell(cell);
       if (evaluatedCell.type === CellValueType.error) {
         throw evaluatedCell.error;
@@ -334,15 +325,8 @@ export class EvaluationPlugin extends UIPlugin {
       for (let col = zone.left; col <= zone.right; col++) {
         const rowValues: PrimitiveArg[] = [];
         for (let row = zone.top; row <= zone.bottom; row++) {
-          const cell = evalContext.getters.getCell({ sheetId: range.sheetId, col, row });
-
-          if (cell && cell.content) {
-            rowValues.push(getEvaluatedCell(cell));
-          } else if (cell) {
-            rowValues.push({ value: null, format: cell.format });
-          } else {
-            rowValues.push({ value: null });
-          }
+          const cellPosition = { sheetId: range.sheetId, col, row };
+          rowValues.push(readCellPosition(cellPosition));
         }
         result.push(rowValues);
       }
@@ -392,7 +376,12 @@ export class EvaluationPlugin extends UIPlugin {
         throw new Error(_lt("Invalid sheet name: %s", range.invalidSheetName));
       }
 
-      return readCell(range);
+      if (!getters.tryGetSheet(range.sheetId)) {
+        throw new Error(_lt("Invalid sheet name"));
+      }
+
+      const cellPosition = { sheetId: range.sheetId, col: range.zone.left, row: range.zone.top };
+      return readCellPosition(cellPosition);
     }
     return [refFn, range, evalContext];
   }
