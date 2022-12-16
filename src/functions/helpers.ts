@@ -131,7 +131,7 @@ export function toJsDate(value: string | number | boolean | null | undefined): D
 // -----------------------------------------------------------------------------
 function visitArgs(
   args: ArgValue[],
-  cellCb: (a: CellValue | undefined) => void,
+  cellCb: (a: CellValue | null) => void,
   dataCb: (a: PrimitiveArgValue) => void
 ): void {
   for (let arg of args) {
@@ -175,7 +175,7 @@ export function visitNumbers(args: ArgValue[], cb: (arg: number) => void): void 
 
 function reduceArgs<T>(
   args: ArgValue[],
-  cellCb: (acc: T, a: CellValue | undefined) => T,
+  cellCb: (acc: T, a: CellValue | null) => T,
   dataCb: (acc: T, a: PrimitiveArgValue) => T,
   initialValue: T
 ): T {
@@ -262,7 +262,7 @@ export function reduceNumbersTextAs0(
  */
 function conditionalVisitArgs(
   args: ArgValue[],
-  cellCb: (a: CellValue | undefined) => boolean,
+  cellCb: (a: CellValue | null) => boolean,
   dataCb: (a: PrimitiveArgValue) => boolean
 ): void {
   for (let arg of args) {
@@ -375,10 +375,10 @@ function operandToRegExp(operand: string): RegExp {
   return new RegExp("^" + exp + "$", "i");
 }
 
-function evaluatePredicate(value: CellValue | undefined, criterion: Predicate): boolean {
+function evaluatePredicate(value: CellValue | null, criterion: Predicate): boolean {
   const { operator, operand } = criterion;
 
-  if (value === undefined || operand === undefined) {
+  if (value === null || operand === undefined) {
     return false;
   }
 
@@ -499,14 +499,14 @@ export function visitMatchingRanges(
 export function getNormalizedValueFromColumnRange(
   range: MatrixArgValue,
   index: number
-): CellValue | undefined {
+): CellValue | null {
   return normalizeValue(range[0][index]);
 }
 
 export function getNormalizedValueFromRowRange(
   range: MatrixArgValue,
   index: number
-): CellValue | undefined {
+): CellValue | null {
   return normalizeValue(range[index][0]);
 }
 
@@ -531,7 +531,7 @@ export function dichotomicSearch<T>(
   mode: "nextGreater" | "nextSmaller" | "strict",
   sortOrder: "asc" | "desc",
   rangeLength: number,
-  getValueInData: (range: T, index: number) => CellValue | undefined
+  getValueInData: (range: T, index: number) => CellValue | null
 ): number {
   if (target === null || target === undefined) {
     return -1;
@@ -546,7 +546,7 @@ export function dichotomicSearch<T>(
 
   let indexMedian: number;
   let currentIndex: number;
-  let currentVal: CellValue | undefined;
+  let currentVal: CellValue | null;
   let currentType: string;
 
   while (indexRight - indexLeft >= 0) {
@@ -562,7 +562,7 @@ export function dichotomicSearch<T>(
       currentVal = getValueInData(data, currentIndex);
       currentType = typeof currentVal;
     }
-    if (currentType !== targetType || currentVal === undefined) {
+    if (currentType !== targetType || currentVal === null) {
       indexLeft = indexMedian + 1;
       continue;
     }
@@ -632,7 +632,7 @@ export function linearSearch<T>(
   target: PrimitiveArgValue | undefined,
   mode: "nextSmaller" | "nextGreater" | "strict",
   numberOfValues: number,
-  getValueInData: (data: T, index: number) => CellValue | undefined,
+  getValueInData: (data: T, index: number) => CellValue | null,
   reverseSearch = false
 ): number {
   if (target === null || target === undefined) return -1;
@@ -641,7 +641,7 @@ export function linearSearch<T>(
     ? (data: T, i: number) => getValueInData(data, numberOfValues - i - 1)
     : getValueInData;
 
-  let closestMatch: CellValue | undefined = undefined;
+  let closestMatch: CellValue | null = null;
   let closestMatchIndex = -1;
   for (let i = 0; i < numberOfValues; i++) {
     const value = getValue(data, i);
@@ -670,7 +670,7 @@ export function linearSearch<T>(
   return reverseSearch ? numberOfValues - closestMatchIndex - 1 : closestMatchIndex;
 }
 
-function compareCellValues(left: CellValue | undefined, right: CellValue | undefined): number {
+function compareCellValues(left: CellValue | null, right: CellValue | null): number {
   let typeOrder = SORT_TYPES_ORDER.indexOf(typeof left) - SORT_TYPES_ORDER.indexOf(typeof right);
   if (typeOrder === 0) {
     if (typeof left === "string" && typeof right === "string") {

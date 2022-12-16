@@ -287,13 +287,13 @@ export class EvaluationPlugin extends UIPlugin {
         throw new Error(_lt("Invalid sheet name"));
       }
       cell = getters.getCell({ sheetId: range.sheetId, col: range.zone.left, row: range.zone.top });
-      if (!cell || cell.content === "") {
-        // magic "empty" value
-        // Returning {value: null} instead of undefined will ensure that we don't
-        // fall back on the default value of the argument provided to the formula's compute function
-        return { value: null };
+      if (cell && cell.content) {
+        return getEvaluatedCell(cell);
       }
-      return getEvaluatedCell(cell);
+      if (cell) {
+        return { value: null, format: cell.format };
+      }
+      return { value: null };
     }
 
     const getEvaluatedCell = (cell: Cell): { value: CellValue; format?: Format } => {
@@ -332,10 +332,17 @@ export class EvaluationPlugin extends UIPlugin {
 
       // Performance issue: nested loop is faster than a map here
       for (let col = zone.left; col <= zone.right; col++) {
-        const rowValues: ({ value: CellValue; format?: Format } | undefined)[] = [];
+        const rowValues: PrimitiveArg[] = [];
         for (let row = zone.top; row <= zone.bottom; row++) {
           const cell = evalContext.getters.getCell({ sheetId: range.sheetId, col, row });
-          rowValues.push(cell ? getEvaluatedCell(cell) : undefined);
+
+          if (cell && cell.content) {
+            rowValues.push(getEvaluatedCell(cell));
+          } else if (cell) {
+            rowValues.push({ value: null, format: cell.format });
+          } else {
+            rowValues.push({ value: null });
+          }
         }
         result.push(rowValues);
       }

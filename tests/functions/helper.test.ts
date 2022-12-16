@@ -4,7 +4,7 @@ function getItem(arr: any[], i: number) {
   return arr[i];
 }
 
-const u = undefined;
+const n = null;
 
 describe("Function helpers", () => {
   describe("dichotomicSearch with array sorted in ascending order", () => {
@@ -78,15 +78,15 @@ describe("Function helpers", () => {
     });
 
     test("search string in strings and numbers", () => {
-      expect(dichotomicSearch(["a", u, u, u, u], "a", "nextSmaller", "asc", 5, getItem)).toBe(0);
-      expect(dichotomicSearch([u, u, u, u, "a"], "a", "nextSmaller", "asc", 5, getItem)).toBe(4);
-      expect(dichotomicSearch([u, u, "a", u, u], "a", "nextSmaller", "asc", 5, getItem)).toBe(2);
-      expect(dichotomicSearch([u, u, u, u, u], "a", "nextGreater", "asc", 5, getItem)).toBe(-1);
-      expect(dichotomicSearch([u, "0", u, u, u], "0", "nextGreater", "asc", 5, getItem)).toBe(1);
-      expect(dichotomicSearch([u, "0", u, u, u], "0", "strict", "asc", 5, getItem)).toBe(1);
-      expect(dichotomicSearch([u, u, u, u, 1], 1, "nextSmaller", "asc", 5, getItem)).toBe(4);
+      expect(dichotomicSearch(["a", n, n, n, n], "a", "nextSmaller", "asc", 5, getItem)).toBe(0);
+      expect(dichotomicSearch([n, n, n, n, "a"], "a", "nextSmaller", "asc", 5, getItem)).toBe(4);
+      expect(dichotomicSearch([n, n, "a", n, n], "a", "nextSmaller", "asc", 5, getItem)).toBe(2);
+      expect(dichotomicSearch([n, n, n, n, n], "a", "nextGreater", "asc", 5, getItem)).toBe(-1);
+      expect(dichotomicSearch([n, "0", n, n, n], "0", "nextGreater", "asc", 5, getItem)).toBe(1);
+      expect(dichotomicSearch([n, "0", n, n, n], "0", "strict", "asc", 5, getItem)).toBe(1);
+      expect(dichotomicSearch([n, n, n, n, 1], 1, "nextSmaller", "asc", 5, getItem)).toBe(4);
       expect(
-        dichotomicSearch([[u], [u], [u], [u], [1]], 1, "nextSmaller", "asc", 5, (el, index) => {
+        dichotomicSearch([[n], [n], [n], [n], [1]], 1, "nextSmaller", "asc", 5, (el, index) => {
           return el[index][0];
         })
       ).toBe(4);
@@ -186,12 +186,12 @@ describe("Function helpers", () => {
     });
 
     test("search string in strings and numbers", () => {
-      expect(dichotomicSearch(["a", u, u, u, u], "a", "nextGreater", "desc", 5, getItem)).toBe(0);
-      expect(dichotomicSearch([u, u, u, u, "a"], "a", "nextGreater", "desc", 5, getItem)).toBe(4);
-      expect(dichotomicSearch([u, u, "a", u, u], "a", "nextGreater", "desc", 5, getItem)).toBe(2);
-      expect(dichotomicSearch([u, u, u, u, u], "a", "nextSmaller", "desc", 5, getItem)).toBe(-1);
-      expect(dichotomicSearch([u, "0", u, u, u], "0", "nextSmaller", "desc", 5, getItem)).toBe(1);
-      expect(dichotomicSearch([u, "0", u, u, u], "0", "strict", "desc", 5, getItem)).toBe(1);
+      expect(dichotomicSearch(["a", n, n, n, n], "a", "nextGreater", "desc", 5, getItem)).toBe(0);
+      expect(dichotomicSearch([n, n, n, n, "a"], "a", "nextGreater", "desc", 5, getItem)).toBe(4);
+      expect(dichotomicSearch([n, n, "a", n, n], "a", "nextGreater", "desc", 5, getItem)).toBe(2);
+      expect(dichotomicSearch([n, n, n, n, n], "a", "nextSmaller", "desc", 5, getItem)).toBe(-1);
+      expect(dichotomicSearch([n, "0", n, n, n], "0", "nextSmaller", "desc", 5, getItem)).toBe(1);
+      expect(dichotomicSearch([n, "0", n, n, n], "0", "strict", "desc", 5, getItem)).toBe(1);
     });
 
     test("search string in strings and numbers", () => {
@@ -240,10 +240,10 @@ describe("Function helpers", () => {
 
   describe("dichotomicSearch with multi-dimensional sparse array", () => {
     test("search in rows", () => {
-      const array1 = [[0], [u], [u]];
-      const array2 = [[u], [5], [u]];
-      const array3 = [[u], [u], [7]];
-      const getItemInRows = (arr: (number | undefined)[][], i: number) => arr[i][0];
+      const array1 = [[0], [n], [n]];
+      const array2 = [[n], [5], [n]];
+      const array3 = [[n], [n], [7]];
+      const getItemInRows = (arr: (number | null)[][], i: number) => arr[i][0];
       expect(dichotomicSearch(array1, 0, "nextSmaller", "asc", 3, getItemInRows)).toBe(0);
       expect(dichotomicSearch(array1, 8, "nextSmaller", "asc", 3, getItemInRows)).toBe(0);
       expect(dichotomicSearch(array1, -22, "nextSmaller", "asc", 3, getItemInRows)).toBe(-1);
@@ -270,10 +270,10 @@ describe("Function helpers", () => {
     });
 
     test("search in cols", () => {
-      const array1 = [[0, u, u]];
-      const array2 = [[u, 5, u]];
-      const array3 = [[u, u, 7]];
-      const getItemInCols = (arr: (number | undefined)[][], i: number) => arr[0][i];
+      const array1 = [[0, n, n]];
+      const array2 = [[n, 5, n]];
+      const array3 = [[n, n, 7]];
+      const getItemInCols = (arr: (number | null)[][], i: number) => arr[0][i];
       expect(dichotomicSearch(array1, 0, "nextSmaller", "asc", 3, getItemInCols)).toBe(0);
       expect(dichotomicSearch(array1, 8, "nextSmaller", "asc", 3, getItemInCols)).toBe(0);
       expect(dichotomicSearch(array1, -22, "nextSmaller", "asc", 3, getItemInCols)).toBe(-1);

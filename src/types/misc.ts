@@ -167,19 +167,19 @@ export interface CompiledFormula {
 }
 
 export type Arg = MatrixArg | PrimitiveArg;
-export type MatrixArg = ({ value: CellValue; format?: Format } | undefined)[][];
+export type MatrixArg = PrimitiveArg[][];
 export type PrimitiveArg = { value: PrimitiveArgValue; format?: Format };
 
 export type ArgValue = PrimitiveArgValue | MatrixArgValue;
-export type MatrixArgValue = (CellValue | undefined)[][];
-export type PrimitiveArgValue = string | number | boolean | null;
+export type MatrixArgValue = PrimitiveArgValue[][];
+export type PrimitiveArgValue = CellValue | null;
 
 export type FunctionReturn = { value: FunctionReturnValue; format?: Format };
 interface FormulaReturn extends Omit<FunctionReturn, "value"> {
   value: FunctionReturnValue | null; // Formulas can return a cell value that can be null for empty cells
   format?: Format;
 }
-export type FunctionReturnValue = string | number | boolean;
+export type FunctionReturnValue = CellValue;
 
 export interface ClipboardCell {
   cell?: Cell;
