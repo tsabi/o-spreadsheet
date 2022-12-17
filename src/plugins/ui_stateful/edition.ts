@@ -330,7 +330,9 @@ export class EditionPlugin extends UIPlugin {
   }
 
   getComposerSelection(): ComposerSelection {
+    // >> getComposerSelection should throw if not selecting
     if (this.state.mode === "inactive") {
+      console.trace();
       throw new Error("You are not currently editing a cell");
     }
     return {
