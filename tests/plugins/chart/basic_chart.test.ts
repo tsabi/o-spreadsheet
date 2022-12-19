@@ -76,14 +76,14 @@ describe("datasource tests", function () {
       model,
       {
         dataSets: ["Sheet1!B1:B4", "Sheet1!C1:C4"],
-        labelRange: "Sheet1!A2:A4",
+        labelRange: "Sheet1!A1:A4",
         type: "line",
       },
       "1"
     );
     expect(model.getters.getChartDefinition("1")).toMatchObject({
       dataSets: ["B1:B4", "C1:C4"],
-      labelRange: "Sheet1!A2:A4",
+      labelRange: "Sheet1!A1:A4",
       title: "test",
       type: "line",
     });
@@ -95,14 +95,14 @@ describe("datasource tests", function () {
       model,
       {
         dataSets: ["Sheet1!B1:C4"],
-        labelRange: "Sheet1!A2:A4",
+        labelRange: "Sheet1!A1:A4",
         type: "line",
       },
       "1"
     );
     expect(model.getters.getChartDefinition("1")).toMatchObject({
       dataSets: ["B1:B4", "C1:C4"],
-      labelRange: "Sheet1!A2:A4",
+      labelRange: "Sheet1!A1:A4",
       title: "test",
       type: "line",
     });
@@ -130,19 +130,35 @@ describe("datasource tests", function () {
     expect(model.getters.getChartRuntime("1")).toMatchSnapshot();
   });
 
+  test("create chart with column datasets with category title", () => {
+    createChart(
+      model,
+      {
+        dataSets: ["Sheet1!B1:B4", "Sheet1!C1:C4"],
+        labelRange: "A1:A4",
+        type: "line",
+      },
+      "1"
+    );
+    expect(
+      (model.getters.getChartRuntime("1") as LineChartRuntime).chartJsConfig.data?.labels
+    ).toEqual(["P1", "P2", "P3"]);
+    expect(model.getters.getChartRuntime("1")).toMatchSnapshot();
+  });
+
   test("create chart with row datasets", () => {
     createChart(
       model,
       {
         dataSets: ["A8:D8", "A9:D9"],
-        labelRange: "B7:D7",
+        labelRange: "A7:D7",
         type: "line",
       },
       "1"
     );
     expect(model.getters.getChartDefinition("1")).toMatchObject({
       dataSets: ["A8:D8", "A9:D9"],
-      labelRange: "B7:D7",
+      labelRange: "A7:D7",
       title: "test",
       type: "line",
     });
@@ -185,6 +201,22 @@ describe("datasource tests", function () {
     expect(model.getters.getChartRuntime("1")).toMatchSnapshot();
   });
 
+  test("create chart with row datasets with category title", () => {
+    createChart(
+      model,
+      {
+        dataSets: ["Sheet1!A8:D8", "Sheet1!A9:D9"],
+        labelRange: "A7:D7",
+        type: "line",
+      },
+      "1"
+    );
+    expect(
+      (model.getters.getChartRuntime("1") as LineChartRuntime).chartJsConfig.data?.labels
+    ).toEqual(["P4", "P5", "P6"]);
+    expect(model.getters.getChartRuntime("1")).toMatchSnapshot();
+  });
+
   test("create chart with only the dataset title (no data)", () => {
     createChart(
       model,
@@ -195,12 +227,15 @@ describe("datasource tests", function () {
       },
       "1"
     );
+    const chart = model.getters.getChartRuntime("1") as LineChartRuntime;
     expect(model.getters.getChartDefinition("1")).toMatchObject({
-      dataSets: [],
       labelRange: "Sheet1!B7:D7",
       title: "test",
       type: "line",
     });
+    expect(chart.chartJsConfig.data?.datasets?.[0].data).toEqual(
+      expect.arrayContaining([undefined, undefined])
+    );
     expect(model.getters.getChartRuntime("1")).toMatchSnapshot();
   });
 
@@ -424,7 +459,7 @@ describe("datasource tests", function () {
       model,
       {
         dataSets: ["Sheet1!B1:B4", "Sheet1!C1:C4"],
-        labelRange: "Sheet1!A2:A4",
+        labelRange: "Sheet1!A1:A4",
         type: "line",
       },
       "1"
@@ -441,7 +476,7 @@ describe("datasource tests", function () {
       model,
       {
         dataSets: ["Sheet1!B1:B4", "Sheet1!C1:C4"],
-        labelRange: "Sheet1!A2:A4",
+        labelRange: "Sheet1!A1:A4",
         type: "line",
       },
       "1"
@@ -449,10 +484,10 @@ describe("datasource tests", function () {
     deleteColumns(model, ["A"]);
     // dataset in col B becomes labels in col A
     const chart = (model.getters.getChartRuntime("1") as LineChartRuntime).chartJsConfig;
-    expect(chart.data!.labels).toEqual(["0", "1", "2"]);
+    expect(chart.data!.labels).toEqual(["1", "2", ""]);
     expect(chart.data!.datasets![0].data).toEqual([10, 11, 12]);
     expect(chart.data!.datasets![1].data).toEqual([20, 19, 18]);
-    expect(chart.data!.labels).toEqual(["0", "1", "2"]);
+    expect(chart.data!.labels).toEqual(["1", "2", ""]);
   });
 
   test("delete last row of dataset", () => {
@@ -460,7 +495,7 @@ describe("datasource tests", function () {
       model,
       {
         dataSets: ["Sheet1!B1:B5", "Sheet1!C1:C5"],
-        labelRange: "Sheet1!A2:A5",
+        labelRange: "Sheet1!A1:A5",
         dataSetsHaveTitle: true,
         type: "line",
       },
@@ -478,7 +513,7 @@ describe("datasource tests", function () {
       model,
       {
         dataSets: ["Sheet1!B1:B5", "Sheet1!C1:C5"],
-        labelRange: "Sheet1!A2:A5",
+        labelRange: "Sheet1!A1:A5",
         dataSetsHaveTitle: true,
         type: "line",
       },
@@ -496,7 +531,7 @@ describe("datasource tests", function () {
       model,
       {
         dataSets: ["Sheet1!B1:B5", "Sheet1!C1:C5"],
-        labelRange: "Sheet1!A2:A5",
+        labelRange: "Sheet1!A1:A5",
         dataSetsHaveTitle: true,
         type: "line",
       },
@@ -531,7 +566,7 @@ describe("datasource tests", function () {
       model,
       {
         dataSets: ["Sheet1!B1:B5", "Sheet1!C1:C5"],
-        labelRange: "Sheet1!A2:A5",
+        labelRange: "Sheet1!A1:A5",
         dataSetsHaveTitle: true,
         type: "line",
       },
@@ -539,7 +574,8 @@ describe("datasource tests", function () {
     );
     deleteRows(model, [1, 2, 3, 4]);
     const chart = (model.getters.getChartRuntime("1") as LineChartRuntime).chartJsConfig;
-    expect(chart.data!.datasets).toHaveLength(0);
+    expect(chart.data!.datasets?.[0].data).toHaveLength(0);
+    expect(chart.data!.datasets?.[1].data).toHaveLength(0);
     expect(chart.data!.labels).toEqual([]);
   });
 
@@ -728,7 +764,7 @@ describe("datasource tests", function () {
     );
     updateChart(model, "1", {
       dataSets: ["Sheet1!B1:B5", "Sheet1!C1:C5"],
-      labelRange: "Sheet1!A2:A5",
+      labelRange: "Sheet1!A1:A5",
       dataSetsHaveTitle: true,
     });
     const chart = (model.getters.getChartRuntime("1") as BarChartRuntime).chartJsConfig;
@@ -747,7 +783,7 @@ describe("datasource tests", function () {
     );
     updateChart(model, "1", {
       dataSets: ["Sheet1!B1:B5", "Sheet1!C1:C5"],
-      labelRange: "Sheet1!A2:A5",
+      labelRange: "Sheet1!A1:A5",
       dataSetsHaveTitle: true,
     });
     const chart = (model.getters.getChartRuntime("1") as BarChartRuntime).chartJsConfig;
@@ -950,7 +986,7 @@ describe("multiple sheets", function () {
       model,
       {
         dataSets: ["Sheet1!B1:B4", "Sheet1!C1:C4"],
-        labelRange: "Sheet1!A2:A4",
+        labelRange: "Sheet1!A1:A4",
       },
       "1"
     );
@@ -968,7 +1004,7 @@ describe("multiple sheets", function () {
       model,
       {
         dataSets: ["Sheet1!B1:B4", "Sheet1!C1:C4"],
-        labelRange: "Sheet1!A2:A4",
+        labelRange: "Sheet1!A1:A4",
       },
       "1"
     );
@@ -976,7 +1012,7 @@ describe("multiple sheets", function () {
     const chartDefinition = model.getters.getChartDefinition("1");
     expect(chart.data!.labels).toEqual(["P1", "P2", "P3"]);
     expect(chartDefinition).toMatchObject({
-      labelRange: "Sheet1!A2:A4",
+      labelRange: "Sheet1!A1:A4",
     });
   });
   test("change source data then activate the chart sheet (it should be up-to-date)", () => {
@@ -985,7 +1021,7 @@ describe("multiple sheets", function () {
       model,
       {
         dataSets: ["Sheet1!B1:B4", "Sheet1!C1:C4"],
-        labelRange: "Sheet1!A2:A4",
+        labelRange: "Sheet1!A1:A4",
       },
       "28"
     );
@@ -1006,7 +1042,7 @@ describe("multiple sheets", function () {
       model,
       {
         dataSets: ["Sheet1!B1:B4", "Sheet1!C1:C4"],
-        labelRange: "Sheet1!A2:A4",
+        labelRange: "Sheet1!A1:A4",
       },
       "28"
     );
@@ -1417,7 +1453,7 @@ describe("Chart design configuration", () => {
   test("data point with only a zero value", () => {
     const model = new Model();
     setCellContent(model, "B2", "0");
-    createChart(model, { labelRange: "A2:A3", dataSets: ["B1:B3"] }, "1");
+    createChart(model, { labelRange: "A1:A3", dataSets: ["B1:B3"] }, "1");
     const chart = (model.getters.getChartRuntime("1") as BarChartRuntime).chartJsConfig;
     expect(chart.data!.labels).toEqual([""]);
     expect(chart.data!.datasets![0].data).toEqual([0]);
@@ -1426,7 +1462,7 @@ describe("Chart design configuration", () => {
   test("data point with only a zero label", () => {
     const model = new Model();
     setCellContent(model, "A2", "0");
-    createChart(model, { labelRange: "A2:A3", dataSets: ["B1:B3"] }, "1");
+    createChart(model, { labelRange: "A1:A3", dataSets: ["B1:B3"] }, "1");
     const chart = (model.getters.getChartRuntime("1") as BarChartRuntime).chartJsConfig;
     expect(chart.data!.labels).toEqual(["0"]);
     expect(chart.data!.datasets![0].data).toEqual([undefined]);
@@ -1437,7 +1473,7 @@ describe("Chart design configuration", () => {
     let chart: BarChartRuntime;
     setCellContent(model, "A2", "2022/03/01");
     setCellContent(model, "A3", "2022/03/02");
-    createChart(model, { labelRange: "A2:A3", dataSets: ["B2:B3"] }, "1");
+    createChart(model, { labelRange: "A2:A3", dataSets: ["B2:B3"], dataSetsHaveTitle: false }, "1");
     chart = model.getters.getChartRuntime("1") as BarChartRuntime;
     expect(chart.chartJsConfig.data!.labels).toEqual(["2022/03/01", "2022/03/02"]);
     setCellFormat(model, "A2", "m/d/yyyy");

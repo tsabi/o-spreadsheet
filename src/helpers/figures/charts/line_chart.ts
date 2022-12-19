@@ -39,6 +39,7 @@ import {
   copyLabelRangeWithNewSheetId,
   createDataSets,
   toExcelDataset,
+  toExcelLabelRange,
   transformChartDefinitionWithDataSetsWithZone,
   updateChartRangesWithDataSets,
 } from "./chart_common";
@@ -76,6 +77,7 @@ export class LineChart extends AbstractChart {
   readonly labelsAsText: boolean;
   readonly stacked: boolean;
   readonly type = "line";
+  readonly dataSetsHaveTitle: boolean;
 
   constructor(definition: LineChartDefinition, sheetId: UID, getters: CoreGetters) {
     super(definition, sheetId, getters);
@@ -91,6 +93,7 @@ export class LineChart extends AbstractChart {
     this.legendPosition = definition.legendPosition;
     this.labelsAsText = definition.labelsAsText;
     this.stacked = definition.stacked;
+    this.dataSetsHaveTitle = definition.dataSetsHaveTitle;
   }
 
   static validateChartDefinition(
@@ -133,7 +136,7 @@ export class LineChart extends AbstractChart {
   ): LineChartDefinition {
     return {
       type: "line",
-      dataSetsHaveTitle: dataSets.length ? Boolean(dataSets[0].labelCell) : false,
+      dataSetsHaveTitle: this.dataSetsHaveTitle,
       background: this.background,
       dataSets: dataSets.map((ds: DataSet) =>
         this.getters.getRangeString(ds.dataRange, targetSheetId || this.sheetId)
@@ -180,11 +183,13 @@ export class LineChart extends AbstractChart {
     const dataSets: ExcelChartDataset[] = this.dataSets
       .map((ds: DataSet) => toExcelDataset(this.getters, ds))
       .filter((ds) => ds.range !== ""); // && range !== INCORRECT_RANGE_STRING ? show incorrect #ref ?
+    const labelRange = toExcelLabelRange(this.getters, this.labelRange, this.dataSetsHaveTitle);
     return {
       ...this.getDefinition(),
       backgroundColor: toXlsxHexColor(this.background || BACKGROUND_CHART_COLOR),
       fontColor: toXlsxHexColor(chartFontColor(this.background)),
       dataSets,
+      labelRange,
     };
   }
 
@@ -336,6 +341,7 @@ function createLineChartRuntime(chart: LineChart, getters: Getters): LineChartRu
   const labelValues = getChartLabelValues(getters, chart.dataSets, chart.labelRange);
   let labels = axisType === "linear" ? labelValues.values : labelValues.formattedValues;
   let dataSetsValues = getChartDatasetValues(getters, chart.dataSets);
+  if (chart.dataSetsHaveTitle) labels.shift();
 
   ({ labels, dataSetsValues } = filterEmptyDataPoints(labels, dataSetsValues));
   if (axisType === "time") {

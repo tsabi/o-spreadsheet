@@ -87,7 +87,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A5
+                                Sheet1!A3:A5
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -125,7 +125,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A5
+                                Sheet1!A3:A5
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -1856,7 +1856,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -1894,7 +1894,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -2246,7 +2246,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -2307,7 +2307,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -2425,7 +2425,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -2466,7 +2466,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -3124,7 +3124,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -3162,7 +3162,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -3579,7 +3579,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -3617,7 +3617,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -4117,7 +4117,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -4155,7 +4155,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -4716,7 +4716,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -5277,7 +5277,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -5315,7 +5315,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -5876,7 +5876,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -6437,7 +6437,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -6478,7 +6478,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -7082,7 +7082,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -7560,7 +7560,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -7634,7 +7634,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -8069,7 +8069,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>
@@ -8107,7 +8107,7 @@ Object {
                     <c:cat>
                         <c:strRef>
                             <c:f>
-                                Sheet1!A2:A4
+                                Sheet1!A3:A4
                             </c:f>
                         </c:strRef>
                     </c:cat>

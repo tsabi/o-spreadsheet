@@ -1,4 +1,6 @@
-import { Component, useState } from "@odoo/owl";
+import { Component, useEffect, useState } from "@odoo/owl";
+import { createRange, zoneToXc } from "../../../../helpers";
+import { createDataSets } from "../../../../helpers/figures/charts";
 import { BarChartDefinition } from "../../../../types/chart/bar_chart";
 import { LineChartDefinition } from "../../../../types/chart/line_chart";
 import { PieChartDefinition } from "../../../../types/chart/pie_chart";
@@ -17,6 +19,10 @@ interface Props {
 interface ChartPanelState {
   datasetDispatchResult?: DispatchResult;
   labelsDispatchResult?: DispatchResult;
+  headerPosition?: {
+    direction: "row" | "column";
+    index: number | string;
+  };
 }
 
 export class LineBarPieConfigPanel extends Component<Props, SpreadsheetChildEnv> {
@@ -26,6 +32,10 @@ export class LineBarPieConfigPanel extends Component<Props, SpreadsheetChildEnv>
   private state: ChartPanelState = useState({
     datasetDispatchResult: undefined,
     labelsDispatchResult: undefined,
+    headerPosition: {
+      direction: "row",
+      index: 1,
+    },
   });
 
   private dataSeriesRanges: string[] = [];
@@ -34,6 +44,13 @@ export class LineBarPieConfigPanel extends Component<Props, SpreadsheetChildEnv>
   setup() {
     this.dataSeriesRanges = this.props.definition.dataSets;
     this.labelRange = this.props.definition.labelRange;
+
+    useEffect(
+      () => {
+        this.state.headerPosition = this.calculateHeaderPosition();
+      },
+      () => [this.state.datasetDispatchResult, this.state.labelsDispatchResult]
+    );
   }
 
   get errorMessages(): string[] {
@@ -86,6 +103,49 @@ export class LineBarPieConfigPanel extends Component<Props, SpreadsheetChildEnv>
     this.state.labelsDispatchResult = this.props.updateChart({
       labelRange: this.labelRange,
     });
+  }
+
+  calculateHeaderPosition(): typeof this.state.headerPosition {
+    if (this.isDatasetInvalid || this.isLabelInvalid) {
+      return {
+        index: 1,
+        direction: "row" as const,
+      };
+    }
+    const sheetId = this.env.model.getters.getActiveSheetId();
+    const getters = this.env.model.getters;
+    const labelRange = createRange(getters, sheetId, this.labelRange);
+    const dataSets = createDataSets(
+      getters,
+      this.dataSeriesRanges,
+      sheetId,
+      this.props.definition.dataSetsHaveTitle
+    );
+    let headerDirection: "row" | "column" = "row";
+    if (
+      (dataSets.length && dataSets[0].dataRange.zone.right > dataSets[0].dataRange.zone.left) ||
+      (dataSets.length === 0 && labelRange && labelRange.zone.right > labelRange.zone.left)
+    ) {
+      headerDirection = "column";
+    }
+    let headerIndex: number | string = headerDirection === "row" ? 1 : "A";
+    if (dataSets.length) {
+      if (headerDirection === "row") {
+        headerIndex = dataSets[0].dataRange.zone.top + 1;
+      } else {
+        headerIndex = zoneToXc(dataSets[0].dataRange.zone)[0];
+      }
+    } else if (labelRange) {
+      if (headerDirection === "row") {
+        headerIndex = labelRange.zone.top + 1;
+      } else {
+        headerIndex = zoneToXc(labelRange.zone)[0];
+      }
+    }
+    return {
+      index: headerIndex,
+      direction: headerDirection,
+    };
   }
 }
 

@@ -40,6 +40,7 @@ import {
   copyLabelRangeWithNewSheetId,
   createDataSets,
   toExcelDataset,
+  toExcelLabelRange,
   transformChartDefinitionWithDataSetsWithZone,
   updateChartRangesWithDataSets,
 } from "./chart_common";
@@ -71,6 +72,7 @@ export class PieChart extends AbstractChart {
   readonly background?: Color;
   readonly legendPosition: LegendPosition;
   readonly type = "pie";
+  readonly dataSetsHaveTitle: boolean;
 
   constructor(definition: PieChartDefinition, sheetId: UID, getters: CoreGetters) {
     super(definition, sheetId, getters);
@@ -83,6 +85,7 @@ export class PieChart extends AbstractChart {
     this.labelRange = createRange(getters, sheetId, definition.labelRange);
     this.background = definition.background;
     this.legendPosition = definition.legendPosition;
+    this.dataSetsHaveTitle = definition.dataSetsHaveTitle;
   }
 
   static transformDefinition(
@@ -135,7 +138,7 @@ export class PieChart extends AbstractChart {
   ): PieChartDefinition {
     return {
       type: "pie",
-      dataSetsHaveTitle: dataSets.length ? Boolean(dataSets[0].labelCell) : false,
+      dataSetsHaveTitle: this.dataSetsHaveTitle,
       background: this.background,
       dataSets: dataSets.map((ds: DataSet) =>
         this.getters.getRangeString(ds.dataRange, targetSheetId || this.sheetId)
@@ -168,12 +171,14 @@ export class PieChart extends AbstractChart {
     const dataSets: ExcelChartDataset[] = this.dataSets
       .map((ds: DataSet) => toExcelDataset(this.getters, ds))
       .filter((ds) => ds.range !== ""); // && range !== INCORRECT_RANGE_STRING ? show incorrect #ref ?
+    const labelRange = toExcelLabelRange(this.getters, this.labelRange, this.dataSetsHaveTitle);
     return {
       ...this.getDefinition(),
       backgroundColor: toXlsxHexColor(this.background || BACKGROUND_CHART_COLOR),
       fontColor: toXlsxHexColor(chartFontColor(this.background)),
       verticalAxisPosition: "left", //TODO ExcelChartDefinition should be adapted, but can be done later
       dataSets,
+      labelRange,
     };
   }
 
@@ -231,6 +236,7 @@ function createPieChartRuntime(chart: PieChart, getters: Getters): PieChartRunti
   const labelValues = getChartLabelValues(getters, chart.dataSets, chart.labelRange);
   let labels = labelValues.formattedValues;
   let dataSetsValues = getChartDatasetValues(getters, chart.dataSets);
+  if (chart.dataSetsHaveTitle) labels.shift();
 
   ({ labels, dataSetsValues } = filterEmptyDataPoints(labels, dataSetsValues));
   const config = getPieConfiguration(chart, labels);

@@ -575,7 +575,11 @@ describe("Collaborative Sheet manipulation", () => {
       });
       expect([alice, bob, charlie]).toHaveSynchronizedValue(
         (user) => user.getters.getChartDefinition(chartId),
-        { ...chartDef, dataSets: ["A1:A3", "H1:H3"], labelRange: "H3" }
+        {
+          ...chartDef,
+          dataSets: ["A1:A3", "H1:H3"],
+          labelRange: "H3",
+        }
       );
       network.concurrent(() => {
         addColumns(alice, "before", "D", 2);
@@ -587,7 +591,11 @@ describe("Collaborative Sheet manipulation", () => {
       });
       expect([alice, bob, charlie]).toHaveSynchronizedValue(
         (user) => user.getters.getChartDefinition(chartId),
-        { ...chartDef, dataSets: ["A1:A3", "H1:H3"], labelRange: "H3" }
+        {
+          ...chartDef,
+          dataSets: ["A1:A3", "H1:H3"],
+          labelRange: "H3",
+        }
       );
     });
 
@@ -638,7 +646,11 @@ describe("Collaborative Sheet manipulation", () => {
       });
       expect([alice, bob, charlie]).toHaveSynchronizedValue(
         (user) => user.getters.getChartDefinition(chartId),
-        { ...chartDef, dataSets: ["A1:A3", "A4:A12", "A13:A14"], labelRange: "F12" }
+        {
+          ...chartDef,
+          dataSets: ["A1:A3", "A4:A12", "A13:A14"],
+          labelRange: "F12",
+        }
       );
       network.concurrent(() => {
         addRows(alice, "before", 9, 2);
@@ -646,7 +658,11 @@ describe("Collaborative Sheet manipulation", () => {
       });
       expect([alice, bob, charlie]).toHaveSynchronizedValue(
         (user) => user.getters.getChartDefinition(chartId),
-        { ...chartDef, dataSets: ["A1:A3", "A4:A12", "A13:A14"], labelRange: "F12" }
+        {
+          ...chartDef,
+          dataSets: ["A1:A3", "A4:A12", "A13:A14"],
+          labelRange: "F12",
+        }
       );
     });
 

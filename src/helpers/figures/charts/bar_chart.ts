@@ -33,6 +33,7 @@ import {
   copyLabelRangeWithNewSheetId,
   createDataSets,
   toExcelDataset,
+  toExcelLabelRange,
   transformChartDefinitionWithDataSetsWithZone,
   updateChartRangesWithDataSets,
 } from "./chart_common";
@@ -67,6 +68,7 @@ export class BarChart extends AbstractChart {
   readonly legendPosition: LegendPosition;
   readonly stacked: boolean;
   readonly type = "bar";
+  readonly dataSetsHaveTitle: boolean;
 
   constructor(definition: BarChartDefinition, sheetId: UID, getters: CoreGetters) {
     super(definition, sheetId, getters);
@@ -81,6 +83,7 @@ export class BarChart extends AbstractChart {
     this.verticalAxisPosition = definition.verticalAxisPosition;
     this.legendPosition = definition.legendPosition;
     this.stacked = definition.stacked;
+    this.dataSetsHaveTitle = definition.dataSetsHaveTitle;
   }
 
   static transformDefinition(
@@ -151,7 +154,7 @@ export class BarChart extends AbstractChart {
   ): BarChartDefinition {
     return {
       type: "bar",
-      dataSetsHaveTitle: dataSets.length ? Boolean(dataSets[0].labelCell) : false,
+      dataSetsHaveTitle: this.dataSetsHaveTitle,
       background: this.background,
       dataSets: dataSets.map((ds: DataSet) =>
         this.getters.getRangeString(ds.dataRange, targetSheetId || this.sheetId)
@@ -170,11 +173,13 @@ export class BarChart extends AbstractChart {
     const dataSets: ExcelChartDataset[] = this.dataSets
       .map((ds: DataSet) => toExcelDataset(this.getters, ds))
       .filter((ds) => ds.range !== ""); // && range !== INCORRECT_RANGE_STRING ? show incorrect #ref ?
+    const labelRange = toExcelLabelRange(this.getters, this.labelRange, this.dataSetsHaveTitle);
     return {
       ...this.getDefinition(),
       backgroundColor: toXlsxHexColor(this.background || BACKGROUND_CHART_COLOR),
       fontColor: toXlsxHexColor(chartFontColor(this.background)),
       dataSets,
+      labelRange,
     };
   }
 
@@ -244,6 +249,7 @@ function createBarChartRuntime(chart: BarChart, getters: Getters): BarChartRunti
   const labelValues = getChartLabelValues(getters, chart.dataSets, chart.labelRange);
   let labels = labelValues.formattedValues;
   let dataSetsValues = getChartDatasetValues(getters, chart.dataSets);
+  if (chart.dataSetsHaveTitle) labels.shift();
 
   ({ labels, dataSetsValues } = filterEmptyDataPoints(labels, dataSetsValues));
   const config = getBarConfiguration(chart, labels);
