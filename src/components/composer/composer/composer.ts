@@ -426,8 +426,6 @@ export class Composer extends Component<Props, SpreadsheetChildEnv> {
     if (content.length !== 0) {
       this.contentHelper.setText(content);
       if (this.props.focus !== "inactive") {
-        console.log("aaaa", this.props.focus);
-        console.trace();
         // Put the cursor back where it was before the rendering
         const { start, end } = this.env.model.getters.getComposerSelection();
         this.contentHelper.selectRange(start, end);

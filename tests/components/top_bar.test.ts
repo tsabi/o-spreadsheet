@@ -50,8 +50,6 @@ class Parent extends Component {
   static components = { TopBar };
 
   static _t = t;
-  // coucou this is really bad. like non typing friendly bad
-  // ask around to see if we can type this correctly
   state = useState({ focusComposer: <ComposerFocusType>"inactive" });
 
   setup() {
@@ -89,6 +87,8 @@ beforeEach(() => {
 afterEach(() => {
   fixture.remove();
 });
+
+// TODORAR: shouldn't it instanciate automatically before each test ?
 
 describe("TopBar component", () => {
   test("simple rendering", async () => {
@@ -351,11 +351,8 @@ describe("TopBar component", () => {
     setCellContent(model, "B2", "b2");
 
     const { app } = await mountParent(model);
-    // TO FIX --> props.focus de composer is set to false (perfect au passage)
-    return;
     expect(fixture.querySelectorAll(".o-dropdown-content").length).toBe(0);
     fixture.querySelector('.o-tool[title="Borders"]')!.dispatchEvent(new Event("click"));
-    return;
     await nextTick();
     expect(fixture.querySelectorAll(".o-dropdown-content").length).toBe(1);
     fixture.querySelector('.o-tool[title="Borders"]')!.dispatchEvent(new Event("click"));
