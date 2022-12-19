@@ -147,9 +147,9 @@ export type ReferenceDenormalizer = (
   isMeta: boolean,
   functionName: string,
   paramNumber: number
-) => any | any[][];
+) => PrimitiveArg;
 
-export type EnsureRange = (range: Range) => any[][];
+export type EnsureRange = (range: Range) => MatrixArg;
 
 export type NumberParser = (str: string) => number;
 
