@@ -24,7 +24,7 @@
             t-att-style="getSheetItemStyle(sheet.id)"
             t-att-class="{active: sheet.id === env.model.getters.getActiveSheetId(),
                           dragged: isDragged(sheet.id),
-                          dragging: sheetState.dnd,
+                          dragging: sheetState.isDnd,
                           }"
             t-on-mousedown="(ev) => this.onSheetMouseDown(sheet.id, ev)">
             <span
