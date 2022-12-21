@@ -5,6 +5,7 @@ import { ComponentConstructor } from "@odoo/owl";
 import { Token } from "../formulas";
 import { Cell, CellValue, EvaluatedCell } from "./cells";
 import { CommandResult } from "./commands";
+import { EvaluationError } from "./errors";
 import { Format } from "./format";
 import { Range } from "./range";
 
@@ -144,12 +145,16 @@ export interface Border {
 
 export type ReferenceDenormalizer = (
   range: Range,
+  muteError: boolean,
   isMeta: boolean,
   functionName: string,
   paramNumber: number
-) => PrimitiveArg;
+) => PrimitiveArg | EvaluationError;
 
-export type EnsureRange = (range: Range) => MatrixArg;
+export type EnsureRange = (
+  range: Range,
+  muteError: boolean
+) => (PrimitiveArg | EvaluationError)[][];
 
 export type NumberParser = (str: string) => number;
 

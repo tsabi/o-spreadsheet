@@ -6,7 +6,7 @@ import {
   PrimitiveArg,
   PrimitiveArgValue,
 } from "../types";
-import { CellErrorType } from "../types/errors";
+import { CellErrorType, EvaluationError } from "../types/errors";
 import { args } from "./arguments";
 import { assert, conditionalVisitBoolean, toBoolean } from "./helpers";
 
@@ -57,11 +57,14 @@ export const IF: AddFunctionDescription = {
   returns: ["ANY"],
   compute: function (
     logicalExpression: PrimitiveArgValue,
-    valueIfTrue: () => PrimitiveArgValue,
-    valueIfFalse: () => PrimitiveArgValue = () => false
+    valueIfTrue: PrimitiveArgValue | EvaluationError,
+    valueIfFalse: PrimitiveArgValue | EvaluationError = false
   ): FunctionReturnValue {
-    const result = toBoolean(logicalExpression) ? valueIfTrue() : valueIfFalse();
-    return result === null || result === undefined ? "" : result;
+    const result = toBoolean(logicalExpression) ? valueIfTrue : valueIfFalse;
+    if (result instanceof EvaluationError) {
+      throw result;
+    }
+    return result === null ? "" : result;
   },
   isExported: true,
 };
@@ -79,26 +82,28 @@ export const IFERROR: AddFunctionDescription = {
   `),
   returns: ["ANY"],
   computeFormat: (
-    value: () => PrimitiveArg,
-    valueIfError: () => PrimitiveArg = () => ({ value: "" })
+    value: PrimitiveArg | EvaluationError,
+    valueIfError: PrimitiveArg | EvaluationError = { value: "" }
   ) => {
-    try {
-      return value().format;
-    } catch (e) {
-      return valueIfError()?.format;
+    if (value instanceof EvaluationError) {
+      if (valueIfError instanceof EvaluationError) {
+        throw valueIfError;
+      }
+      return valueIfError.format;
     }
+    return value.format;
   },
   compute: function (
-    value: () => PrimitiveArgValue,
-    valueIfError: () => PrimitiveArgValue = () => ""
+    value: PrimitiveArgValue | EvaluationError,
+    valueIfError: PrimitiveArgValue | EvaluationError = ""
   ): FunctionReturnValue {
-    let result;
-    try {
-      result = value();
-    } catch (e) {
-      result = valueIfError();
+    if (value instanceof EvaluationError) {
+      if (valueIfError instanceof EvaluationError) {
+        throw valueIfError;
+      }
+      return valueIfError === null ? "" : valueIfError;
     }
-    return result === null || result === undefined ? "" : result;
+    return value === null ? "" : value;
   },
   isExported: true,
 };
@@ -116,20 +121,19 @@ export const IFNA: AddFunctionDescription = {
   `),
   returns: ["ANY"],
   compute: function (
-    value: () => PrimitiveArgValue,
-    valueIfError: () => PrimitiveArgValue = () => ""
+    value: PrimitiveArgValue | EvaluationError,
+    valueIfError: PrimitiveArgValue | EvaluationError = ""
   ): FunctionReturnValue {
-    let result;
-    try {
-      result = value();
-    } catch (e) {
-      if (e.errorType === CellErrorType.NotAvailable) {
-        result = valueIfError();
-      } else {
-        result = value();
+    if (value instanceof EvaluationError) {
+      if (value.errorType === CellErrorType.NotAvailable) {
+        if (valueIfError instanceof EvaluationError) {
+          throw valueIfError;
+        }
+        return valueIfError === null ? "" : valueIfError;
       }
+      throw value;
     }
-    return result === null || result === undefined ? "" : result;
+    return value === null ? "" : value;
   },
   isExported: true,
 };
@@ -152,15 +156,22 @@ export const IFS: AddFunctionDescription = {
       )}
   `),
   returns: ["ANY"],
-  compute: function (...values: (() => PrimitiveArgValue)[]): FunctionReturnValue {
+  compute: function (...values: (PrimitiveArgValue | EvaluationError)[]): FunctionReturnValue {
     assert(
       () => values.length % 2 === 0,
       _lt(`Wrong number of arguments. Expected an even number of arguments.`)
     );
     for (let n = 0; n < values.length - 1; n += 2) {
-      if (toBoolean(values[n]())) {
-        const returnValue = values[n + 1]();
-        return returnValue !== null ? returnValue : "";
+      const condition = values[n];
+      if (condition instanceof EvaluationError) {
+        throw condition;
+      }
+      if (toBoolean(condition)) {
+        const value = values[n + 1];
+        if (value instanceof EvaluationError) {
+          throw value;
+        }
+        return value === null ? "" : value;
       }
     }
     throw new Error(_lt(`No match.`));

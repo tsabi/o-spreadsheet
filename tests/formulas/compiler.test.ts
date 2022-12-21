@@ -1,4 +1,4 @@
-import { Model } from "../../src";
+import { EvaluationError, Model } from "../../src";
 import { functionCache } from "../../src/formulas/compiler";
 import { compile } from "../../src/formulas/index";
 import { functionRegistry } from "../../src/functions";
@@ -211,7 +211,7 @@ describe("compile functions", () => {
         },
         computeFormat: (arg1, arg2 = { value: 42, format: "42" }) => {
           return !Array.isArray(arg2) &&
-            typeof arg2 !== "function" &&
+            !(arg2 instanceof EvaluationError) &&
             arg2.value === 42 &&
             arg2.format === "42"
             ? "TRUE"
@@ -327,7 +327,7 @@ describe("compile functions", () => {
     });
   });
 
-  describe("with lazy arguments", () => {
+  describe("with muteError arguments", () => {
     // this tests performs controls inside formula functions. For this reason, we
     // don't use mocked functions. Errors would be caught during evaluation of
     // formulas and not during the tests. So here we use a simple counter
@@ -335,32 +335,24 @@ describe("compile functions", () => {
     let count = 0;
 
     beforeAll(() => {
-      functionRegistry.add("ANYFUNCTION", {
-        description: "any function",
-        args: [],
-        compute: () => {
-          count += 1;
-          return true;
-        },
-        returns: ["ANY"],
-      });
-
-      functionRegistry.add("USELAZYARG", {
-        description: "function with a lazy argument",
-        args: [{ name: "lazyArg", description: "", type: ["ANY"], lazy: true }],
+      functionRegistry.add("USEMUTEERRORARG", {
+        description: "function with a mute error argument",
+        args: [{ name: "muteErrorArg", description: "", type: ["ANY"], muteError: true }],
         compute: (arg) => {
-          count *= 42;
-          (arg as Function)();
+          count += 42;
+          if (arg instanceof EvaluationError) {
+            throw arg;
+          }
           return true;
         },
         returns: ["ANY"],
       });
 
-      functionRegistry.add("NOTUSELAZYARG", {
+      functionRegistry.add("NOTUSEMUTEERRORARG", {
         description: "any function",
         args: [{ name: "any", description: "", type: ["ANY"] }],
         compute: () => {
-          count *= 42;
+          count += 42;
           return true;
         },
         returns: ["ANY"],
@@ -371,21 +363,29 @@ describe("compile functions", () => {
       restoreDefaultFunctions();
     });
 
-    test("with function as argument --> change the order in which functions are evaluated ", () => {
+    test("error is not thrown before entering the compute function of the formula  ", () => {
       count = 0;
-      evaluateCell("A1", { A1: "=USELAZYARG(ANYFUNCTION())" });
+      evaluateCell("A1", { A1: "=NOTUSEMUTEERRORARG(1/0)" });
+      expect(count).toBe(0);
+      evaluateCell("A2", { A2: "=USEMUTEERRORARG(1/0)" });
+      expect(count).toBe(42);
+    });
+
+    test("with function as argument -->  ", () => {
+      count = 0;
+      evaluateCell("A1", { A1: "=USEMUTEERRORARG(ANYFUNCTION())" });
       expect(count).toBe(1);
       count = 0;
-      evaluateCell("A2", { A2: "=NOTUSELAZYARG(ANYFUNCTION())" });
+      evaluateCell("A2", { A2: "=NOTUSEMUTEERRORARG(ANYFUNCTION())" });
       expect(count).toBe(42);
     });
 
     test.each([
-      "=USELAZYARG(24)",
-      "=USELAZYARG(1/0)",
-      "=USELAZYARG(1/1/0)",
-      "=USELAZYARG(USELAZYARG(24))",
-    ])("functions call requesting lazy parameters", (formula) => {
+      "=USEMUTEERRORARG(24)",
+      "=USEMUTEERRORARG(1/0)",
+      "=USEMUTEERRORARG(1/1/0)",
+      "=USEMUTEERRORARG(USEMUTEERRORARG(24))",
+    ])("functions call requesting mute error parameters", (formula) => {
       const compiledFormula = compiledBaseFunction(formula);
       expect(compiledFormula.execute.toString()).toMatchSnapshot();
     });

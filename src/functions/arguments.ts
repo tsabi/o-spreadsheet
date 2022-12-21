@@ -44,7 +44,7 @@ function makeArg(str: string): ArgDefinition {
   let types: ArgType[] = [];
   let isOptional = false;
   let isRepeating = false;
-  let isLazy = false;
+  let muteError = false;
   let defaultValue;
 
   for (let param of parts[2].split(",")) {
@@ -59,7 +59,7 @@ function makeArg(str: string): ArgDefinition {
     } else if (key === "REPEATING") {
       isRepeating = true;
     } else if (key === "LAZY") {
-      isLazy = true;
+      muteError = true;
     } else if (key.startsWith("DEFAULT=")) {
       defaultValue = param.trim().slice(8);
     }
@@ -76,8 +76,8 @@ function makeArg(str: string): ArgDefinition {
   if (isRepeating) {
     result.repeating = true;
   }
-  if (isLazy) {
-    result.lazy = true;
+  if (muteError) {
+    result.muteError = true;
   }
   if (defaultValue !== undefined) {
     result.default = true;

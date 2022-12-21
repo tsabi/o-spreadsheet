@@ -13,8 +13,6 @@ import { toString } from "../../src/functions/helpers";
 import { toZone } from "../../src/helpers";
 import { Model } from "../../src/model";
 import {
-  Arg,
-  ArgValue,
   CommandResult,
   ComputeFunction,
   Format,
@@ -24,6 +22,7 @@ import {
   SetDecimalStep,
   UID,
 } from "../../src/types";
+import { EvaluationError } from "../../src/types/errors";
 import {
   createFilter,
   createSheet,
@@ -178,10 +177,10 @@ describe("formatting values (with formatters)", () => {
       `),
       compute: function (value: PrimitiveArgValue, format: PrimitiveArgValue) {
         return value || 0;
-      } as ComputeFunction<ArgValue, FunctionReturnValue>,
+      } as ComputeFunction<PrimitiveArgValue | EvaluationError, FunctionReturnValue>,
       computeFormat: function (value: PrimitiveArg, format: PrimitiveArg) {
         return toString(format.value);
-      } as ComputeFunction<Arg, Format>,
+      } as ComputeFunction<PrimitiveArg | EvaluationError, Format | undefined>,
       returns: ["ANY"],
     });
     const model = new Model();

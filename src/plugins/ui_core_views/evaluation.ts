@@ -34,7 +34,6 @@ import {
   HeaderIndex,
   invalidateEvaluationCommands,
   Lazy,
-  MatrixArg,
   PrimitiveArg,
   Range,
   ReferenceDenormalizer,
@@ -280,7 +279,10 @@ export class EvaluationPlugin extends UIPlugin {
     });
     const getters = this.getters;
 
-    const readCellPosition = (cellPosition: CellPosition): PrimitiveArg => {
+    const readCellPosition = (
+      cellPosition: CellPosition,
+      muteError: boolean
+    ): PrimitiveArg | EvaluationError => {
       const cell = getters.getCell(cellPosition);
       if (!cell) {
         return { value: null };
@@ -290,6 +292,9 @@ export class EvaluationPlugin extends UIPlugin {
       }
       const evaluatedCell = computeCell(cell);
       if (evaluatedCell.type === CellValueType.error) {
+        if (muteError) {
+          return evaluatedCell.error;
+        }
         throw evaluatedCell.error;
       }
       return evaluatedCell;
@@ -303,7 +308,7 @@ export class EvaluationPlugin extends UIPlugin {
      * Note that each col is possibly sparse: it only contain the values of cells
      * that are actually present in the grid.
      */
-    function range(range: Range): MatrixArg {
+    function range(range: Range, muteError: boolean): (PrimitiveArg | EvaluationError)[][] {
       const sheetId = range.sheetId;
 
       if (!isZoneValid(range.zone)) {
@@ -313,7 +318,7 @@ export class EvaluationPlugin extends UIPlugin {
       // Performance issue: Avoid fetching data on positions that are out of the spreadsheet
       // e.g. A1:ZZZ9999 in a sheet with 10 cols and 10 rows should ignore everything past J10 and return a 10x10 array
       const sheetZone = getters.getSheetZone(sheetId);
-      const result: MatrixArg = [];
+      const result: (PrimitiveArg | EvaluationError)[][] = [];
 
       const zone = intersection(range.zone, sheetZone);
       if (!zone) {
@@ -323,10 +328,10 @@ export class EvaluationPlugin extends UIPlugin {
 
       // Performance issue: nested loop is faster than a map here
       for (let col = zone.left; col <= zone.right; col++) {
-        const rowValues: PrimitiveArg[] = [];
+        const rowValues: (PrimitiveArg | EvaluationError)[] = [];
         for (let row = zone.top; row <= zone.bottom; row++) {
           const cellPosition = { sheetId: range.sheetId, col, row };
-          rowValues.push(readCellPosition(cellPosition));
+          rowValues.push(readCellPosition(cellPosition, muteError));
         }
         result.push(rowValues);
       }
@@ -343,10 +348,11 @@ export class EvaluationPlugin extends UIPlugin {
      */
     function refFn(
       range: Range,
+      muteError: boolean,
       isMeta: boolean,
       functionName: string,
       paramNumber?: number
-    ): PrimitiveArg {
+    ): PrimitiveArg | EvaluationError {
       if (isMeta) {
         // Use zoneToXc of zone instead of getRangeString to avoid sending unbounded ranges
         return { value: zoneToXc(range.zone) };
@@ -381,7 +387,7 @@ export class EvaluationPlugin extends UIPlugin {
       }
 
       const cellPosition = { sheetId: range.sheetId, col: range.zone.left, row: range.zone.top };
-      return readCellPosition(cellPosition);
+      return readCellPosition(cellPosition, muteError);
     }
     return [refFn, range, evalContext];
   }

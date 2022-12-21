@@ -180,7 +180,7 @@ export function compile(formula: string): CompiledFormula {
           // detect when an argument need to be evaluated as a meta argument
           const isMeta = argTypes.includes("META");
           // detect when an argument need to be evaluated as a lazy argument
-          const isLazy = argDefinition.lazy;
+          const muteError = argDefinition.muteError;
 
           const hasRange = argTypes.some(
             (t) =>
@@ -211,7 +211,7 @@ export function compile(formula: string): CompiledFormula {
             }
           }
 
-          const compiledAST = compileAST(currentArg, isLazy, isMeta, hasRange, {
+          const compiledAST = compileAST(currentArg, muteError, isMeta, hasRange, {
             functionName: ast.value.toUpperCase(),
             paramIndex: i + 1,
           });
@@ -227,13 +227,12 @@ export function compile(formula: string): CompiledFormula {
      * executable code for the evaluation of the cells content. It uses a cash to
      * not reevaluate identical code structures.
      *
-     * The function is sensitive to two parameters “isLazy” and “isMeta”. These
+     * The function is sensitive to two parameters "muteError" and “isMeta”. These
      * parameters may vary when compiling function arguments:
      *
-     * - isLazy: In some cases the function arguments does not need to be
-     * evaluated before entering the functions. For example the IF function might
-     * take invalid arguments that do not need to be evaluate and thus should not
-     * create an error. For this we have lazy arguments.
+     * - muteError: In some cases the function arguments does not need to throw
+     * error before entering the functions. For example the IF function might
+     * take invalid arguments and thus should not create an error.
      *
      * - isMeta: In some cases the function arguments expects information on the
      * cell/range other than the associated value(s). For example the COLUMN
@@ -243,7 +242,7 @@ export function compile(formula: string): CompiledFormula {
 
     function compileAST(
       ast: AST,
-      isLazy = false,
+      muteError = false,
       isMeta = false,
       hasRange = false,
       referenceVerification: {
@@ -263,12 +262,7 @@ export function compile(formula: string): CompiledFormula {
       }
       switch (ast.type) {
         case "BOOLEAN":
-          if (!isLazy) {
-            return { id: `{ value: ${ast.value} }`, code: "" };
-          }
-          id = nextId++;
-          statement = `{ value: ${ast.value} }`;
-          break;
+          return { id: `{ value: ${ast.value} }`, code: "" };
         case "NUMBER":
           id = nextId++;
           statement = `{ value: this.constantValues.numbers[${constantValues.numbers.indexOf(
@@ -285,11 +279,13 @@ export function compile(formula: string): CompiledFormula {
           const referenceIndex = dependencies.indexOf(ast.value);
           id = nextId++;
           if (hasRange) {
-            statement = `range(deps[${referenceIndex}])`;
+            statement = `range(deps[${referenceIndex}], ${muteError ? "true" : "false"})`;
           } else {
-            statement = `ref(deps[${referenceIndex}], ${isMeta ? "true" : "false"}, "${
-              referenceVerification.functionName || OPERATOR_MAP["="]
-            }",  ${referenceVerification.paramIndex})`;
+            statement = `ref(deps[${referenceIndex}], ${muteError ? "true" : "false"}, ${
+              isMeta ? "true" : "false"
+            }, "${referenceVerification.functionName || OPERATOR_MAP["="]}",  ${
+              referenceVerification.paramIndex
+            })`;
           }
           break;
         case "FUNCALL":
@@ -327,24 +323,10 @@ export function compile(formula: string): CompiledFormula {
           break;
         }
         case "UNKNOWN":
-          if (!isLazy) {
-            return { id: "undefined", code: "" };
-          }
-          id = nextId++;
-          statement = `undefined`;
-          break;
+          return { id: "undefined", code: "" };
       }
-      if (isLazy) {
-        const lazyFunction =
-          `const _${id} = () => {\n` +
-          `\t${splitCodeLines(codeBlocks).join("\n\t")}\n` +
-          `\treturn ${statement};\n` +
-          "}";
-        return { id: `_${id}`, code: lazyFunction };
-      } else {
-        codeBlocks.push(`let _${id} = ${statement};`);
-        return { id: `_${id}`, code: codeBlocks.join("\n") };
-      }
+      codeBlocks.push(`let _${id} = ${statement};`);
+      return { id: `_${id}`, code: codeBlocks.join("\n") };
     }
   }
   const compiledFormula: InternalCompiledFormula = {

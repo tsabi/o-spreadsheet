@@ -87,6 +87,61 @@ return _1;
 }"
 `;
 
+exports[`compile functions with muteError arguments functions call requesting mute error parameters 1`] = `
+"function anonymous(deps,ref,range,ctx
+) {
+// =USEMUTEERRORARG(|N0|)
+let _2 = { value: this.constantValues.numbers[0] };
+ctx.__lastFnCalled = 'USEMUTEERRORARG';
+let _1 = ctx['USEMUTEERRORARG'](_2);
+return _1;
+}"
+`;
+
+exports[`compile functions with muteError arguments functions call requesting mute error parameters 2`] = `
+"function anonymous(deps,ref,range,ctx
+) {
+// =USEMUTEERRORARG(|N0|/|N1|)
+let _3 = { value: this.constantValues.numbers[0] };
+let _4 = { value: this.constantValues.numbers[1] };
+ctx.__lastFnCalled = 'DIVIDE';
+let _2 = ctx['DIVIDE'](_3, _4);
+ctx.__lastFnCalled = 'USEMUTEERRORARG';
+let _1 = ctx['USEMUTEERRORARG'](_2);
+return _1;
+}"
+`;
+
+exports[`compile functions with muteError arguments functions call requesting mute error parameters 3`] = `
+"function anonymous(deps,ref,range,ctx
+) {
+// =USEMUTEERRORARG(|N0|/|N0|/|N1|)
+let _4 = { value: this.constantValues.numbers[0] };
+let _5 = { value: this.constantValues.numbers[0] };
+ctx.__lastFnCalled = 'DIVIDE';
+let _3 = ctx['DIVIDE'](_4, _5);
+let _6 = { value: this.constantValues.numbers[1] };
+ctx.__lastFnCalled = 'DIVIDE';
+let _2 = ctx['DIVIDE'](_3, _6);
+ctx.__lastFnCalled = 'USEMUTEERRORARG';
+let _1 = ctx['USEMUTEERRORARG'](_2);
+return _1;
+}"
+`;
+
+exports[`compile functions with muteError arguments functions call requesting mute error parameters 4`] = `
+"function anonymous(deps,ref,range,ctx
+) {
+// =USEMUTEERRORARG(USEMUTEERRORARG(|N0|))
+let _3 = { value: this.constantValues.numbers[0] };
+ctx.__lastFnCalled = 'USEMUTEERRORARG';
+let _2 = ctx['USEMUTEERRORARG'](_3);
+ctx.__lastFnCalled = 'USEMUTEERRORARG';
+let _1 = ctx['USEMUTEERRORARG'](_2);
+return _1;
+}"
+`;
+
 exports[`expression compiler cells are converted to ranges if function require a range 1`] = `
 "function anonymous(deps,ref,range,ctx
 ) {

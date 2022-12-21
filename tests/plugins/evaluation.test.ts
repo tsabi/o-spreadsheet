@@ -1,12 +1,12 @@
 import { args, functionRegistry } from "../../src/functions";
 import { Model } from "../../src/model";
 import {
-  ArgValue,
   CellValueType,
   ComputeFunction,
   ErrorCell,
   FunctionReturnValue,
   MatrixArgValue,
+  PrimitiveArgValue,
 } from "../../src/types";
 import {
   activateSheet,
@@ -29,7 +29,7 @@ import {
   restoreDefaultFunctions,
   target,
 } from "../test_helpers/helpers";
-import { CellErrorType } from "./../../src/types/errors";
+import { CellErrorType, EvaluationError } from "./../../src/types/errors";
 import resetAllMocks = jest.resetAllMocks;
 
 describe("evaluateCells", () => {
@@ -276,7 +276,7 @@ describe("evaluateCells", () => {
     functionRegistry.add("RANGE.COUNT.FUNCTION", {
       description: "any function",
       compute: ((range: MatrixArgValue) => range.flat().length) as ComputeFunction<
-        ArgValue,
+        PrimitiveArgValue | EvaluationError,
         FunctionReturnValue
       >,
       args: [{ name: "range", description: "", type: ["RANGE"] }],

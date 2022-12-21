@@ -1,5 +1,6 @@
+import { EvaluationError } from "./errors";
 import { Format } from "./format";
-import { Arg, ArgValue, FunctionReturnValue } from "./misc";
+import { FunctionReturnValue, PrimitiveArg, PrimitiveArgValue } from "./misc";
 
 export type ArgType =
   | "ANY"
@@ -17,7 +18,7 @@ export type ArgType =
 export interface ArgDefinition {
   repeating?: boolean;
   optional?: boolean;
-  lazy?: boolean;
+  muteError?: boolean;
   description: string;
   name: string;
   type: ArgType[];
@@ -25,13 +26,13 @@ export interface ArgDefinition {
   defaultValue?: any;
 }
 
-export type ComputeFunctionArg<T> = T | (() => T) | undefined;
+export type ComputeFunctionArg<T> = T | T[][] | undefined;
 export type ComputeFunction<T, R> = (this: EvalContext, ...args: ComputeFunctionArg<T>[]) => R;
 
 export interface AddFunctionDescription {
   description: string;
-  compute: ComputeFunction<ArgValue, FunctionReturnValue>;
-  computeFormat?: ComputeFunction<Arg, Format | undefined>;
+  compute: ComputeFunction<PrimitiveArgValue | EvaluationError, FunctionReturnValue>;
+  computeFormat?: ComputeFunction<PrimitiveArg | EvaluationError, Format | undefined>;
   category?: string;
   args: ArgDefinition[];
   returns: [ArgType];

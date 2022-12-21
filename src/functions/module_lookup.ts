@@ -6,6 +6,7 @@ import {
   MatrixArgValue,
   PrimitiveArgValue,
 } from "../types";
+import { EvaluationError } from "../types/errors";
 import { args } from "./arguments";
 import {
   assert,
@@ -392,7 +393,7 @@ export const XLOOKUP: AddFunctionDescription = {
     searchKey: PrimitiveArgValue,
     lookupRange: MatrixArgValue,
     returnRange: MatrixArgValue,
-    defaultValue?: () => PrimitiveArgValue,
+    defaultValue?: PrimitiveArgValue | EvaluationError,
     matchMode: PrimitiveArgValue = DEFAULT_MATCH_MODE,
     searchMode: PrimitiveArgValue = DEFAULT_SEARCH_MODE
   ): FunctionReturnValue {
@@ -445,12 +446,15 @@ export const XLOOKUP: AddFunctionDescription = {
       ) as FunctionReturnValue;
     }
 
-    const _defaultValue = defaultValue?.();
+    if (defaultValue instanceof EvaluationError) {
+      throw defaultValue;
+    }
+
     assert(
-      () => !!_defaultValue,
+      () => !!defaultValue,
       _lt("Did not find value '%s' in [[FUNCTION_NAME]] evaluation.", toString(searchKey))
     );
-    return _defaultValue!;
+    return defaultValue!;
   },
   isExported: true,
 };
