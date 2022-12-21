@@ -169,9 +169,11 @@ export class DOMDndHelper {
   private getHoveredItemIndex(mousePosition: number, items: DragAndDropItems[]): number {
     if (mousePosition <= this.minPosition) return 0;
     if (mousePosition >= this.maxPosition) return items.length - 1;
-    return items.findIndex(
-      (item) => mousePosition >= item.position && item.position + item.size > mousePosition
+    const index = items.findIndex(
+      (item) => mousePosition >= item.position && item.position + item.size >= mousePosition
     );
+    if (index === -1) debugger;
+    return index;
   }
 
   private getItemsPositions() {

@@ -272,7 +272,7 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
     const sheets = visibleSheets.map((sheet, index) => ({
       id: sheet.id,
       size: sheetRects[index].width - 1, // -1 to compensate negative margin
-      position: sheetRects[index].x - 1,
+      position: sheetRects[index].x,
     }));
     this.dndHelper = new DOMDndHelper({
       draggedItemId: sheetId,
