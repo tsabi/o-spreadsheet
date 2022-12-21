@@ -25,6 +25,7 @@ import {
   keyDown,
   keyUp,
   rightClickCell,
+  selectColumnByClicking,
   simulateClick,
 } from "../test_helpers/dom_helper";
 import { getActiveXc, getCell, getCellContent, getCellText } from "../test_helpers/getters_helpers";
@@ -1204,6 +1205,26 @@ describe("composer", () => {
     await rightClickCell(model, "C8");
     expect(model.getters.getEditionMode()).toBe("inactive");
     expect(fixture.querySelectorAll(".o-grid div.o-composer")).toHaveLength(0);
+  });
+
+  test("The composer should be closed before selecting headers", async () => {
+    composerEl = await typeInComposerGrid("=");
+    composerEl.dispatchEvent(new MouseEvent("click"));
+    expect(fixture.querySelectorAll(".o-grid-composer .o-composer")).toHaveLength(1);
+    await selectColumnByClicking(model, "C");
+    await nextTick();
+    expect(model.getters.getEditionMode()).toBe("inactive");
+    expect(fixture.querySelectorAll(".o-grid-composer .o-composer")).toHaveLength(0);
+  });
+
+  test("The content in the composer should be kept after selecting headers", async () => {
+    await clickCell(model, "C8");
+    await typeInComposerGrid("=");
+    await keyDown("Enter");
+    await selectColumnByClicking(model, "C");
+    await nextTick();
+    expect(getCellText(model, "C8")).toBe("=");
+    expect(getCell(model, "C8")!.evaluated.value).toBe("#BAD_EXPR");
   });
 
   test("type '=', stop editing with enter, click on the modified cell --> the edition mode should be inactive", async () => {

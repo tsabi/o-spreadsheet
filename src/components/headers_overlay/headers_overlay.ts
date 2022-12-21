@@ -200,6 +200,10 @@ abstract class AbstractResizer extends Component<ResizerProps, SpreadsheetChildE
       this.startMovement(ev);
       return;
     }
+    if (this.env.model.getters.getEditionMode() === "editing") {
+      this.env.model.dispatch("STOP_EDITION"); // to keep the content
+      this.env.model.selection.getBackToDefault();
+    }
     this.startSelection(ev, index);
   }
 
