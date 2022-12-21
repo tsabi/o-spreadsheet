@@ -24,10 +24,14 @@ export class DOMDndHelper {
   minX: number;
   maxX: number;
 
+  edgeScrollInterval: number | undefined;
+  edgeScrollOffset: number = 0;
+
   constructor(
     public draggedItemId: string,
     mouseX: number,
     private items: DragAndDropItem[],
+    private containerEl: HTMLElement,
     private onChange: (newPositions: Record<string, number>) => void,
     private onCancel: () => void,
     private onDragEnd: (itemId: string, indexAtEnd: number) => void
@@ -48,45 +52,77 @@ export class DOMDndHelper {
     }
     const mouseX = ev.clientX;
 
+    if (mouseX < this.containerRect.left || mouseX > this.containerRect.right) {
+      this.startEdgeScroll(mouseX < this.containerRect.left ? -1 : 1);
+      return;
+    } else {
+      this.stopEdgeScroll();
+    }
+
+    this.moveDraggedToPosition(mouseX + this.edgeScrollOffset);
+  }
+
+  private startEdgeScroll(direction: -1 | 1) {
+    if (this.edgeScrollInterval) return;
+    this.edgeScrollInterval = window.setInterval(() => {
+      let newPosition = this.currentMouseX + direction * 3;
+
+      if (newPosition < this.minX) {
+        newPosition = this.minX;
+      } else if (newPosition > this.maxX) {
+        newPosition = this.maxX;
+      }
+
+      this.edgeScrollOffset += newPosition - this.currentMouseX;
+      this.moveDraggedToPosition(newPosition);
+    }, 8);
+  }
+
+  private stopEdgeScroll() {
+    window.clearInterval(this.edgeScrollInterval);
+    this.edgeScrollInterval = undefined;
+  }
+
+  private moveDraggedToPosition(mouseX: number) {
+    this.currentMouseX = mouseX;
+
     const hoveredSheetIndex = this.getHoveredItemIndex(
       mouseX,
       this.items.map((item) => item.x)
     );
-    const draggedSheetIndex = this.items.findIndex((item) => item.id === this.draggedItemId);
-    const draggedSheet = this.items[draggedSheetIndex];
-
-    this.currentMouseX = mouseX;
+    const draggedItemIndex = this.items.findIndex((item) => item.id === this.draggedItemId);
+    const draggedItem = this.items[draggedItemIndex];
 
     if (this.deadZone && mouseX >= this.deadZone.start && mouseX <= this.deadZone.end) {
       this.onChange(this.getItemsPositions());
       return;
-    } else if (mouseX >= draggedSheet.x && mouseX <= draggedSheet.x + draggedSheet.width) {
+    } else if (mouseX >= draggedItem.x && mouseX <= draggedItem.x + draggedItem.width) {
       this.deadZone = undefined;
     }
 
-    if (draggedSheetIndex === hoveredSheetIndex) {
+    if (draggedItemIndex === hoveredSheetIndex) {
       this.onChange(this.getItemsPositions());
       return;
     }
 
-    const startIndex = Math.min(draggedSheetIndex, hoveredSheetIndex);
-    const endIndex = Math.max(draggedSheetIndex, hoveredSheetIndex);
-    const dir = Math.sign(hoveredSheetIndex - draggedSheetIndex);
+    const startIndex = Math.min(draggedItemIndex, hoveredSheetIndex);
+    const endIndex = Math.max(draggedItemIndex, hoveredSheetIndex);
+    const dir = Math.sign(hoveredSheetIndex - draggedItemIndex);
 
     let movedWidth = 0;
     for (let i = startIndex; i <= endIndex; i++) {
-      if (i === draggedSheetIndex) {
+      if (i === draggedItemIndex) {
         continue;
       }
-      this.items[i].x -= dir * draggedSheet.width;
+      this.items[i].x -= dir * draggedItem.width;
       movedWidth += this.items[i].width;
     }
 
-    draggedSheet.x += dir * movedWidth;
+    draggedItem.x += dir * movedWidth;
     this.deadZone =
       dir > 0
-        ? { start: mouseX, end: draggedSheet.x }
-        : { start: draggedSheet.x + draggedSheet.width, end: mouseX };
+        ? { start: mouseX, end: draggedItem.x }
+        : { start: draggedItem.x + draggedItem.width, end: mouseX };
     this.items.sort((item1, item2) => item1.x - item2.x);
 
     this.onChange(this.getItemsPositions());
@@ -100,6 +136,7 @@ export class DOMDndHelper {
 
     const targetSheetIndex = this.items.findIndex((item) => item.id === this.draggedItemId);
     this.onDragEnd(this.draggedItemId, targetSheetIndex);
+    this.stopEdgeScroll();
   }
 
   private getHoveredItemIndex(mouseX: number, xs: number[]): number {
@@ -129,5 +166,9 @@ export class DOMDndHelper {
       positions[item.id] = Math.floor(left);
     }
     return positions;
+  }
+
+  private get containerRect() {
+    return this.containerEl.getBoundingClientRect();
   }
 }

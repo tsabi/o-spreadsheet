@@ -139,6 +139,7 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
   static components = { Menu };
 
   private bottomBarRef = useRef("bottomBar");
+  private sheetListRef = useRef("allSheetsDiv");
 
   private dndHelper: DOMDndHelper | undefined;
 
@@ -153,7 +154,6 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
   setup() {
     onMounted(() => this.focusSheet());
     onPatched(() => {
-      if (!this.sheetState.isDnd) document.body.style.cursor = "";
       this.focusSheet();
     });
     onWillUpdateProps(() => {
@@ -270,7 +270,6 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
     this.closeContextMenu();
 
     const mouseX = event.clientX;
-    this.sheetState.isDnd = true;
 
     document.body.style.cursor = "move";
     this.activateSheet(sheetId);
@@ -287,10 +286,10 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
       sheetId,
       mouseX,
       sheets,
+      this.sheetListRef.el!,
       (newPositions) => {
-        console.log("onChange");
+        this.sheetState.isDnd = true;
         this.sheetState.sheetPositions = newPositions;
-        console.log(newPositions);
       },
       () => this.stopDragging(),
       (sheetId: string, finalIndex: number) => this.onDragEnd(sheetId, finalIndex)
@@ -298,7 +297,6 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
   }
 
   private onDragEnd(sheetId: string, finalIndex: number) {
-    console.log("onStopDragging");
     const originalIndex = this.sheetState.sheetList.findIndex((sheet) => sheet.id === sheetId);
     const delta = finalIndex - originalIndex;
     if (sheetId && delta !== 0) {
