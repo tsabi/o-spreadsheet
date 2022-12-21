@@ -501,12 +501,12 @@ describe("BottomBar component", () => {
       triggerMouseEvent('.o-sheet[data-id="Sheet1"]', "mousemove", 100, 0);
       await nextTick();
       expect(getElComputedStyle(".o-sheet[data-id=Sheet1]", "left")).toBe("100px");
-      expect(getElComputedStyle(".o-sheet[data-id=Sheet2]", "left")).toBe("-100px");
+      expect(getElComputedStyle(".o-sheet[data-id=Sheet2]", "left")).toBe("-99px"); // -99 because we do a -1 to take the negative margin into account
 
       triggerMouseEvent('.o-sheet[data-id="Sheet1"]', "mousemove", 150, 0); // 150 is the position of the mouse not the move offset
       await nextTick();
       expect(getElComputedStyle(".o-sheet[data-id=Sheet1]", "left")).toBe("150px");
-      expect(getElComputedStyle(".o-sheet[data-id=Sheet2]", "left")).toBe("-100px");
+      expect(getElComputedStyle(".o-sheet[data-id=Sheet2]", "left")).toBe("-99px");
     });
 
     test.each([

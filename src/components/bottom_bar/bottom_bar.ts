@@ -43,7 +43,7 @@ css/* scss */ `
       align-items: center;
       max-width: 80%;
       overflow: hidden;
-      padding-left: 1px;
+      padding: 0px 2px;
     }
 
     .o-sheet {
@@ -54,27 +54,20 @@ css/* scss */ `
       line-height: ${BOTTOMBAR_HEIGHT}px;
       user-select: none;
       white-space: nowrap;
-      background-color: ${BACKGROUND_GRAY_COLOR};
 
       border-left: 1px solid #c1c1c1;
-
-      &:last-child {
-        border-right: 1px solid #c1c1c1;
-      }
+      border-right: 1px solid #c1c1c1;
+      margin-right: -1px;
 
       &.dragging {
-        left: 0px;
-        border-right: 1px solid #c1c1c1;
-        margin-right: -1px;
-
         position: relative;
+        left: 0px;
         transition: left 0.5s;
         cursor: move;
       }
 
       &.dragged {
         transition: left 0s;
-        background-color: rgba(0, 0, 0, 0.08);
         z-index: 1000;
       }
 
@@ -167,7 +160,7 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
   }
 
   isDragged(sheetId: UID): boolean {
-    return this.dndHelper?.draggedItemId === sheetId;
+    return this.dndHelper?.draggedSheetId === sheetId;
   }
 
   focusSheet() {
@@ -278,22 +271,21 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
 
     const sheets = visibleSheets.map((sheet, index) => ({
       id: sheet.id,
-      width: sheetRects[index].width,
-      x: sheetRects[index].x,
-      startingX: sheetRects[index].x,
+      size: sheetRects[index].width - 1, // -1 to compensate negative margin
+      position: sheetRects[index].x - 1,
     }));
-    this.dndHelper = new DOMDndHelper(
-      sheetId,
+    this.dndHelper = new DOMDndHelper({
+      draggedItemId: sheetId,
       mouseX,
-      sheets,
-      this.sheetListRef.el!,
-      (newPositions) => {
+      items: sheets,
+      containerEl: this.sheetListRef.el!,
+      onChange: (newPositions) => {
         this.sheetState.isDnd = true;
         this.sheetState.sheetPositions = newPositions;
       },
-      () => this.stopDragging(),
-      (sheetId: string, finalIndex: number) => this.onDragEnd(sheetId, finalIndex)
-    );
+      onCancel: () => this.stopDragging(),
+      onDragEnd: (sheetId: string, finalIndex: number) => this.onDragEnd(sheetId, finalIndex),
+    });
   }
 
   private onDragEnd(sheetId: string, finalIndex: number) {
