@@ -41,10 +41,26 @@ css/* scss */ `
     }
 
     .o-all-sheets {
+      position: relative;
       display: flex;
       align-items: center;
-      max-width: 80%;
+      max-width: 70%;
       overflow: hidden;
+
+      .o-bottom-bar-fade {
+        position: absolute;
+        pointer-events: none;
+        height: 100%;
+        width: 100%;
+
+        &.o-bottom-bar-fade-out {
+          background-image: linear-gradient(-90deg, #cfcfcf, transparent 1%);
+        }
+
+        &.o-bottom-bar-fade-in {
+          background-image: linear-gradient(90deg, #cfcfcf, transparent 1%);
+        }
+      }
     }
 
     .o-sheet {
@@ -72,6 +88,16 @@ css/* scss */ `
 
         &:hover {
           background-color: rgba(0, 0, 0, 0.08);
+        }
+      }
+    }
+
+    .o-bottom-bar-arrows {
+      .o-bottom-bar-arrow {
+        cursor: pointer;
+        .o-icon {
+          height: 18px;
+          width: 18px;
         }
       }
     }
@@ -163,7 +189,8 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
       i++;
     }
     const target = ev.currentTarget as HTMLElement;
-    const { top, left } = target.getBoundingClientRect();
+    const { left } = target.getBoundingClientRect();
+    const top = this.bottomBarRef.el!.getBoundingClientRect().top;
     this.openContextMenu(left, top, registry);
   }
 

@@ -14,6 +14,7 @@
         <t t-call="o-spreadsheet-Icon.LIST"/>
       </div>
       <div class="o-all-sheets flex-shrink-0 me-3">
+        <div class="o-bottom-bar-fade o-bottom-bar-fade-in"/>
         <t t-foreach="getVisibleSheets()" t-as="sheet" t-key="sheet.id">
           <div
             class="o-sheet-item o-sheet"
@@ -32,6 +33,15 @@
             </span>
           </div>
         </t>
+        <div class="o-bottom-bar-fade o-bottom-bar-fade-out"/>
+      </div>
+      <div class="o-bottom-bar-arrows d-flex h-100 me-5">
+        <div class="o-bottom-bar-arrow o-bottom-bar-arrow-left d-flex align-items-center me-2">
+          <t t-call="o-spreadsheet-Icon.CARET_LEFT"/>
+        </div>
+        <div class="o-bottom-bar-arrow o-bottom-bar-arrow-right d-flex align-items-center me-4">
+          <t t-call="o-spreadsheet-Icon.CARET_RIGHT"/>
+        </div>
       </div>
 
       <t t-set="selectedStatistic" t-value="getSelectedStatistic()"/>
