@@ -14,32 +14,45 @@
         <t t-call="o-spreadsheet-Icon.LIST"/>
       </div>
       <div class="o-all-sheets flex-shrink-0 me-3">
-        <div class="o-bottom-bar-fade o-bottom-bar-fade-in"/>
-        <t t-foreach="getVisibleSheets()" t-as="sheet" t-key="sheet.id">
-          <div
-            class="o-sheet-item o-sheet"
-            t-on-click="(ev) => this.activateSheet(sheet.id, ev)"
-            t-on-contextmenu.prevent="(ev) => this.onContextMenu(sheet.id, ev)"
-            t-att-title="sheet.name"
-            t-att-data-id="sheet.id"
-            t-att-class="{active: sheet.id === env.model.getters.getActiveSheetId()}">
-            <span
-              class="o-sheet-name"
-              t-esc="sheet.name"
-              t-on-dblclick="(ev) => this.onDblClick(sheet.id, ev)"
-            />
-            <span class="o-sheet-icon" t-on-click.stop="(ev) => this.onIconClick(sheet.id, ev)">
-              <t t-call="o-spreadsheet-Icon.TRIANGLE_DOWN"/>
-            </span>
-          </div>
-        </t>
-        <div class="o-bottom-bar-fade o-bottom-bar-fade-out"/>
+        <div class="o-bottom-bar-fade o-bottom-bar-fade-in" t-if="state.isSheetListScrollableLeft"/>
+        <div
+          class="o-sheet-list d-flex w-100 overflow-hidden"
+          t-ref="sheetList"
+          t-on-wheel="onWheel"
+          t-on-scroll="onScroll">
+          <t t-foreach="getVisibleSheets()" t-as="sheet" t-key="sheet.id">
+            <div
+              class="o-sheet-item o-sheet"
+              t-on-click="(ev) => this.activateSheet(sheet.id, ev)"
+              t-on-contextmenu.prevent="(ev) => this.onContextMenu(sheet.id, ev)"
+              t-att-title="sheet.name"
+              t-att-data-id="sheet.id"
+              t-att-class="{active: sheet.id === env.model.getters.getActiveSheetId()}">
+              <span
+                class="o-sheet-name"
+                t-esc="sheet.name"
+                t-on-dblclick="(ev) => this.onDblClick(sheet.id, ev)"
+              />
+              <span class="o-sheet-icon" t-on-click.stop="(ev) => this.onIconClick(sheet.id, ev)">
+                <t t-call="o-spreadsheet-Icon.TRIANGLE_DOWN"/>
+              </span>
+            </div>
+          </t>
+        </div>
+        <div
+          class="o-bottom-bar-fade o-bottom-bar-fade-out"
+          t-if="state.isSheetListScrollableRight"
+        />
       </div>
       <div class="o-bottom-bar-arrows d-flex h-100 me-5">
-        <div class="o-bottom-bar-arrow o-bottom-bar-arrow-left d-flex align-items-center me-2">
+        <div
+          class="o-bottom-bar-arrow o-bottom-bar-arrow-left d-flex align-items-center me-2"
+          t-on-click="onArrowLeft">
           <t t-call="o-spreadsheet-Icon.CARET_LEFT"/>
         </div>
-        <div class="o-bottom-bar-arrow o-bottom-bar-arrow-right d-flex align-items-center me-4">
+        <div
+          class="o-bottom-bar-arrow o-bottom-bar-arrow-right d-flex align-items-center me-4"
+          t-on-click="onArrowRight">
           <t t-call="o-spreadsheet-Icon.CARET_RIGHT"/>
         </div>
       </div>

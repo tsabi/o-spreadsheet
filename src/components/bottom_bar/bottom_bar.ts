@@ -1,4 +1,4 @@
-import { Component, onMounted, onPatched, useRef, useState } from "@odoo/owl";
+import { Component, onMounted, onPatched, onWillUpdateProps, useRef, useState } from "@odoo/owl";
 import { BACKGROUND_GRAY_COLOR, BOTTOMBAR_HEIGHT, HEADER_WIDTH } from "../../constants";
 import { formatValue } from "../../helpers/format";
 import { interactiveRenameSheet } from "../../helpers/ui/sheet_interactive";
@@ -45,7 +45,13 @@ css/* scss */ `
       display: flex;
       align-items: center;
       max-width: 70%;
+      height: 100%;
       overflow: hidden;
+      width: fit-content;
+
+      .o-sheet-list {
+        // scroll-behavior: smooth;
+      }
 
       .o-bottom-bar-fade {
         position: absolute;
@@ -137,13 +143,26 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
   static components = { Menu };
 
   private bottomBarRef = useRef("bottomBar");
+  private sheetListRef = useRef("sheetList");
+
+  private targetScroll: number | undefined = undefined;
+  private state = useState({
+    isSheetListScrollableLeft: false,
+    isSheetListScrollableRight: false,
+  });
 
   menuState: MenuState = useState({ isOpen: false, position: null, menuItems: [] });
   selectedStatisticFn: string = "";
 
   setup() {
     onMounted(() => this.focusSheet());
-    onPatched(() => this.focusSheet());
+    // onPatched(() => this.focusSheet());
+    onWillUpdateProps(() => {
+      this.updateScrollState();
+    });
+    onPatched(() => {
+      console.log("onPatched");
+    });
   }
 
   focusSheet() {
@@ -269,6 +288,59 @@ export class BottomBar extends Component<Props, SpreadsheetChildEnv> {
 
   private getComposedFnName(fnName: string, fnValue: number | undefined): string {
     return fnName + ": " + (fnValue !== undefined ? formatValue(fnValue) : "__");
+  }
+
+  onWheel(ev: WheelEvent) {
+    this.targetScroll = undefined;
+    const target = ev.currentTarget as HTMLElement;
+    target.scrollLeft += ev.deltaY * 0.5;
+  }
+
+  onScroll() {
+    this.updateScrollState();
+    if (this.targetScroll === this.sheetListCurrentScroll) {
+      this.targetScroll = undefined;
+    }
+  }
+
+  onArrowLeft() {
+    // TODO : we probably want to stop at the start of a sheet, instead of at a random place
+    if (!this.targetScroll) this.targetScroll = this.sheetListCurrentScroll;
+    const newScroll = this.targetScroll - this.sheetListWidth;
+    this.scrollSheetListTo(Math.max(0, newScroll));
+  }
+
+  onArrowRight() {
+    if (!this.targetScroll) this.targetScroll = this.sheetListCurrentScroll;
+    const newScroll = this.targetScroll + this.sheetListWidth;
+    this.scrollSheetListTo(Math.min(this.sheetListMaxScroll, newScroll));
+  }
+
+  private updateScrollState() {
+    this.state.isSheetListScrollableLeft = this.sheetListCurrentScroll > 0;
+    this.state.isSheetListScrollableRight = this.sheetListCurrentScroll < this.sheetListMaxScroll;
+  }
+
+  private scrollSheetListTo(scroll: number) {
+    if (!this.sheetListRef.el) return;
+    this.targetScroll = scroll;
+    // TODO : this don't behave very well for spam click on left/right arrow
+    this.sheetListRef.el.scrollTo({ top: 0, left: scroll, behavior: "smooth" });
+  }
+
+  get sheetListCurrentScroll() {
+    if (!this.sheetListRef.el) return 0;
+    return this.sheetListRef.el.scrollLeft;
+  }
+
+  get sheetListWidth() {
+    if (!this.sheetListRef.el) return 0;
+    return this.sheetListRef.el.clientWidth;
+  }
+
+  get sheetListMaxScroll() {
+    if (!this.sheetListRef.el) return 0;
+    return this.sheetListRef.el.scrollWidth - this.sheetListRef.el.clientWidth;
   }
 }
 
