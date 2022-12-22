@@ -4,7 +4,7 @@
       class="o-grid"
       tabindex="-1"
       t-att-class="{'o-two-columns': !props.sidePanelIsOpen}"
-      t-on-click="focus"
+      t-on-click="defaultFocus"
       t-on-keydown="onKeydown"
       t-on-wheel="onMouseWheel"
       t-ref="grid">
@@ -17,18 +17,15 @@
         onGridMoved.bind="moveCanvas"
         gridOverlayDimensions="gridOverlayDimensions"
         sidePanelIsOpen="props.sidePanelIsOpen"
-        onFigureDeleted.bind="focus"
+        onFigureDeleted.bind="defaultFocus"
       />
       <HeadersOverlay onOpenContextMenu="(type, x, y) => this.toggleContextMenu(type, x, y)"/>
 
-      <t t-if="env.model.getters.getEditionMode() !== 'inactive'">
-        <GridComposer
-          onComposerUnmounted="() => this.focus()"
-          onComposerContentFocused="props.onComposerContentFocused"
-          focus="props.focusComposer"
-        />
-      </t>
-      <t else="1">
+      <GridComposer
+        onComposerContentFocused="props.onComposerContentFocused"
+        focus="props.focusComposer"
+      />
+      <!-- <t else="1">
         <input
           class="position-absolute"
           style="z-index:-1000;"
@@ -36,7 +33,7 @@
           t-on-contextmenu="onInputContextMenu"
           t-ref="hiddenInput"
         />
-      </t>
+      </t> -->
       <canvas t-ref="canvas"/>
       <t
         t-foreach="env.model.getters.getClientsToDisplay()"

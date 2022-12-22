@@ -1,4 +1,4 @@
-import { Component, onMounted, onPatched, onWillUnmount, useRef, useState } from "@odoo/owl";
+import { Component, onMounted, onPatched, useRef, useState } from "@odoo/owl";
 import { ComponentsImportance, SELECTION_BORDER_COLOR } from "../../../constants";
 import { EnrichedToken } from "../../../formulas/index";
 import { functionRegistry } from "../../../functions/index";
@@ -88,8 +88,8 @@ interface Props {
   rect?: Rect;
   delimitation?: DOMDimension;
   focus: "inactive" | "cellFocus" | "contentFocus";
-  onComposerUnmounted?: () => void;
   onComposerContentFocused: (selection: ComposerSelection) => void;
+  isDefaultFocus?: boolean;
 }
 
 interface ComposerState {
@@ -116,6 +116,7 @@ export class Composer extends Component<Props, SpreadsheetChildEnv> {
   static defaultProps = {
     inputStyle: "",
     focus: "inactive",
+    isDefaultFocus: false,
   };
 
   composerRef = useRef("o_composer");
@@ -185,12 +186,12 @@ export class Composer extends Component<Props, SpreadsheetChildEnv> {
     onMounted(() => {
       const el = this.composerRef.el!;
 
+      if (this.props.isDefaultFocus) {
+        this.env.focusManager.setFocusableElement(el);
+      }
+
       this.contentHelper.updateEl(el);
       this.processContent();
-    });
-
-    onWillUnmount(() => {
-      this.props.onComposerUnmounted?.();
     });
 
     onPatched(() => {
